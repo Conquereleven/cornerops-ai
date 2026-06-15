@@ -1,0 +1,69 @@
+const express = require('express');
+const chatRoutes = require('./routes/chat');
+const ivrRoutes = require('./routes/ivr');
+const dataRoutes = require('./routes/data');
+const internalRoutes = require('./routes/internal');
+const requestLogger = require('./middleware/requestLogger');
+const errorHandler = require('./middleware/errorHandler');
+const env = require('./config/env');
+const fs = require('fs');
+const path = require('path');
+const { getDataSourceStatus } = require('./data/supabase/supabaseClient');
+
+const app = express();
+
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, x-internal-api-key',
+  );
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  return next();
+});
+app.use(express.json({ limit: '32kb' }));
+app.use(requestLogger);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'cornerops-ai-workers',
+    dataSource: getDataSourceStatus(),
+  });
+});
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'cornerops-ai-workers',
+    dataSource: getDataSourceStatus(),
+  });
+});
+
+app.use('/api/chat', chatRoutes);
+app.use('/api/ivr', ivrRoutes);
+app.use('/api/internal', internalRoutes);
+app.use('/api', dataRoutes);
+
+const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
+
+if (fs.existsSync(frontendIndexPath)) {
+  app.use(express.static(frontendDistPath));
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
+    }
+    return res.sendFile(frontendIndexPath);
+  });
+} else {
+  app.use((req, res) => {
+    res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
+  });
+}
+
+// Express identifies error middleware by its four-argument signature.
+app.use(errorHandler);
+
+module.exports = app;

@@ -1,0 +1,46 @@
+{
+  "name": "cornerops-ai-workers",
+  "version": "0.1.0",
+  "description": "MVP de CornerOps AI Workers para las operaciones de Cornermex UAE.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node scripts/dev.js",
+    "dev:backend": "nodemon src/server.js",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "install:all": "npm install && npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "test": "jest --runInBand",
+    "test:frontend": "npm --prefix frontend test",
+    "test:all": "npm test && npm run test:frontend",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "ai-workers",
+    "express",
+    "openai",
+    "cornerops",
+    "cornermex"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "testEnvironment": "node",
+    "clearMocks": true
+  }
+}
