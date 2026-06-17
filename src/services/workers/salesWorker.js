@@ -19,9 +19,20 @@ const handle = async ({ message, language = 'es' }) => {
     };
   }
   const product = products[0];
+  const priceText = product.priceAED === null || product.priceAED === undefined
+    ? (
+      language === 'en'
+        ? 'Price is confirmed through a quotation.'
+        : 'El precio se confirma mediante cotización.'
+    )
+    : (
+      language === 'en'
+        ? `Price: ${product.priceAED} AED.`
+        : `Precio: ${product.priceAED} AED.`
+    );
   const fallbackReply = language === 'en'
-    ? `${product.name} is available. Price: ${product.priceAED} AED. Current stock: ${product.stock} units.${product.b2bAvailable ? ' It is also available for B2B orders.' : ''}`
-    : `Tenemos ${product.name} disponible. Precio: ${product.priceAED} AED. Stock actual: ${product.stock} unidades.${product.b2bAvailable ? ' También está disponible para pedidos B2B.' : ''}`;
+    ? `${product.name} is ${product.available === false ? 'not currently available' : 'available'}. ${priceText} Current stock: ${product.stock} units.${product.b2bAvailable ? ' It is also available for B2B orders.' : ''}`
+    : `${product.name} ${product.available === false ? 'no está disponible actualmente' : 'está disponible'}. ${priceText} Stock actual: ${product.stock} unidades.${product.b2bAvailable ? ' También está disponible para pedidos B2B.' : ''}`;
 
   const facts = {
     products: products.map(

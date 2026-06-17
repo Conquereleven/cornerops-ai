@@ -1,35 +1,29 @@
-const { createClient } = require('@supabase/supabase-js');
 const env = require('../../config/env');
 const {
-  hasSupabaseCredentials,
-  supabaseServerKey,
-  useSupabase,
+  getRepositoryClient,
+  getSupabaseAdminClient,
+  getSupabaseClient,
+  isSupabaseAdminConfigured,
+  isSupabaseConfigured,
+  isSupabaseEnabled,
 } = require('../../config/supabase');
 
-const isSupabaseEnabled = () => useSupabase;
-
-const supabase = isSupabaseEnabled()
-  ? createClient(env.supabaseUrl, supabaseServerKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-      db: { schema: 'public' },
-    })
-  : null;
+const supabase = getRepositoryClient();
 
 const getDataSourceStatus = () => ({
   mode: isSupabaseEnabled() ? 'supabase' : 'mock',
   requested: env.useSupabase,
-  configured: hasSupabaseCredentials,
-  credentialType: env.supabaseServiceRoleKey ? 'service_role' : (
-    env.supabaseAnonKey ? 'anon' : 'none'
-  ),
+  configured: isSupabaseConfigured() || isSupabaseAdminConfigured(),
+  credentialType: isSupabaseAdminConfigured()
+    ? 'service_role'
+    : isSupabaseConfigured() ? 'anon' : 'none',
 });
 
 module.exports = {
   supabase,
-  isSupabaseEnabled,
   getDataSourceStatus,
+  getSupabaseAdminClient,
+  getSupabaseClient,
+  isSupabaseConfigured,
+  isSupabaseEnabled,
 };

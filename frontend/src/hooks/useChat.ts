@@ -40,7 +40,13 @@ export function useChat() {
     setLoading(true);
     setError('');
     try {
-      const response = await sendChatMessage({ userId: '1', message: cleanContent, conversationId });
+      const response = await sendChatMessage({
+        userId: '1',
+        message: cleanContent,
+        conversationId,
+        requestId: crypto.randomUUID(),
+        channel: 'web',
+      });
       setConversationId(response.conversationId);
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'assistant', content: response.reply, worker: response.worker, intent: response.intent, metadata: response.metadata, conversationId: response.conversationId, timestamp: new Date().toISOString() }]);
     } catch (requestError) {

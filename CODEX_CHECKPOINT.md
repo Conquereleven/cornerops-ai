@@ -1,69 +1,87 @@
-# CODEX Checkpoint - Sprint 4 + 5
+# CODEX Checkpoint - Sprint 6
 
-Fecha: 2026-06-15
+Fecha: 2026-06-17
 
-## Qué existía
+## Estado encontrado
 
-- Orquestador con routing, workers y fallback sin OpenAI.
-- Repositories híbridos para Supabase y mocks.
-- Persistencia de conversaciones, mensajes, leads y worker runs.
-- Catálogo, órdenes, dashboard operativo y frontend responsive.
-- Esquema Supabase de ocho tablas y seed idempotente.
-- 42 pruebas backend y 5 frontend.
+- Sprint 4 y 5 estaban funcionales y comprometidos en `d295c46`.
+- Supabase real ya estaba activo en un entorno independiente.
+- Existían repositories híbridos, memoria, leads, órdenes, catálogo, dashboard,
+  API interna, esquema SQL y 57 pruebas backend.
+- Faltaban idempotencia, `source`, clientes anon/admin separados, eventos,
+  customer repository, operaciones internas completas y WhatsApp adapter.
 
-## Qué se completó
+## Implementado
 
-- Routing bilingüe con prioridad B2B, categoría canónica y `unknown`.
-- Memoria estructurada por conversación y `memorySummary` en `/api/chat`.
-- Continuidad contextual para órdenes, catálogo y B2B.
-- Búsqueda de órdenes por número o email.
-- Calificación B2B progresiva con campos comerciales completos.
-- Servicio AI con hechos verificados, guardrails y fallback ante fallos.
-- Aliases contractuales de repositories para Sprint 4-5.
-- `/api/health`, endpoints mock y endpoints internos protegibles.
-- Fallback seguro cuando una operación Supabase falla.
-- Placeholder de catálogo para RAG futuro.
-- Catálogo mock mínimo ampliado con Piñatas, Tomatillo y Chamoy.
+- Configuración centralizada para lenguaje, modo de workers, seguridad interna,
+  Supabase y futuras variables WhatsApp.
+- Clientes Supabase normal y admin con helpers públicos.
+- SQL staging aditivo en `supabase/schema.sql`.
+- Compatibilidad automática entre `conversation_messages` y `messages`.
+- Idempotencia de `/api/chat` mediante `requestId`.
+- Campo `source` en respuestas: `supabase` o `memory`.
+- Persistencia de eventos en `worker_events` con fallback local.
+- Customer repository híbrido.
+- Estados B2B validados, notas y captura limitada a tres preguntas prioritarias.
+- Catálogo interno con búsqueda, upsert y sincronización protegida de staging.
+- Detalle interno de órdenes.
+- Webhook WhatsApp placeholder y adapter de entrada/salida.
+- AI response service con contexto limitado y hechos verificados.
+- Compatibilidad PostgREST `PGRST205` para usar la tabla legacy `messages`
+  cuando `conversation_messages` aún no se ha migrado en staging.
 
-## Archivos principales
+## Endpoints Sprint 6
 
-- `src/services/agent.js`
-- `src/services/memoryService.js`
-- `src/services/aiResponseService.js`
-- `src/services/catalogSearchService.js`
-- `src/services/workers/*`
-- `src/data/repositories/*`
-- `src/routes/internal.js`
-- `src/middleware/internalApiKey.js`
-- `src/data/supabase/schema.sql`
-- `src/data/supabase/seed.sql`
-- `docs/rag-roadmap.md`
-- `README.md`
-- `tests/*`
+- `GET /api/internal/products/search`
+- `POST /api/internal/products/sync-mocks`
+- `GET /api/internal/orders/:orderNumber`
+- `POST /api/internal/leads/:leadId/notes`
+- `GET/POST /api/internal/customers`
+- `GET /api/internal/worker-events`
+- `GET/POST /api/webhooks/whatsapp`
 
-## Riesgos y pendientes
+## Fallback
 
-- La API key interna es una protección inicial, no sustituye auth con roles.
-- WhatsApp, voz, catálogo productivo y RAG real siguen fuera de alcance.
-- Las nuevas columnas SQL deben aplicarse en cada ambiente antes de usarlas
-  directamente; el código mantiene compatibilidad con el esquema anterior.
-- Repositorio Git inicializado y entrega preparada como commit reproducible.
+- Sin Supabase: conversaciones y eventos en memoria; catálogo, órdenes, leads y
+  clientes usan mocks.
+- Sin OpenAI: templates deterministas.
+- Sin WhatsApp: webhook placeholder, sin llamadas externas.
 
-## Verificación ejecutada
+## Verificación
 
-- Backend: 20 suites, 57 pruebas aprobadas.
-- Frontend: 3 archivos, 5 pruebas aprobadas.
-- Build Vite de producción aprobado.
-- Health real confirmado en modo Supabase.
-- Memoria real confirmada en una conversación de dos turnos.
-- API interna confirmada con rechazo sin clave y acceso con clave local.
+- Backend Sprint 6: 24 suites, 66 pruebas aprobadas.
+- Frontend: 3 suites, 5 pruebas aprobadas.
+- Build frontend: Vite production build generado correctamente.
+- Validación real con Supabase staging:
+  - `GET /api/health` reportó `mode=supabase`, `configured=true`,
+    `credentialType=service_role`.
+  - `/api/chat` guardó conversación y mensajes con `source=supabase`.
+  - Reintento con el mismo `requestId` regresó `idempotentReplay=true` sin
+    duplicar mensajes.
+  - `/api/internal/worker-events` respondió 200 usando fallback local cuando
+    `worker_events` aún no existe en la base.
+- Dashboard verificado en Chrome: data layer Supabase, métricas visibles,
+  responsive desktop y sin errores de consola.
+- Tests sin OpenAI, Supabase ni WhatsApp externos.
 
-## Sprint 6 recomendado
+## Riesgos
 
-- Staging aislado con migraciones versionadas.
-- Auth administrativa y RBAC.
-- Catálogo real y sincronización de inventario.
-- WhatsApp Business API.
-- Pipeline de voz con transcripción y TTS.
-- RAG híbrido con evaluaciones.
-- Analytics de calidad, costo, latencia y conversión.
+- `INTERNAL_API_KEY` sigue siendo una protección inicial, no RBAC.
+- La sincronización de mocks es solo para staging.
+- La migración SQL debe probarse y respaldarse antes de producción.
+- En el staging actual, `worker_events` requiere ejecutar `supabase/schema.sql`
+  para persistir eventos remotos; mientras tanto el fallback en memoria opera.
+- El webhook aún no valida firma HMAC ni envía respuestas a Meta.
+- RAG sigue usando keywords, sin embeddings.
+- El checkout local no tiene `git remote`, por lo que no se puede empujar ni
+  abrir PR hasta configurar el repositorio GitHub de destino.
+
+## Sprint 7 recomendado
+
+- Migraciones versionadas y pipeline CI/CD para staging.
+- RBAC administrativo y auditoría.
+- Firma y envío real de WhatsApp Business.
+- Cola de trabajos y reintentos.
+- Catálogo/inventario real sincronizado.
+- RAG híbrido con pgvector y evaluaciones.
+- Analytics de calidad, conversión, costo y latencia.

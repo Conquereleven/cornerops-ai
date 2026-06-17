@@ -17,6 +17,14 @@ const validateChatPayload = (payload = {}) => {
   ) {
     errors.push('conversationId debe ser texto cuando se proporciona.');
   }
+  if (
+    payload.requestId !== undefined &&
+    (typeof payload.requestId !== 'string' ||
+      !payload.requestId.trim() ||
+      payload.requestId.length > 128)
+  ) {
+    errors.push('requestId debe ser texto de máximo 128 caracteres.');
+  }
   return errors;
 };
 

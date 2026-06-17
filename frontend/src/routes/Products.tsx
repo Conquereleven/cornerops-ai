@@ -22,7 +22,12 @@ export function Products() {
     { label: 'SKU', render: (row) => <code>{row.sku}</code> },
     { label: 'Producto', render: (row) => <span className="cell-primary">{row.name}</span> },
     { label: 'Categoría', render: (row) => row.category },
-    { label: 'Precio AED', render: (row) => <strong>{row.priceAED} AED</strong> },
+    {
+      label: 'Precio AED',
+      render: (row) => (
+        <strong>{row.priceAED === null ? 'Cotización' : `${row.priceAED} AED`}</strong>
+      ),
+    },
     { label: 'Stock', render: (row) => <StatusBadge tone={row.stock < 20 ? 'amber' : 'green'}>{row.stock} uds</StatusBadge> },
     { label: 'B2B', render: (row) => row.b2bAvailable ? 'Disponible' : 'No' },
     { label: 'Idiomas', render: (row) => row.languages.join(' / ').toUpperCase() },

@@ -33,7 +33,7 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   return response.json();
 };
 
-export const sendChatMessage = (payload: { userId: string; message: string; conversationId?: string }) =>
+export const sendChatMessage = (payload: { userId: string; message: string; conversationId?: string; requestId?: string; channel?: string }) =>
   request<ChatResponse>('/api/chat', { method: 'POST', body: JSON.stringify(payload) });
 const queryString = (params: Record<string, string | number | boolean | undefined>) => {
   const search = new URLSearchParams();

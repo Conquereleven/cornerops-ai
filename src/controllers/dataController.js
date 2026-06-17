@@ -4,6 +4,8 @@ const leadRepository = require('../data/repositories/leadRepository');
 const conversationRepository = require('../data/repositories/conversationRepository');
 const operationsRepository = require('../data/repositories/operationsRepository');
 const aiWorkerRunRepository = require('../data/repositories/aiWorkerRunRepository');
+const customerRepository = require('../data/repositories/customerRepository');
+const workerEventService = require('../services/workerEventService');
 
 const listOrders = async (req, res, next) => {
   try {
@@ -109,13 +111,67 @@ const updateLeadStatus = async (req, res, next) => {
         message: 'status is required.',
       });
     }
-    const lead = await leadRepository.updateLead(req.params.leadId, {
-      status: req.body.status.trim(),
-    });
+    const lead = await leadRepository.updateB2BLeadStatus(
+      req.params.leadId,
+      req.body.status.trim(),
+    );
     if (!lead) {
       return res.status(404).json({ error: true, message: 'Lead not found' });
     }
     return res.json(lead);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const addLeadNote = async (req, res, next) => {
+  try {
+    const lead = await leadRepository.addB2BLeadNote(
+      req.params.leadId,
+      req.body.note,
+    );
+    if (!lead) {
+      return res.status(404).json({ error: true, message: 'Lead not found' });
+    }
+    return res.json(lead);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const syncProducts = async (req, res, next) => {
+  try {
+    return res.json(await productRepository.syncMockProductsToSupabase());
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const listCustomers = async (req, res, next) => {
+  try {
+    return res.json(await customerRepository.listCustomers({
+      limit: req.query.limit,
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const createCustomer = async (req, res, next) => {
+  try {
+    return res.status(201).json(
+      await customerRepository.createCustomer(req.body),
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const listInternalWorkerEvents = async (req, res, next) => {
+  try {
+    return res.json(await workerEventService.listWorkerEvents({
+      limit: req.query.limit,
+    }));
   } catch (error) {
     return next(error);
   }
@@ -280,6 +336,11 @@ module.exports = {
   createLead,
   updateLead,
   updateLeadStatus,
+  addLeadNote,
+  syncProducts,
+  listCustomers,
+  createCustomer,
+  listInternalWorkerEvents,
   listConversations,
   getConversation,
   listConversationMessages,

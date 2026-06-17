@@ -13,7 +13,9 @@ const getClient = () => {
 };
 
 const shouldUseMock = () =>
-  env.nodeEnv === 'test' || !env.openaiApiKey;
+  env.nodeEnv === 'test' ||
+  env.aiWorkersMode === 'mock' ||
+  !env.openaiApiKey;
 
 /**
  * Central OpenAI adapter. Keeping provider code here lets workers remain

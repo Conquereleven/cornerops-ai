@@ -22,6 +22,8 @@ export interface ChatResponse {
   metadata: Record<string, unknown>;
   intentCategory: 'support' | 'sales' | 'orders' | 'b2b' | 'unknown';
   memorySummary: Record<string, unknown>;
+  source: 'supabase' | 'memory' | 'mock';
+  idempotentReplay?: boolean;
 }
 
 export interface ChatMessage {
@@ -52,7 +54,7 @@ export interface Product {
   sku: string;
   name: string;
   category: string;
-  priceAED: number;
+  priceAED: number | null;
   stock: number;
   description: string;
   languages: string[];

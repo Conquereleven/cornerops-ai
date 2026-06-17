@@ -41,6 +41,7 @@ const handle = async ({
   userId,
   memory = {},
   language = 'es',
+  source = 'web',
 }) => {
   const extracted = extractLeadData(message);
   const existing = normalizeExistingLead(
@@ -70,8 +71,9 @@ const handle = async ({
     requestedProducts: combined.requestedProducts,
     estimatedVolume: combined.estimatedVolume,
     missingFields,
-    status: missingFields.length ? 'needs_info' : 'qualified',
-    source: 'ai_worker',
+    status: missingFields.length ? 'new' : 'qualified',
+    notes: combined.notes || message.slice(0, 500),
+    source: source || 'ai_worker',
   };
   const lead = existing.id
     ? await updateLead(existing.id, leadData)
@@ -99,8 +101,8 @@ const handle = async ({
   const fallbackReply = missingFields.length
     ? (
       language === 'en'
-        ? `I registered the B2B opportunity. To prepare the quotation I still need: ${missingFields.map((field) => labels[field]).join(', ')}.`
-        : `Registré la oportunidad B2B. Para preparar la cotización aún necesito: ${missingFields.map((field) => labels[field]).join(', ')}.`
+        ? `I registered the B2B opportunity. To continue I need: ${missingFields.slice(0, 3).map((field) => labels[field]).join(', ')}.`
+        : `Registré la oportunidad B2B. Para continuar necesito: ${missingFields.slice(0, 3).map((field) => labels[field]).join(', ')}.`
     )
     : (
       language === 'en'

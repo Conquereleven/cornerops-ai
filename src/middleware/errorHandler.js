@@ -3,11 +3,13 @@ const logger = require('../utils/logger');
 
 const errorHandler = (error, req, res, next) => {
   const statusCode = error.statusCode || 500;
-  logger.error('request_error', {
+  const log = statusCode >= 500 ? logger.error : logger.warn;
+  log('request_error', {
     statusCode,
     path: req.originalUrl,
     message: error.message,
-    ...(env.nodeEnv !== 'production' && { stack: error.stack }),
+    ...(statusCode >= 500 &&
+      env.nodeEnv !== 'production' && { stack: error.stack }),
   });
   res.status(statusCode).json({
     error: true,

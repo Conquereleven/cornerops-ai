@@ -1,6 +1,12 @@
 const app = require('./app');
 const env = require('./config/env');
+const logger = require('./utils/logger');
+const { logSupabaseConfiguration } = require('./config/supabase');
 
+for (const warning of env.getEnvWarnings()) {
+  logger.warn('environment_warning', { warning });
+}
+logSupabaseConfiguration();
 const server = app.listen(env.port, () => {
   console.log(
     `CornerOps AI Workers listening on http://localhost:${env.port}`,

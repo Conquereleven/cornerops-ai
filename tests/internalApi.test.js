@@ -36,4 +36,32 @@ describe('Internal operations API', () => {
     expect(created.statusCode).toBe(201);
     expect(updated.body.status).toBe('contacted');
   });
+
+  test('validates lead status and appends notes', async () => {
+    const created = await request(app).post('/api/internal/leads').send({
+      userId: `lead-status-${Date.now()}`,
+      businessName: 'Status Market',
+      status: 'new',
+    });
+    const invalid = await request(app)
+      .patch(`/api/internal/leads/${created.body.id}/status`)
+      .send({ status: 'invalid-state' });
+    const noted = await request(app)
+      .post(`/api/internal/leads/${created.body.id}/notes`)
+      .send({ note: 'Call buyer on Tuesday.' });
+
+    expect(invalid.statusCode).toBe(400);
+    expect(noted.body.notes).toContain('Call buyer on Tuesday.');
+  });
+
+  test('supports internal product search and order detail', async () => {
+    const product = await request(app)
+      .get('/api/internal/products/search?q=chamoy');
+    const order = await request(app).get('/api/internal/orders/123');
+    const sync = await request(app).post('/api/internal/products/sync-mocks');
+
+    expect(product.body[0].sku).toBe('CHAMOY-1L');
+    expect(order.body.id).toBe('123');
+    expect(sync.statusCode).toBe(409);
+  });
 });

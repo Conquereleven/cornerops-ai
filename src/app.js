@@ -3,6 +3,7 @@ const chatRoutes = require('./routes/chat');
 const ivrRoutes = require('./routes/ivr');
 const dataRoutes = require('./routes/data');
 const internalRoutes = require('./routes/internal');
+const whatsappRoutes = require('./routes/whatsapp');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const env = require('./config/env');
@@ -44,6 +45,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/chat', chatRoutes);
 app.use('/api/ivr', ivrRoutes);
 app.use('/api/internal', internalRoutes);
+app.use('/api/webhooks/whatsapp', whatsappRoutes);
 app.use('/api', dataRoutes);
 
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');

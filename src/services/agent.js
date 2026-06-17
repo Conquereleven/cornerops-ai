@@ -14,6 +14,8 @@ const {
   extractMemoryData,
   mergeMemory,
 } = require('./memoryService');
+const { getDataSourceStatus } = require('../data/supabase/supabaseClient');
+const { recordEvent } = require('./workerEventService');
 
 const workers = Object.freeze({
   supportWorker,
@@ -23,7 +25,12 @@ const workers = Object.freeze({
   humanHandoffWorker,
 });
 
-const handleMessage = async (userId, message, conversationId) => {
+const handleMessage = async (
+  userId,
+  message,
+  conversationId,
+  { requestId, channel = 'web' } = {},
+) => {
   const startedAt = Date.now();
   const cleanUserId = sanitizeInput(userId);
   const cleanMessage = sanitizeInput(message);
@@ -34,13 +41,26 @@ const handleMessage = async (userId, message, conversationId) => {
     throw error;
   }
 
+  if (requestId) {
+    const cached = await conversationRepository.findResponseByRequestId(
+      cleanUserId,
+      requestId,
+    );
+    if (cached) return { ...cached, idempotentReplay: true };
+  }
+
   let conversation = conversationId
     ? await conversationRepository.getConversationById(conversationId)
     : null;
   const conversationCreated = !conversation;
   if (!conversation) {
-    conversation = await conversationRepository.createConversation(cleanUserId);
+    conversation = await conversationRepository.createConversation({
+      userId: cleanUserId,
+      channel,
+    });
   }
+  const source = conversation.source ||
+    (getDataSourceStatus().mode === 'supabase' ? 'supabase' : 'memory');
   const history = await conversationRepository.getConversationMessages(
     conversation.id,
     12,
@@ -65,7 +85,7 @@ const handleMessage = async (userId, message, conversationId) => {
     content: cleanMessage,
     intent: routing.intent,
     worker: selectedWorkerName,
-    metadata: { memorySummary },
+    metadata: { memorySummary, requestId },
   });
   let workerResult;
   try {
@@ -80,6 +100,7 @@ const handleMessage = async (userId, message, conversationId) => {
       }],
       memory: memorySummary,
       language: detectLanguage(cleanMessage),
+      source: channel,
     });
   } catch (error) {
     const latencyMs = Date.now() - startedAt;
@@ -101,6 +122,14 @@ const handleMessage = async (userId, message, conversationId) => {
       mainIntent: routing.intent,
       requiresHuman: false,
     });
+    await recordEvent({
+      conversationId: conversation.id,
+      worker: selectedWorkerName,
+      intent: routing.intent,
+      eventType: 'controlled_error',
+      payload: { message: error.message },
+      source,
+    });
     throw error;
   }
   const normalizedResult =
@@ -111,6 +140,20 @@ const handleMessage = async (userId, message, conversationId) => {
     memorySummary,
     normalizedResult.metadata?.memoryData || {},
   );
+  const latencyMs = Date.now() - startedAt;
+  const responseEnvelope = {
+    reply: normalizedResult.reply,
+    worker: selectedWorkerName,
+    intent: routing.intent,
+    conversationId: conversation.id,
+    metadata: {
+      ...(normalizedResult.metadata || {}),
+      latencyMs,
+    },
+    intentCategory: routing.category,
+    memorySummary: finalMemorySummary,
+    source,
+  };
   await conversationRepository.addMessage({
     conversationId: conversation.id,
     userId: cleanUserId,
@@ -121,9 +164,10 @@ const handleMessage = async (userId, message, conversationId) => {
     metadata: {
       ...(normalizedResult.metadata || {}),
       memorySummary: finalMemorySummary,
+      requestId,
+      responseEnvelope,
     },
   });
-  const latencyMs = Date.now() - startedAt;
   await aiWorkerRunRepository.createWorkerRun({
     conversationId: conversation.id,
     userId: cleanUserId,
@@ -141,6 +185,7 @@ const handleMessage = async (userId, message, conversationId) => {
     mainWorker: selectedWorkerName,
     mainIntent: routing.intent,
     requiresHuman: Boolean(normalizedResult.metadata?.requiresHuman),
+    metadata: finalMemorySummary,
   });
   await operationsRepository.recordWorkerRun({
     worker: selectedWorkerName,
@@ -158,18 +203,25 @@ const handleMessage = async (userId, message, conversationId) => {
     });
   }
 
-  return {
-    reply: normalizedResult.reply,
+  await recordEvent({
+    conversationId: conversation.id,
     worker: selectedWorkerName,
     intent: routing.intent,
-    conversationId: conversation.id,
-    metadata: {
-      ...(normalizedResult.metadata || {}),
+    eventType: normalizedResult.metadata?.leadCaptured
+      ? 'lead_created'
+      : normalizedResult.metadata?.orderId
+        ? 'order_lookup'
+        : 'worker_completed',
+    payload: {
+      leadId: normalizedResult.metadata?.leadId,
+      orderId: normalizedResult.metadata?.orderId,
+      success: true,
       latencyMs,
     },
-    intentCategory: routing.category,
-    memorySummary: finalMemorySummary,
-  };
+    source,
+  });
+
+  return responseEnvelope;
 };
 
 module.exports = {

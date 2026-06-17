@@ -11,8 +11,18 @@ const {
   trySupabase,
 } = require('./repositoryUtils');
 
+const LEAD_STATUSES = Object.freeze([
+  'new',
+  'qualified',
+  'contacted',
+  'quoted',
+  'won',
+  'lost',
+]);
+
 const mapLead = (row) => ({
   id: row.id,
+  leadId: row.lead_id || row.id,
   userId: row.user_id,
   businessName: row.business_name,
   city: row.city,
@@ -30,6 +40,7 @@ const mapLead = (row) => ({
   missingFields: row.missing_fields || [],
   source: row.source,
   notes: row.notes,
+  metadata: row.metadata || {},
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -44,6 +55,7 @@ const toLeadRow = (data) => {
   const isEmail = typeof genericContact === 'string' && genericContact.includes('@');
   return compact({
     user_id: data.userId,
+    lead_id: data.leadId,
     business_name: data.businessName,
     city: data.city ?? data.emirate,
     business_type: data.businessType,
@@ -59,15 +71,23 @@ const toLeadRow = (data) => {
     missing_fields: data.missingFields,
     source: data.source,
     notes: data.notes,
+    metadata: data.metadata,
   });
 };
 
 const createLead = async (data) => {
   if (isSupabaseEnabled()) {
     const result = await trySupabase('create lead', async () => {
+      const databaseId = randomUUID();
       const { data: created, error } = await supabase
         .from('b2b_leads')
-        .insert({ status: 'needs_info', source: 'ai_worker', ...toLeadRow(data) })
+        .insert({
+          id: databaseId,
+          lead_id: data.leadId || databaseId,
+          status: 'new',
+          source: 'ai_worker',
+          ...toLeadRow(data),
+        })
         .select()
         .single();
       throwSupabaseError(error, 'create lead');
@@ -79,12 +99,13 @@ const createLead = async (data) => {
   const now = new Date().toISOString();
   const lead = {
     id: `lead-${randomUUID().slice(0, 8)}`,
-    status: 'needs_info',
+    status: 'new',
     source: 'ai_worker',
     createdAt: now,
     updatedAt: now,
     ...data,
   };
+  lead.leadId = lead.leadId || lead.id;
   const normalizedLead = normalizeMockLead(lead);
   mockLeads.push(normalizedLead);
   return { ...normalizedLead };
@@ -110,6 +131,28 @@ const updateLead = async (leadId, data) => {
   Object.assign(lead, data, { updatedAt: new Date().toISOString() });
   Object.assign(lead, normalizeMockLead(lead));
   return { ...lead };
+};
+
+const updateB2BLeadStatus = async (leadId, status) => {
+  if (!LEAD_STATUSES.includes(status)) {
+    const error = new Error(`Invalid lead status: ${status}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return updateLead(leadId, { status });
+};
+
+const addB2BLeadNote = async (leadId, note) => {
+  const cleanNote = String(note || '').trim();
+  if (!cleanNote) {
+    const error = new Error('note is required.');
+    error.statusCode = 400;
+    throw error;
+  }
+  const lead = await getLeadById(leadId);
+  if (!lead) return null;
+  const notes = [lead.notes, cleanNote].filter(Boolean).join('\n');
+  return updateLead(leadId, { notes });
 };
 
 const getLeadById = async (leadId) => {
@@ -174,8 +217,12 @@ module.exports = {
   createLead,
   createB2BLead: createLead,
   updateLead,
+  updateB2BLeadStatus,
+  addB2BLeadNote,
   getLeadById,
+  getB2BLeadById: getLeadById,
   findLatestLeadByUserId,
   listLeads,
   listB2BLeads: listLeads,
+  LEAD_STATUSES,
 };

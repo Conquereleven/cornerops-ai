@@ -29,3 +29,19 @@ real de Cornermex sin permitir que el modelo invente stock, precios o estados.
 
 `src/services/catalogSearchService.js` encapsula la búsqueda simple por keywords.
 Esta interfaz podrá incorporar búsqueda híbrida sin modificar los workers.
+
+Sprint 6 añade:
+
+- Catálogo híbrido desde `productRepository`.
+- Búsqueda interna en `/api/internal/products/search?q=`.
+- Herramienta protegida de staging `/api/internal/products/sync-mocks`.
+- Campos `keywords` y `metadata` preparados en Supabase.
+
+## Evolución Sprint 7
+
+1. Habilitar `vector` en staging.
+2. Crear una tabla de documentos o embeddings separada del inventario.
+3. Versionar embeddings por SKU y checksum de contenido.
+4. Implementar búsqueda híbrida keyword + vector.
+5. Revalidar cada candidato contra `products`.
+6. Crear evaluaciones ES/EN para precisión, abstención y disponibilidad.

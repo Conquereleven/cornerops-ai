@@ -37,7 +37,7 @@ const mapProduct = (row) => ({
   name: row.name,
   category: row.category || '',
   available: row.available !== false && row.active !== false && row.stock > 0,
-  priceAED: row.price_aed === null ? 0 : Number(row.price_aed),
+  priceAED: row.price_aed === null ? null : Number(row.price_aed),
   stock: row.stock,
   description: row.description || '',
   languages: row.languages || [],
@@ -46,6 +46,7 @@ const mapProduct = (row) => ({
   active: Boolean(row.active),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  source: 'supabase',
 });
 
 const searchProducts = async (query) => {
@@ -146,6 +147,64 @@ const listProducts = async ({
     .map((product) => ({ active: true, ...product }));
 };
 
+const toProductRow = (data) => ({
+  sku: data.sku,
+  name: data.name,
+  category: data.category || '',
+  available: data.available !== false,
+  price_aed: data.priceAED ?? null,
+  stock: data.stock ?? 0,
+  description: data.description || '',
+  languages: data.languages || ['es', 'en'],
+  b2b_available: Boolean(data.b2bAvailable),
+  keywords: data.keywords || [],
+  active: data.active !== false,
+});
+
+const upsertProduct = async (data) => {
+  if (!data?.sku || !data?.name) {
+    const error = new Error('sku and name are required.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (isSupabaseEnabled()) {
+    const result = await trySupabase('upsert product', async () => {
+      const { data: saved, error } = await supabase
+        .from('products')
+        .upsert(toProductRow(data), { onConflict: 'sku' })
+        .select()
+        .single();
+      throwSupabaseError(error, 'upsert product');
+      return mapProduct(saved);
+    });
+    if (result.ok) return result.value;
+  }
+
+  const index = mockProducts.findIndex(
+    (product) => normalize(product.sku) === normalize(data.sku),
+  );
+  const product = { ...(index >= 0 ? mockProducts[index] : {}), ...data };
+  if (index >= 0) mockProducts[index] = product;
+  else mockProducts.push(product);
+  return { active: true, ...product };
+};
+
+const syncMockProductsToSupabase = async () => {
+  if (!isSupabaseEnabled()) {
+    const error = new Error('Supabase is not enabled.');
+    error.statusCode = 409;
+    throw error;
+  }
+  const { data, error } = await supabase
+    .from('products')
+    .upsert(mockProducts.map(toProductRow), { onConflict: 'sku' })
+    .select();
+  throwSupabaseError(error, 'sync mock products');
+  const products = data.map(mapProduct);
+  return { synced: products.length, source: 'supabase', products };
+};
+
 module.exports = {
   searchProducts,
   findProducts: searchProducts,
@@ -153,4 +212,6 @@ module.exports = {
   findProductBySku: getProductBySku,
   listAvailableProducts,
   listProducts,
+  upsertProduct,
+  syncMockProductsToSupabase,
 };

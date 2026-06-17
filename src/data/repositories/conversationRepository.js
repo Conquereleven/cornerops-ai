@@ -12,6 +12,21 @@ const {
 
 const conversations = [];
 const messages = [];
+let resolvedMessageTable;
+
+const getMessageTable = async () => {
+  if (!isSupabaseEnabled()) return 'messages';
+  if (resolvedMessageTable) return resolvedMessageTable;
+
+  const { error } = await supabase
+    .from('conversation_messages')
+    .select('id')
+    .limit(1);
+  resolvedMessageTable = ['42P01', 'PGRST205'].includes(error?.code)
+    ? 'messages'
+    : 'conversation_messages';
+  return resolvedMessageTable;
+};
 
 const mapMessage = (row) => ({
   id: row.id,
@@ -23,11 +38,21 @@ const mapMessage = (row) => ({
   worker: row.worker,
   metadata: row.metadata || {},
   createdAt: row.created_at,
+  source: 'supabase',
 });
 
-const mapConversation = (row, conversationMessages = row.messages || []) => ({
+const mapConversation = (
+  row,
+  conversationMessages =
+    row.conversation_messages || row.messages || [],
+) => ({
   id: row.id,
   userId: row.user_id,
+  conversationId: row.conversation_id || row.id,
+  channel: row.channel || 'web',
+  customerEmail: row.customer_email || '',
+  customerName: row.customer_name || '',
+  metadata: row.metadata || {},
   status: row.status,
   lastMessage: row.last_message || '',
   worker: row.main_worker || 'supportWorker',
@@ -38,22 +63,43 @@ const mapConversation = (row, conversationMessages = row.messages || []) => ({
   messageCount: conversationMessages.length,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  source: 'supabase',
   ...(conversationMessages.length &&
     conversationMessages[0]?.content !== undefined && {
       messages: conversationMessages.map(mapMessage),
     }),
 });
 
-const createConversation = async (userId) => {
+const createConversation = async (input) => {
+  const data = typeof input === 'string' ? { userId: input } : input;
+  const userId = data.userId;
   if (isSupabaseEnabled()) {
     const result = await trySupabase('create conversation', async () => {
-      const { data, error } = await supabase
+      const conversationId = randomUUID();
+      let { data: created, error } = await supabase
         .from('conversations')
-        .insert({ user_id: userId })
+        .insert({
+          id: conversationId,
+          conversation_id: conversationId,
+          user_id: userId,
+          channel: data.channel || 'web',
+          customer_email: data.customerEmail || null,
+          customer_name: data.customerName || null,
+          metadata: data.metadata || {},
+        })
         .select()
         .single();
+      if (error?.code === 'PGRST204' || error?.code === '42703') {
+        const legacy = await supabase
+          .from('conversations')
+          .insert({ id: conversationId, user_id: userId })
+          .select()
+          .single();
+        created = legacy.data;
+        error = legacy.error;
+      }
       throwSupabaseError(error, 'create conversation');
-      return mapConversation(data);
+      return mapConversation(created);
     });
     if (result.ok) return result.value;
   }
@@ -69,6 +115,11 @@ const createConversation = async (userId) => {
     mainWorker: null,
     mainIntent: null,
     requiresHuman: false,
+    channel: data.channel || 'web',
+    customerEmail: data.customerEmail || '',
+    customerName: data.customerName || '',
+    metadata: data.metadata || {},
+    source: 'memory',
     createdAt: now,
     updatedAt: now,
   };
@@ -80,8 +131,9 @@ const getConversationMessages = async (conversationId, limit = 200) => {
   const safeLimit = clampLimit(limit, 200, 1000);
   if (isSupabaseEnabled()) {
     const result = await trySupabase('get conversation messages', async () => {
+      const messageTable = await getMessageTable();
       const { data, error } = await supabase
-        .from('messages')
+        .from(messageTable)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true })
@@ -94,7 +146,7 @@ const getConversationMessages = async (conversationId, limit = 200) => {
   return messages
     .filter((message) => message.conversationId === conversationId)
     .slice(-safeLimit)
-    .map((message) => ({ ...message }));
+    .map((message) => ({ ...message, source: 'memory' }));
 };
 
 const getConversationById = async (conversationId) => {
@@ -130,9 +182,10 @@ const listConversations = async ({
   const safeLimit = clampLimit(limit);
   if (isSupabaseEnabled()) {
     const result = await trySupabase('list conversations', async () => {
+      const messageTable = await getMessageTable();
       let query = supabase
         .from('conversations')
-        .select('*, messages(id)')
+        .select(`*, ${messageTable}(id)`)
         .order('updated_at', { ascending: false })
         .limit(safeLimit);
       if (status) query = query.eq('status', status);
@@ -163,8 +216,9 @@ const getConversationHistory = async (userId, limit = 20) => {
   const safeLimit = clampLimit(limit, 20, 100);
   if (isSupabaseEnabled()) {
     const result = await trySupabase('get conversation history', async () => {
+      const messageTable = await getMessageTable();
       const { data, error } = await supabase
-        .from('messages')
+        .from(messageTable)
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -191,8 +245,9 @@ const addMessage = async ({
 }) => {
   if (isSupabaseEnabled()) {
     const result = await trySupabase('add message', async () => {
+      const messageTable = await getMessageTable();
       const { data, error } = await supabase
-        .from('messages')
+        .from(messageTable)
         .insert({
           conversation_id: conversationId,
           user_id: userId,
@@ -220,6 +275,7 @@ const addMessage = async ({
     worker,
     metadata,
     createdAt: new Date().toISOString(),
+    source: 'memory',
   };
   messages.push(message);
   return { ...message };
@@ -232,16 +288,36 @@ const updateConversation = async (conversationId, data) => {
     main_intent: data.mainIntent ?? data.intent,
     last_message: data.lastMessage,
     requires_human: data.requiresHuman,
+    last_worker: data.mainWorker ?? data.worker,
+    last_intent: data.mainIntent ?? data.intent,
+    metadata: data.metadata,
+  });
+  const legacyChanges = compact({
+    status: data.status,
+    main_worker: data.mainWorker ?? data.worker,
+    main_intent: data.mainIntent ?? data.intent,
+    last_message: data.lastMessage,
+    requires_human: data.requiresHuman,
   });
 
   if (isSupabaseEnabled()) {
     const result = await trySupabase('update conversation', async () => {
-      const { data: updated, error } = await supabase
+      let { data: updated, error } = await supabase
         .from('conversations')
         .update(changes)
         .eq('id', conversationId)
         .select()
         .maybeSingle();
+      if (error?.code === 'PGRST204' || error?.code === '42703') {
+        const legacy = await supabase
+          .from('conversations')
+          .update(legacyChanges)
+          .eq('id', conversationId)
+          .select()
+          .maybeSingle();
+        updated = legacy.data;
+        error = legacy.error;
+      }
       throwSupabaseError(error, 'update conversation');
       return updated ? mapConversation(updated) : null;
     });
@@ -269,6 +345,36 @@ const updateConversation = async (conversationId, data) => {
 const saveConversationSummary = async (conversationId, data) =>
   updateConversation(conversationId, data);
 
+const findResponseByRequestId = async (userId, requestId) => {
+  if (!requestId) return null;
+
+  if (isSupabaseEnabled()) {
+    const result = await trySupabase('find response by request id', async () => {
+      const messageTable = await getMessageTable();
+      const { data, error } = await supabase
+        .from(messageTable)
+        .select('*')
+        .eq('user_id', userId)
+        .eq('role', 'assistant')
+        .contains('metadata', { requestId })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      throwSupabaseError(error, 'find response by request id');
+      return data?.metadata?.responseEnvelope || null;
+    });
+    if (result.ok) return result.value;
+  }
+
+  const existing = [...messages].reverse().find(
+    (message) =>
+      message.userId === userId &&
+      message.role === 'assistant' &&
+      message.metadata?.requestId === requestId,
+  );
+  return existing?.metadata?.responseEnvelope || null;
+};
+
 module.exports = {
   createConversation,
   getConversationById,
@@ -281,4 +387,5 @@ module.exports = {
   updateConversation,
   saveConversation: updateConversation,
   saveConversationSummary,
+  findResponseByRequestId,
 };

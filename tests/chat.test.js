@@ -20,6 +20,7 @@ describe('CornerOps chat API', () => {
     expect(response.body.metadata.orderId).toBe('123');
     expect(response.body.intentCategory).toBe('orders');
     expect(response.body.memorySummary.orderId).toBe('123');
+    expect(response.body.source).toBe('memory');
     const runs = await aiWorkerRunRepository.listWorkerRuns({
       worker: 'ordersWorker',
       intent: 'order_status',
@@ -98,5 +99,23 @@ describe('CornerOps chat API', () => {
     const response = await request(app).get('/api/health');
     expect(response.statusCode).toBe(200);
     expect(response.body.dataSource.mode).toBe('mock');
+  });
+
+  test('replays an idempotent request without duplicating messages', async () => {
+    const userId = `idempotent-${Date.now()}`;
+    const payload = {
+      userId,
+      message: '¿Tienen Tajín disponible?',
+      requestId: `request-${Date.now()}`,
+    };
+    const first = await request(app).post('/api/chat').send(payload);
+    const second = await request(app).post('/api/chat').send(payload);
+    const messages = await request(app).get(
+      `/api/conversations/${first.body.conversationId}/messages`,
+    );
+
+    expect(second.body.conversationId).toBe(first.body.conversationId);
+    expect(second.body.idempotentReplay).toBe(true);
+    expect(messages.body).toHaveLength(2);
   });
 });
