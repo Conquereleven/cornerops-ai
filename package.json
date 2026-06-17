@@ -1,7 +1,7 @@
 {
-  "name": "cornerops-ai-workers",
+  "name": "cornerops-ai",
   "version": "0.1.0",
-  "description": "MVP de CornerOps AI Workers para las operaciones de Cornermex UAE.",
+  "description": "Internal AI operating system for CornerMex operations.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -10,6 +10,8 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "install:all": "npm install && npm --prefix frontend install",
     "build": "npm --prefix frontend run build",
+    "lint": "node scripts/check-syntax.js",
+    "typecheck": "npm --prefix frontend run typecheck",
     "test": "jest --runInBand",
     "test:frontend": "npm --prefix frontend test",
     "test:all": "npm test && npm run test:frontend",

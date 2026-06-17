@@ -1,0 +1,8 @@
+{
+  "id": "tool_fixture",
+  "status": "success",
+  "output": {
+    "draft": true,
+    "message": "Draft created; no external send."
+  }
+}

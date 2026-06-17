@@ -1,9 +1,14 @@
-# CODEX Checkpoint - Sprint 6
+# CODEX Checkpoint - Sprint 7 OpenClaw Foundation
 
 Fecha: 2026-06-17
 
 ## Estado encontrado
 
+- El repositorio privado fue renombrado de `Conquereleven/cornerops-ai-workers`
+  a `Conquereleven/cornerops-ai` conservando historial.
+- `origin` local apunta a `https://github.com/Conquereleven/cornerops-ai.git`.
+- Se creó `develop` desde `main` y la implementación vive en
+  `feature/openclaw-integration`.
 - Sprint 4 y 5 estaban funcionales y comprometidos en `d295c46`.
 - Supabase real ya estaba activo en un entorno independiente.
 - Existían repositories híbridos, memoria, leads, órdenes, catálogo, dashboard,
@@ -13,6 +18,23 @@ Fecha: 2026-06-17
 
 ## Implementado
 
+- Base de integración OpenClaw en `src/integrations/openclaw/` con cliente,
+  adapter, router de canales, políticas, aprobaciones humanas, auditoría y
+  puente de memoria.
+- OpenClaw queda apagado por defecto con `OPENCLAW_ENABLED=false` y en dry run
+  con `OPENCLAW_DRY_RUN=true`.
+- Cliente OpenClaw usa `fetch` nativo con timeout, retry solo idempotente,
+  circuit breaker básico, request IDs y headers configurables.
+- Endpoints internos protegidos para health, mensajes, aprobaciones y audit log.
+- Políticas iniciales: lectura permitida, drafts sin envío, acciones sensibles
+  con aprobación humana y acciones destructivas prohibidas.
+- Documentación nueva en `docs/architecture`, `docs/security`, `docs/runbooks`,
+  `docs/openclaw-integration` y `docs/sprints/ia-en-mexico.md`.
+- README actualizado: CornerOps AI es el sistema operativo interno; OpenClaw es
+  gateway self-hosted multicanal/capa de ejecución controlada.
+- CI en `.github/workflows/ci.yml` para install, lint, typecheck, test y build.
+- Configuración centralizada para variables `OPENCLAW_*`, canales permitidos,
+  auditoría, approvals, dry run y sandbox.
 - Configuración centralizada para lenguaje, modo de workers, seguridad interna,
   Supabase y futuras variables WhatsApp.
 - Clientes Supabase normal y admin con helpers públicos.
@@ -40,6 +62,17 @@ Fecha: 2026-06-17
 - `GET /api/internal/worker-events`
 - `GET/POST /api/webhooks/whatsapp`
 
+## Endpoints OpenClaw Foundation
+
+- `GET /api/openclaw/health`
+- `POST /api/openclaw/messages`
+- `GET /api/openclaw/approvals`
+- `POST /api/openclaw/approvals`
+- `GET /api/openclaw/approvals/:id`
+- `POST /api/openclaw/approvals/:id/approve`
+- `POST /api/openclaw/approvals/:id/reject`
+- `GET /api/openclaw/audit-logs`
+
 ## Fallback
 
 - Sin Supabase: conversaciones y eventos en memoria; catálogo, órdenes, leads y
@@ -49,6 +82,11 @@ Fecha: 2026-06-17
 
 ## Verificación
 
+- Backend: 29 suites, 81 pruebas aprobadas.
+- Frontend: 3 suites, 5 pruebas aprobadas.
+- Lint sintáctico: 93 archivos JavaScript aprobados con `scripts/check-syntax.js`.
+- Typecheck frontend: `tsc --noEmit` aprobado.
+- Build frontend: Vite production build generado correctamente.
 - Backend Sprint 6: 24 suites, 66 pruebas aprobadas.
 - Frontend: 3 suites, 5 pruebas aprobadas.
 - Build frontend: Vite production build generado correctamente.
@@ -66,6 +104,11 @@ Fecha: 2026-06-17
 
 ## Riesgos
 
+- La integración OpenClaw aún no conecta canales reales ni herramientas reales.
+- Las aprobaciones y auditoría están en memoria para esta fase; requieren
+  persistencia antes de producción.
+- Los contratos concretos de una instalación OpenClaw real siguen marcados como
+  supuestos en `docs/openclaw-integration/assumptions.md`.
 - `INTERNAL_API_KEY` sigue siendo una protección inicial, no RBAC.
 - La sincronización de mocks es solo para staging.
 - La migración SQL debe probarse y respaldarse antes de producción.
@@ -73,13 +116,13 @@ Fecha: 2026-06-17
   para persistir eventos remotos; mientras tanto el fallback en memoria opera.
 - El webhook aún no valida firma HMAC ni envía respuestas a Meta.
 - RAG sigue usando keywords, sin embeddings.
-- El checkout local no tiene `git remote`, por lo que no se puede empujar ni
-  abrir PR hasta configurar el repositorio GitHub de destino.
 
-## Sprint 7 recomendado
+## Sprint 8 recomendado
 
 - Migraciones versionadas y pipeline CI/CD para staging.
 - RBAC administrativo y auditoría.
+- Persistencia Supabase para aprobaciones y audit log OpenClaw.
+- Validar contrato real de OpenClaw gateway antes de activar `OPENCLAW_ENABLED`.
 - Firma y envío real de WhatsApp Business.
 - Cola de trabajos y reintentos.
 - Catálogo/inventario real sincronizado.

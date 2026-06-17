@@ -4,6 +4,7 @@ const ivrRoutes = require('./routes/ivr');
 const dataRoutes = require('./routes/data');
 const internalRoutes = require('./routes/internal');
 const whatsappRoutes = require('./routes/whatsapp');
+const openclawRoutes = require('./routes/openclaw');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const env = require('./config/env');
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, x-internal-api-key',
+    'Content-Type, x-internal-api-key, x-request-id, x-correlation-id',
   );
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -30,14 +31,14 @@ app.use(requestLogger);
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    service: 'cornerops-ai-workers',
+    service: 'cornerops-ai',
     dataSource: getDataSourceStatus(),
   });
 });
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    service: 'cornerops-ai-workers',
+    service: 'cornerops-ai',
     dataSource: getDataSourceStatus(),
   });
 });
@@ -45,6 +46,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/chat', chatRoutes);
 app.use('/api/ivr', ivrRoutes);
 app.use('/api/internal', internalRoutes);
+app.use('/api/openclaw', openclawRoutes);
 app.use('/api/webhooks/whatsapp', whatsappRoutes);
 app.use('/api', dataRoutes);
 

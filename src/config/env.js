@@ -16,6 +16,18 @@ const parseEnum = (value, allowed, fallback) =>
     ? String(value).toLowerCase()
     : fallback;
 
+const parseInteger = (value, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) return fallback;
+  return parsed;
+};
+
+const parseCsv = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
@@ -43,6 +55,39 @@ const baseEnv = {
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET || '',
+  openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
+  openclawBaseUrl:
+    process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
+  openclawGatewayToken: process.env.OPENCLAW_GATEWAY_TOKEN || '',
+  openclawGatewayPassword: process.env.OPENCLAW_GATEWAY_PASSWORD || '',
+  openclawDefaultModel:
+    process.env.OPENCLAW_DEFAULT_MODEL || 'openclaw/default',
+  openclawTimeoutMs: parseInteger(process.env.OPENCLAW_TIMEOUT_MS, 30000, {
+    min: 1000,
+    max: 120000,
+  }),
+  openclawMaxRetries: parseInteger(process.env.OPENCLAW_MAX_RETRIES, 2, {
+    min: 0,
+    max: 5,
+  }),
+  openclawDryRun:
+    process.env.OPENCLAW_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_DRY_RUN),
+  openclawRequireApproval:
+    process.env.OPENCLAW_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_REQUIRE_APPROVAL),
+  openclawAuditEnabled:
+    process.env.OPENCLAW_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_AUDIT_ENABLED),
+  openclawSandboxMode: process.env.OPENCLAW_SANDBOX_MODE || 'non-main',
+  openclawAllowedChannels: parseCsv(
+    process.env.OPENCLAW_ALLOWED_CHANNELS || 'whatsapp,telegram,slack',
+  ),
+  openclawAllowedUsers: parseCsv(process.env.OPENCLAW_ALLOWED_USERS),
+  openclawAllowedTools: parseCsv(process.env.OPENCLAW_ALLOWED_TOOLS),
 };
 
 const getEnvWarnings = () => {
@@ -63,6 +108,16 @@ const getEnvWarnings = () => {
     !baseEnv.allowInternalNoKey
   ) {
     warnings.push('INTERNAL_API_KEY is missing; internal endpoints will remain locked.');
+  }
+  if (baseEnv.openclawEnabled && baseEnv.openclawDryRun) {
+    warnings.push('OPENCLAW_ENABLED=true while OPENCLAW_DRY_RUN=true; tool execution will remain simulated.');
+  }
+  if (
+    baseEnv.openclawEnabled &&
+    !baseEnv.openclawGatewayToken &&
+    !baseEnv.openclawGatewayPassword
+  ) {
+    warnings.push('OPENCLAW_ENABLED=true without gateway auth; only use this on trusted localhost.');
   }
   return warnings;
 };

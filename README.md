@@ -1,10 +1,13 @@
-# CórnerOps AI Workers
+# CornerOps AI
 
-Command Center y backend de AI Workers 24/7 para Cornermex UAE. Atiende
-soporte, ventas retail, órdenes y captación B2B en español o inglés. Opera con
-Supabase real o fallbacks deterministas, sin depender de OpenAI para responder.
+CornerOps AI is the internal AI operating system for CornerMex. It coordinates
+business operations, agents, workflows, memory, tools, integrations and
+human-approved automation. OpenClaw is integrated only as a self-hosted
+multi-channel gateway and controlled execution layer.
 
-## Estado Sprint 6
+CornerOps AI is the brain. OpenClaw is the gateway.
+
+## Estado Actual
 
 - Orquestador ES/EN con workers de soporte, ventas, órdenes, B2B y handoff.
 - Memoria conversacional, extracción de entidades e idempotencia por
@@ -17,6 +20,8 @@ Supabase real o fallbacks deterministas, sin depender de OpenAI para responder.
 - Adapter y webhook WhatsApp placeholder, sin envío externo a Meta.
 - Command Center responsive servido por Express después del build.
 - OpenAI opcional, limitado a hechos verificados y con fallback local.
+- OpenClaw foundation en modo seguro: desactivado/dry-run por defecto, router
+  multicanal, policies, approvals y audit logs.
 
 ## Inicio rápido
 
@@ -63,12 +68,28 @@ WHATSAPP_VERIFY_TOKEN=
 WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_API_VERSION=v23.0
+
+OPENCLAW_ENABLED=false
+OPENCLAW_BASE_URL=http://127.0.0.1:18789
+OPENCLAW_GATEWAY_TOKEN=
+OPENCLAW_GATEWAY_PASSWORD=
+OPENCLAW_DEFAULT_MODEL=openclaw/default
+OPENCLAW_TIMEOUT_MS=30000
+OPENCLAW_MAX_RETRIES=2
+OPENCLAW_DRY_RUN=true
+OPENCLAW_REQUIRE_APPROVAL=true
+OPENCLAW_AUDIT_ENABLED=true
+OPENCLAW_ALLOWED_CHANNELS=whatsapp,telegram,slack
+OPENCLAW_ALLOWED_USERS=
+OPENCLAW_ALLOWED_TOOLS=
+OPENCLAW_SANDBOX_MODE=non-main
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY`, `INTERNAL_API_KEY` y los tokens de WhatsApp son
 secretos de servidor. No deben exponerse como variables `VITE_*`, incluirse en
 logs ni comprometerse en Git. `AI_WORKERS_MODE=mock` desactiva Supabase y
 OpenAI; `hybrid` usa los proveedores configurados con fallback local.
+OpenClaw inicia apagado y en dry run para evitar ejecuciones reales.
 
 ## Supabase
 
@@ -141,6 +162,11 @@ mensajes. Sin Supabase, `source` será `memory`.
 | `GET` | `/api/conversations`, `/api/conversations/:id` | Conversaciones |
 | `GET` | `/api/worker-runs` | Ejecuciones de workers |
 | `GET/POST` | `/api/webhooks/whatsapp` | Verificación y entrada WhatsApp |
+| `GET` | `/api/openclaw/health` | Health OpenClaw protegido |
+| `POST` | `/api/openclaw/messages` | Entrada OpenClaw dry-run protegida |
+| `GET/POST` | `/api/openclaw/approvals` | Aprobaciones humanas |
+| `POST` | `/api/openclaw/approvals/:id/approve` | Aprobar acción |
+| `POST` | `/api/openclaw/approvals/:id/reject` | Rechazar acción |
 
 El Command Center usa también `/api/dashboard`, `/api/workers`, `/api/events`,
 `/api/handoffs`, `/api/integrations` y `/api/settings`.
@@ -168,12 +194,16 @@ Fuera de tests requiere `x-internal-api-key: <INTERNAL_API_KEY>`.
 - Sin Supabase: conversaciones/eventos en memoria y datos de negocio en mocks.
 - Sin OpenAI: respuestas deterministas basadas en los hechos de repositories.
 - Sin WhatsApp: webhook local funcional, sin firma HMAC ni llamadas a Meta.
+- Sin OpenClaw o con dry run: no se ejecutan herramientas externas; se devuelve
+  fallback seguro y se audita la decisión.
 - Ningún worker inventa precio, stock, estado de orden o fecha de entrega.
 
 ## Validación
 
 ```bash
 npm test
+npm run lint
+npm run typecheck
 npm run test:frontend
 npm run test:all
 npm run build
@@ -189,6 +219,7 @@ src/
 ├── config/                 # Entorno y clientes Supabase
 ├── controllers/            # Contrato HTTP
 ├── data/repositories/      # Supabase + fallback local
+├── integrations/openclaw/  # Gateway, policies, approvals, audit
 ├── middleware/             # Logging, errores y auth interna
 ├── routes/                 # Chat, IVR, datos, internos y webhooks
 └── services/
@@ -203,16 +234,21 @@ frontend/                   # Command Center React + Vite
 docs/                       # Runbooks y roadmaps
 ```
 
-## Sprint 7 recomendado
+## OpenClaw
 
-- Migraciones versionadas y CI/CD de staging.
-- Auth administrativa, RBAC y auditoría.
-- Firma HMAC, envío real y reintentos de WhatsApp Business.
-- Cola de trabajos para procesos asíncronos.
-- Sincronización de catálogo e inventario productivos.
-- RAG híbrido con pgvector y evaluaciones.
-- Analytics de calidad, conversión, costo y latencia.
+La integración OpenClaw vive en `src/integrations/openclaw` y se documenta en
+`docs/openclaw-integration`. Su rol es conectar canales y herramientas con
+CornerOps sin mover la lógica de negocio fuera de CornerOps.
+
+Prioridades siguientes:
+
+- Persistir approvals y audit logs.
+- Agregar UI de aprobaciones al Command Center.
+- Conectar Slack sandbox con allowlist.
+- Preparar WhatsApp/Telegram reales con firma y permisos.
+- Añadir RBAC administrativo.
 
 Consulta [`CODEX_CHECKPOINT.md`](CODEX_CHECKPOINT.md),
+[`docs/openclaw-integration/architecture.md`](docs/openclaw-integration/architecture.md),
 [`docs/whatsapp-roadmap.md`](docs/whatsapp-roadmap.md) y
 [`docs/rag-roadmap.md`](docs/rag-roadmap.md).

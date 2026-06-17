@@ -1,0 +1,7 @@
+{
+  "channel": "whatsapp",
+  "from": "buyer-971500000000",
+  "text": "Resume correos de proveedores y prepara respuestas.",
+  "requestId": "wamid.fixture.1",
+  "actionType": "draft_supplier_reply"
+}

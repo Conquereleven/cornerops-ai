@@ -1,0 +1,11 @@
+{
+  "id": "chatcmpl_fixture",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Resumen preparado en modo controlado."
+      }
+    }
+  ]
+}

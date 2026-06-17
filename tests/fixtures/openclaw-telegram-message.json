@@ -1,0 +1,8 @@
+{
+  "channel": "telegram",
+  "userId": "telegram-123",
+  "message": "Dame mi briefing de hoy.",
+  "telegramChatId": "chat-123",
+  "requestId": "telegram.fixture.1",
+  "actionType": "daily_briefing"
+}
