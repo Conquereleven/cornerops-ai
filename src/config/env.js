@@ -55,6 +55,29 @@ const baseEnv = {
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET || '',
+  corneropsAgentsEnabled:
+    process.env.CORNEROPS_AGENTS_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AGENTS_ENABLED),
+  corneropsAgentPackVersion:
+    process.env.CORNEROPS_AGENT_PACK_VERSION || 'v0.1',
+  corneropsDefaultAgent:
+    process.env.CORNEROPS_DEFAULT_AGENT || 'cornerops-router-agent',
+  corneropsDryRun:
+    process.env.CORNEROPS_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DRY_RUN),
+  corneropsRequireApproval:
+    process.env.CORNEROPS_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL),
+  corneropsAuditEnabled:
+    process.env.CORNEROPS_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AUDIT_ENABLED),
+  corneropsAgentEnabledIds: parseCsv(process.env.CORNEROPS_AGENT_ENABLED_IDS),
+  corneropsAgentDisabledIds: parseCsv(process.env.CORNEROPS_AGENT_DISABLED_IDS),
+  corneropsAgentAllowedUsers: parseCsv(process.env.CORNEROPS_AGENT_ALLOWED_USERS),
   openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
   openclawBaseUrl:
     process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
@@ -111,6 +134,12 @@ const getEnvWarnings = () => {
   }
   if (baseEnv.openclawEnabled && baseEnv.openclawDryRun) {
     warnings.push('OPENCLAW_ENABLED=true while OPENCLAW_DRY_RUN=true; tool execution will remain simulated.');
+  }
+  if (baseEnv.corneropsAgentsEnabled && baseEnv.corneropsDryRun) {
+    warnings.push('CORNEROPS_AGENTS_ENABLED=true while CORNEROPS_DRY_RUN=true; agent execution will remain simulated.');
+  }
+  if (!baseEnv.corneropsRequireApproval) {
+    warnings.push('CORNEROPS_REQUIRE_APPROVAL=false; only use this in isolated tests.');
   }
   if (
     baseEnv.openclawEnabled &&

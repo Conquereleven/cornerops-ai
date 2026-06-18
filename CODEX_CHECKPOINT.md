@@ -1,6 +1,6 @@
-# CODEX Checkpoint - Sprint 7 OpenClaw Foundation
+# CODEX Checkpoint - Sprint 8 Core Agent Pack v0.1
 
-Fecha: 2026-06-17
+Fecha: 2026-06-18
 
 ## Estado encontrado
 
@@ -9,6 +9,8 @@ Fecha: 2026-06-17
 - `origin` local apunta a `https://github.com/Conquereleven/cornerops-ai.git`.
 - Se creó `develop` desde `main` y la implementación vive en
   `feature/openclaw-integration`.
+- La fase Core Agent Pack v0.1 vive en `feature/core-agent-pack-v0.1` y parte
+  de la base OpenClaw porque `main` aún no contiene el PR del foundation.
 - Sprint 4 y 5 estaban funcionales y comprometidos en `d295c46`.
 - Supabase real ya estaba activo en un entorno independiente.
 - Existían repositories híbridos, memoria, leads, órdenes, catálogo, dashboard,
@@ -35,6 +37,19 @@ Fecha: 2026-06-17
 - CI en `.github/workflows/ci.yml` para install, lint, typecheck, test y build.
 - Configuración centralizada para variables `OPENCLAW_*`, canales permitidos,
   auditoría, approvals, dry run y sandbox.
+- Core Agent Pack v0.1 en `src/core` con AgentRegistry, AgentOrchestrator,
+  AgentPermissionPolicy, WorkflowRegistry, AgentMemoryService y
+  AgentAuditService.
+- Seis agentes internos: `cornerops-router-agent`, `daily-briefing-agent`,
+  `b2b-sales-agent`, `quotes-orders-agent`, `dev-codex-github-agent` y
+  `security-audit-agent`.
+- Prompts base por agente en `src/core/agents/prompts`.
+- Routing determinístico por intención para briefing, B2B, quotes/orders,
+  GitHub/Codex y seguridad/auditoría.
+- `POST /api/openclaw/messages` mantiene el resultado legacy OpenClaw y agrega
+  `agentResult` del Core Agent Pack.
+- Demo local `npm run demo:agents`, siempre en dry run.
+- Variables `CORNEROPS_*` agregadas con dry run y approvals activos por defecto.
 - Configuración centralizada para lenguaje, modo de workers, seguridad interna,
   Supabase y futuras variables WhatsApp.
 - Clientes Supabase normal y admin con helpers públicos.
@@ -79,12 +94,16 @@ Fecha: 2026-06-17
   clientes usan mocks.
 - Sin OpenAI: templates deterministas.
 - Sin WhatsApp: webhook placeholder, sin llamadas externas.
+- Sin OpenClaw: agentes operan localmente en dry run sin invocar servicios
+  externos.
 
 ## Verificación
 
-- Backend: 29 suites, 81 pruebas aprobadas.
+- Backend: 34 suites, 96 pruebas aprobadas.
 - Frontend: 3 suites, 5 pruebas aprobadas.
-- Lint sintáctico: 93 archivos JavaScript aprobados con `scripts/check-syntax.js`.
+- Core Agent Pack focalizado: 5 suites, 15 pruebas aprobadas dentro del total.
+- Demo `npm run demo:agents` aprobada en dry run.
+- Lint sintáctico: 118 archivos JavaScript aprobados con `scripts/check-syntax.js`.
 - Typecheck frontend: `tsc --noEmit` aprobado.
 - Build frontend: Vite production build generado correctamente.
 - Backend Sprint 6: 24 suites, 66 pruebas aprobadas.
@@ -107,6 +126,11 @@ Fecha: 2026-06-17
 - La integración OpenClaw aún no conecta canales reales ni herramientas reales.
 - Las aprobaciones y auditoría están en memoria para esta fase; requieren
   persistencia antes de producción.
+- La auditoría/memoria específica de agentes está en memoria para v0.1.
+- El routing de v0.1 es determinístico por keywords; requiere evaluaciones y
+  posible router model-backed antes de producción a escala.
+- `feature/core-agent-pack-v0.1` está apilada sobre
+  `feature/openclaw-integration` hasta que el foundation sea mergeado.
 - Los contratos concretos de una instalación OpenClaw real siguen marcados como
   supuestos en `docs/openclaw-integration/assumptions.md`.
 - `INTERNAL_API_KEY` sigue siendo una protección inicial, no RBAC.
@@ -117,11 +141,13 @@ Fecha: 2026-06-17
 - El webhook aún no valida firma HMAC ni envía respuestas a Meta.
 - RAG sigue usando keywords, sin embeddings.
 
-## Sprint 8 recomendado
+## Sprint 9 recomendado
 
 - Migraciones versionadas y pipeline CI/CD para staging.
 - RBAC administrativo y auditoría.
 - Persistencia Supabase para aprobaciones y audit log OpenClaw.
+- Persistencia Supabase para `agent_audit` y memoria operativa de agentes.
+- UI de approvals y agente seleccionado en el Command Center.
 - Validar contrato real de OpenClaw gateway antes de activar `OPENCLAW_ENABLED`.
 - Firma y envío real de WhatsApp Business.
 - Cola de trabajos y reintentos.

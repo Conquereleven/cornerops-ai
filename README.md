@@ -22,6 +22,8 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - OpenAI opcional, limitado a hechos verificados y con fallback local.
 - OpenClaw foundation en modo seguro: desactivado/dry-run por defecto, router
   multicanal, policies, approvals y audit logs.
+- CornerOps Core Agent Pack v0.1 con seis agentes internos, routing por
+  intención, permisos por agente, dry run, approvals y auditoría.
 
 ## Inicio rápido
 
@@ -64,6 +66,16 @@ ALLOW_INTERNAL_NO_KEY=false
 AI_DEFAULT_LANGUAGE=es
 AI_WORKERS_MODE=hybrid
 
+CORNEROPS_AGENTS_ENABLED=true
+CORNEROPS_AGENT_PACK_VERSION=v0.1
+CORNEROPS_DEFAULT_AGENT=cornerops-router-agent
+CORNEROPS_DRY_RUN=true
+CORNEROPS_REQUIRE_APPROVAL=true
+CORNEROPS_AUDIT_ENABLED=true
+CORNEROPS_AGENT_ENABLED_IDS=
+CORNEROPS_AGENT_DISABLED_IDS=
+CORNEROPS_AGENT_ALLOWED_USERS=
+
 WHATSAPP_VERIFY_TOKEN=
 WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_PHONE_NUMBER_ID=
@@ -90,6 +102,8 @@ secretos de servidor. No deben exponerse como variables `VITE_*`, incluirse en
 logs ni comprometerse en Git. `AI_WORKERS_MODE=mock` desactiva Supabase y
 OpenAI; `hybrid` usa los proveedores configurados con fallback local.
 OpenClaw inicia apagado y en dry run para evitar ejecuciones reales.
+Los agentes de CornerOps inician en dry run y requieren aprobación humana para
+acciones sensibles.
 
 ## Supabase
 
@@ -207,6 +221,7 @@ npm run typecheck
 npm run test:frontend
 npm run test:all
 npm run build
+npm run demo:agents
 ```
 
 Las pruebas fuerzan modo local y no llaman servicios externos.
@@ -218,6 +233,7 @@ src/
 ├── adapters/               # Contratos de canales como WhatsApp
 ├── config/                 # Entorno y clientes Supabase
 ├── controllers/            # Contrato HTTP
+├── core/                   # Agent Pack, workflows, policies, audit, memory
 ├── data/repositories/      # Supabase + fallback local
 ├── integrations/openclaw/  # Gateway, policies, approvals, audit
 ├── middleware/             # Logging, errores y auth interna
@@ -233,6 +249,33 @@ supabase/                   # Esquema y seed de staging
 frontend/                   # Command Center React + Vite
 docs/                       # Runbooks y roadmaps
 ```
+
+## Core Agent Pack v0.1
+
+El primer paquete operativo vive en `src/core`:
+
+- `cornerops-router-agent`
+- `daily-briefing-agent`
+- `b2b-sales-agent`
+- `quotes-orders-agent`
+- `dev-codex-github-agent`
+- `security-audit-agent`
+
+Todo corre en dry run por defecto. Los agentes pueden preparar resúmenes,
+drafts, propuestas y approvals, pero no envían mensajes, no crean issues reales,
+no cambian órdenes y no marcan pagos sin aprobación humana.
+
+Demo local:
+
+```bash
+npm run demo:agents
+```
+
+Documentación:
+
+- [`docs/architecture/agents.md`](docs/architecture/agents.md)
+- [`docs/architecture/workflows.md`](docs/architecture/workflows.md)
+- [`docs/runbooks/core-agent-pack-v0.1.md`](docs/runbooks/core-agent-pack-v0.1.md)
 
 ## OpenClaw
 

@@ -12,6 +12,7 @@
     "build": "npm --prefix frontend run build",
     "lint": "node scripts/check-syntax.js",
     "typecheck": "npm --prefix frontend run typecheck",
+    "demo:agents": "node scripts/demo-agents.js",
     "test": "jest --runInBand",
     "test:frontend": "npm --prefix frontend test",
     "test:all": "npm test && npm run test:frontend",

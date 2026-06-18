@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-quote",
+  "conversationId": "slack-orders",
+  "userId": "U5",
+  "channel": "slack",
+  "text": "Marca esta orden como pagada",
+  "metadata": {
+    "source": "fixture"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-briefing",
+  "conversationId": "whatsapp-u1",
+  "userId": "U1",
+  "channel": "whatsapp",
+  "text": "Dame mi briefing de hoy",
+  "metadata": {
+    "source": "fixture"
+  }
+}

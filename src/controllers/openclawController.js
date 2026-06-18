@@ -6,6 +6,7 @@ const {
   config,
   humanApprovalService,
 } = require('../integrations/openclaw');
+const { agentOrchestrator } = require('../core/agents');
 
 const health = async (req, res, next) => {
   try {
@@ -32,8 +33,9 @@ const receiveMessage = async (req, res, next) => {
       requestId: req.body.requestId || req.get('x-request-id'),
       correlationId: req.body.correlationId || req.get('x-correlation-id'),
     });
+    const agentResult = await agentOrchestrator.handleMessage(routed);
     const result = await adapter.handleMessage(routed);
-    return res.json({ routed, result });
+    return res.json({ routed, result, agentResult });
   } catch (error) {
     return next(error);
   }

@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-b2b",
+  "conversationId": "telegram-u2",
+  "userId": "U2",
+  "channel": "telegram",
+  "text": "Prepara follow-up para un restaurante interesado en Tajín y Pulparindo",
+  "metadata": {
+    "source": "fixture"
+  }
+}
