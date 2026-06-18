@@ -1,0 +1,4 @@
+-- CornerOps real-data foundation v0.1 proposed schema.
+-- This file is documentation-only in this phase. Do not run automatically.
+-- Tables proposed for a future migration: leads, quotes, orders, audit_logs,
+-- approvals, github_events, data_sync_runs.

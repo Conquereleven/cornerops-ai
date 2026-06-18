@@ -4,7 +4,7 @@ class BaseAgent {
     this.prompt = prompt;
   }
 
-  render({ input, route, proposedActions = [] }) {
+  render({ input, route, proposedActions = [], dataSnapshot }) {
     const actionLines = proposedActions.length
       ? proposedActions.map((action) => `- ${action.label}`).join('\n')
       : '- Sin acciones externas propuestas.';
@@ -14,6 +14,7 @@ class BaseAgent {
     return [
       '## Resultado',
       this.resultText(input, route),
+      this.dataSnapshotText(dataSnapshot),
       '',
       '## Acciones sugeridas',
       actionLines,
@@ -27,6 +28,18 @@ class BaseAgent {
       '## Siguiente paso recomendado',
       this.nextStepText(route),
     ].join('\n');
+  }
+
+  dataSnapshotText(dataSnapshot) {
+    if (!dataSnapshot) return '';
+    const lines = [];
+    if (dataSnapshot.summary) lines.push('', dataSnapshot.summary);
+    if (dataSnapshot.metrics) {
+      lines.push('', `Datos consultados: ${Object.entries(dataSnapshot.metrics)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(', ')}.`);
+    }
+    return lines.join('\n');
   }
 
   resultText(input, route) {

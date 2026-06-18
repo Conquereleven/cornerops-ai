@@ -1,0 +1,6 @@
+[
+  { "id": "skill-read-github", "name": "Read GitHub metadata", "source": "internal", "status": "approved", "riskLevel": "low", "permissions": ["read_github"] },
+  { "id": "skill-run-command", "name": "Run shell command", "source": "clawhub", "status": "proposed", "riskLevel": "critical", "permissions": ["command_execution", "filesystem"] },
+  { "id": "skill-browser-automation", "name": "Browser automation", "source": "clawhub", "status": "reviewed", "riskLevel": "high", "permissions": ["browser", "network"] },
+  { "id": "skill-disabled-secrets", "name": "Secret scanner with write access", "source": "clawhub", "status": "disabled", "riskLevel": "critical", "permissions": ["secret_access", "filesystem"] }
+]

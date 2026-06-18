@@ -24,6 +24,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
   multicanal, policies, approvals y audit logs.
 - CornerOps Core Agent Pack v0.1 con seis agentes internos, routing por
   intención, permisos por agente, dry run, approvals y auditoría.
+- Real Data + OpenClaw Ecosystem v0.1 con datos canonicos mock/read-only,
+  tools internas para agentes, GitHub dry-run, data health, audit logs
+  sanitizados y adapters controlados para servicios OpenClaw.
 
 ## Inicio rápido
 
@@ -75,6 +78,12 @@ CORNEROPS_AUDIT_ENABLED=true
 CORNEROPS_AGENT_ENABLED_IDS=
 CORNEROPS_AGENT_DISABLED_IDS=
 CORNEROPS_AGENT_ALLOWED_USERS=
+CORNEROPS_REAL_DATA_ENABLED=false
+CORNEROPS_DATA_MODE=mock
+CORNEROPS_ALLOWED_DATA_SOURCES=leads,quotes,orders,github,audit_logs,approvals,agent_logs,sync_status
+CORNEROPS_SYNC_ENABLED=false
+CORNEROPS_SYNC_INTERVAL_MINUTES=15
+CORNEROPS_DATABASE_PROVIDER=
 
 WHATSAPP_VERIFY_TOKEN=
 WHATSAPP_ACCESS_TOKEN=
@@ -95,6 +104,24 @@ OPENCLAW_ALLOWED_CHANNELS=whatsapp,telegram,slack
 OPENCLAW_ALLOWED_USERS=
 OPENCLAW_ALLOWED_TOOLS=
 OPENCLAW_SANDBOX_MODE=non-main
+
+GITHUB_ENABLED=false
+GITHUB_DRY_RUN=true
+GITHUB_TOKEN=
+GITHUB_OWNER=Conquereleven
+GITHUB_REPO=cornerops-ai
+GITHUB_WEBHOOK_SECRET=
+
+OPENCLAW_ECOSYSTEM_ENABLED=false
+CRABOX_ENABLED=false
+CRABOX_DRY_RUN=true
+OCTOPOOL_ENABLED=false
+OCTOPOOL_DRY_RUN=true
+CLAWHUB_ENABLED=false
+CLAWHUB_READ_ONLY=true
+CLAWHUB_ALLOWLIST_ONLY=true
+LOBSTER_ENABLED=false
+LOBSTER_DRY_RUN=true
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY`, `INTERNAL_API_KEY` y los tokens de WhatsApp son
@@ -172,7 +199,14 @@ mensajes. Sin Supabase, `source` será `memory`.
 | `GET` | `/api/products`, `/api/products/search?q=` | Catálogo |
 | `GET` | `/api/products/:sku` | Producto por SKU |
 | `GET` | `/api/orders`, `/api/orders/:orderNumber` | Órdenes |
+| `GET` | `/api/orders/requiring-action`, `/api/orders/manual-payments` | Órdenes que requieren acción |
 | `GET/PATCH` | `/api/leads`, `/api/leads/:id` | Leads B2B |
+| `GET` | `/api/leads/follow-up` | Leads que requieren seguimiento |
+| `GET` | `/api/quotes`, `/api/quotes/follow-up` | Quotes mock/read-only |
+| `GET` | `/api/github/issues`, `/api/github/pull-requests`, `/api/github/workflow-runs` | GitHub mock/read-only |
+| `POST` | `/api/github/issues/draft` | Draft de issue sin escritura real |
+| `GET` | `/api/audit-logs`, `/api/approvals`, `/api/data-health` | Torre de control |
+| `GET` | `/api/openclaw-ecosystem/services`, `/api/openclaw-ecosystem/skills` | Ecosistema OpenClaw controlado |
 | `GET` | `/api/conversations`, `/api/conversations/:id` | Conversaciones |
 | `GET` | `/api/worker-runs` | Ejecuciones de workers |
 | `GET/POST` | `/api/webhooks/whatsapp` | Verificación y entrada WhatsApp |
@@ -222,6 +256,9 @@ npm run test:frontend
 npm run test:all
 npm run build
 npm run demo:agents
+npm run demo:real-data
+npm run demo:ecosystem
+npm run demo:cornerops-control-tower
 ```
 
 Las pruebas fuerzan modo local y no llaman servicios externos.

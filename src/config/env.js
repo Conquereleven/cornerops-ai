@@ -78,6 +78,24 @@ const baseEnv = {
   corneropsAgentEnabledIds: parseCsv(process.env.CORNEROPS_AGENT_ENABLED_IDS),
   corneropsAgentDisabledIds: parseCsv(process.env.CORNEROPS_AGENT_DISABLED_IDS),
   corneropsAgentAllowedUsers: parseCsv(process.env.CORNEROPS_AGENT_ALLOWED_USERS),
+  corneropsRealDataEnabled: parseBoolean(process.env.CORNEROPS_REAL_DATA_ENABLED),
+  corneropsDataMode: parseEnum(
+    process.env.CORNEROPS_DATA_MODE,
+    ['mock', 'read_only', 'draft_only', 'approval_required', 'write_enabled'],
+    'mock',
+  ),
+  corneropsAllowedDataSources: parseCsv(
+    process.env.CORNEROPS_ALLOWED_DATA_SOURCES
+      || 'leads,quotes,orders,github,audit_logs,approvals,agent_logs,sync_status',
+  ),
+  corneropsSyncEnabled: parseBoolean(process.env.CORNEROPS_SYNC_ENABLED),
+  corneropsSyncIntervalMinutes: parseInteger(
+    process.env.CORNEROPS_SYNC_INTERVAL_MINUTES,
+    15,
+    { min: 1, max: 1440 },
+  ),
+  corneropsDatabaseProvider: process.env.CORNEROPS_DATABASE_PROVIDER || '',
+  databaseUrl: process.env.DATABASE_URL || '',
   openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
   openclawBaseUrl:
     process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
@@ -111,6 +129,56 @@ const baseEnv = {
   ),
   openclawAllowedUsers: parseCsv(process.env.OPENCLAW_ALLOWED_USERS),
   openclawAllowedTools: parseCsv(process.env.OPENCLAW_ALLOWED_TOOLS),
+  githubEnabled: parseBoolean(process.env.GITHUB_ENABLED),
+  githubDryRun:
+    process.env.GITHUB_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GITHUB_DRY_RUN),
+  githubToken: process.env.GITHUB_TOKEN || '',
+  githubOwner: process.env.GITHUB_OWNER || '',
+  githubRepo: process.env.GITHUB_REPO || 'cornerops-ai',
+  githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
+  githubApiVersion: process.env.GITHUB_API_VERSION || '2026-03-10',
+  openclawEcosystemEnabled: parseBoolean(process.env.OPENCLAW_ECOSYSTEM_ENABLED),
+  craboxEnabled: parseBoolean(process.env.CRABOX_ENABLED),
+  craboxDryRun:
+    process.env.CRABOX_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CRABOX_DRY_RUN),
+  octopoolEnabled: parseBoolean(process.env.OCTOPOOL_ENABLED),
+  octopoolDryRun:
+    process.env.OCTOPOOL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OCTOPOOL_DRY_RUN),
+  clawhubEnabled: parseBoolean(process.env.CLAWHUB_ENABLED),
+  clawhubReadOnly:
+    process.env.CLAWHUB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CLAWHUB_READ_ONLY),
+  clawhubAllowlistOnly:
+    process.env.CLAWHUB_ALLOWLIST_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CLAWHUB_ALLOWLIST_ONLY),
+  lobsterEnabled: parseBoolean(process.env.LOBSTER_ENABLED),
+  lobsterDryRun:
+    process.env.LOBSTER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.LOBSTER_DRY_RUN),
+  clawsweeperEnabled: parseBoolean(process.env.CLAWSWEEPER_ENABLED),
+  clawsweeperDryRun:
+    process.env.CLAWSWEEPER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWSWEEPER_DRY_RUN),
+  crabfleetEnabled: parseBoolean(process.env.CRABFLEET_ENABLED),
+  crabfleetDryRun:
+    process.env.CRABFLEET_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CRABFLEET_DRY_RUN),
+  clickclackEnabled: parseBoolean(process.env.CLICKCLACK_ENABLED),
+  clickclackDryRun:
+    process.env.CLICKCLACK_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLICKCLACK_DRY_RUN),
 };
 
 const getEnvWarnings = () => {
@@ -140,6 +208,18 @@ const getEnvWarnings = () => {
   }
   if (!baseEnv.corneropsRequireApproval) {
     warnings.push('CORNEROPS_REQUIRE_APPROVAL=false; only use this in isolated tests.');
+  }
+  if (baseEnv.corneropsDataMode === 'write_enabled' && baseEnv.corneropsDryRun) {
+    warnings.push('CORNEROPS_DATA_MODE=write_enabled while CORNEROPS_DRY_RUN=true; writes will remain blocked.');
+  }
+  if (baseEnv.githubEnabled && !baseEnv.githubToken) {
+    warnings.push('GITHUB_ENABLED=true but GITHUB_TOKEN is missing; GitHub integration will use mock/dry-run data.');
+  }
+  if (baseEnv.githubEnabled && baseEnv.githubDryRun) {
+    warnings.push('GITHUB_ENABLED=true while GITHUB_DRY_RUN=true; issue creation will remain simulated.');
+  }
+  if (baseEnv.openclawEcosystemEnabled && baseEnv.openclawDryRun) {
+    warnings.push('OPENCLAW_ECOSYSTEM_ENABLED=true while OpenClaw dry run flags are active; ecosystem calls are simulated.');
   }
   if (
     baseEnv.openclawEnabled &&

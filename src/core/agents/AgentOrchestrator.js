@@ -24,6 +24,7 @@ class AgentOrchestrator {
     openclawConfig,
     permissionPolicy,
     registry,
+    tools,
   }) {
     this.auditService = auditService;
     this.config = config;
@@ -33,6 +34,7 @@ class AgentOrchestrator {
     this.openclawConfig = openclawConfig;
     this.permissionPolicy = permissionPolicy;
     this.registry = registry;
+    this.tools = tools || {};
   }
 
   async handleMessage(input) {
@@ -62,6 +64,8 @@ class AgentOrchestrator {
       return output;
     }
 
+    const dataSnapshot = await this.buildDataSnapshot(agent, normalizedInput);
+
     if (policy.requiresApproval) {
       const approval = this.humanApprovalService.createApproval({
         actionType: proposedActions[0]?.type || route.intent,
@@ -79,13 +83,14 @@ class AgentOrchestrator {
         toolName: proposedActions[0]?.toolName,
       });
       const responseText = new BaseAgent({ definition: agent, prompt })
-        .render({ input: normalizedInput, route, proposedActions });
+        .render({ input: normalizedInput, route, proposedActions, dataSnapshot });
       const output = this.output({
         agentId: agent.id,
         status: AGENT_STATUSES.NEEDS_APPROVAL,
         responseText,
         proposedActions,
         approvalId: approval.id,
+        dataSnapshot,
       });
       this.audit(normalizedInput, route, policy, output, proposedActions, approval.id);
       this.memoryService.remember(normalizedInput, output);
@@ -99,12 +104,13 @@ class AgentOrchestrator {
       this.openclawConfig?.dryRun
     ) {
       const responseText = new BaseAgent({ definition: agent, prompt })
-        .render({ input: normalizedInput, route, proposedActions });
+        .render({ input: normalizedInput, route, proposedActions, dataSnapshot });
       const output = this.output({
         agentId: agent.id,
         status: AGENT_STATUSES.DRY_RUN,
         responseText,
         proposedActions,
+        dataSnapshot,
       });
       this.audit(normalizedInput, route, policy, output, proposedActions);
       this.memoryService.remember(normalizedInput, output);
@@ -127,6 +133,7 @@ class AgentOrchestrator {
         status: AGENT_STATUSES.SUCCESS,
         responseText: openclawResult.reply,
         proposedActions,
+        dataSnapshot,
       });
       this.audit(normalizedInput, route, policy, output, proposedActions);
       this.memoryService.remember(normalizedInput, output);
@@ -137,6 +144,7 @@ class AgentOrchestrator {
         status: AGENT_STATUSES.ERROR,
         responseText: 'OpenClaw no respondió; CornerOps conserva control y no ejecutó acciones.',
         proposedActions,
+        dataSnapshot,
         errorCode: error.code || 'AGENT_OPENCLAW_ERROR',
       });
       this.audit(normalizedInput, route, policy, output, proposedActions, undefined, error);
@@ -163,7 +171,10 @@ class AgentOrchestrator {
     if (hasAny(text, ['seguridad', 'security', 'audit', 'auditoria', 'logs', 'rechazad', 'riesgo', 'permisos'])) {
       return this.route(AGENT_IDS.SECURITY_AUDIT, 'security_audit', 0.94, 'Security/audit intent detected.', RISK_LEVELS.LOW);
     }
-    if (hasAny(text, ['github', 'codex', 'issue', 'pull request', ' pr ', 'bug', 'ci', 'branch', 'rama', 'documentacion tecnica'])) {
+    if (
+      hasAny(text, ['github', 'codex', 'issue', 'pull request', ' pr ', 'bug', 'branch', 'rama', 'documentacion tecnica'])
+      || /\bci\b/.test(text)
+    ) {
       const risk = hasAny(text, ['crea', 'crear', 'create', 'merge', 'deploy'])
         ? RISK_LEVELS.HIGH
         : RISK_LEVELS.MEDIUM;
@@ -268,13 +279,119 @@ class AgentOrchestrator {
     };
   }
 
-  output({ agentId, status, responseText, proposedActions, approvalId, errorCode }) {
+  async buildDataSnapshot(agent, input) {
+    const run = async (toolName) => {
+      const tool = this.tools[toolName];
+      if (!tool) return null;
+      return tool(input, agent.id);
+    };
+    switch (agent.id) {
+      case AGENT_IDS.DAILY_BRIEFING: {
+        const [
+          leads,
+          followUpLeads,
+          quoteFollowUps,
+          orders,
+          manualPayments,
+          issues,
+          prs,
+          audit,
+          health,
+        ] = await Promise.all([
+          run('readLeadsTool'),
+          run('readLeadsNeedingFollowUpTool'),
+          run('readQuotesNeedingFollowUpTool'),
+          run('readOrdersRequiringActionTool'),
+          run('readManualPaymentOrdersTool'),
+          run('readGitHubIssuesTool'),
+          run('readGitHubPullRequestsTool'),
+          run('readAuditLogsTool'),
+          run('readDataHealthTool'),
+        ]);
+        return this.snapshot('Briefing enriquecido con datos mock/read-only.', {
+          leads: leads?.count || 0,
+          leadsFollowUp: followUpLeads?.count || 0,
+          quotesFollowUp: quoteFollowUps?.count || 0,
+          ordersRequiringAction: orders?.count || 0,
+          manualPayments: manualPayments?.count || 0,
+          githubIssues: issues?.count || 0,
+          githubPRs: prs?.count || 0,
+          auditLogs: audit?.count || 0,
+          dataHealthWarnings: health?.data?.warnings?.length || 0,
+        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health });
+      }
+      case AGENT_IDS.B2B_SALES: {
+        const [leads, followUpLeads, draft] = await Promise.all([
+          run('readLeadsTool'),
+          run('readLeadsNeedingFollowUpTool'),
+          run('draftB2BMessageTool'),
+        ]);
+        return this.snapshot('Sales draft generado con leads mock/read-only.', {
+          leads: leads?.count || 0,
+          leadsFollowUp: followUpLeads?.count || 0,
+        }, { leads, followUpLeads, draft });
+      }
+      case AGENT_IDS.QUOTES_ORDERS: {
+        const [quotes, orders, manualPayments, statusProposal, markPaidProposal] = await Promise.all([
+          run('readQuotesNeedingFollowUpTool'),
+          run('readOrdersRequiringActionTool'),
+          run('readManualPaymentOrdersTool'),
+          run('proposeOrderStatusChangeTool'),
+          run('proposeManualPaymentMarkPaidTool'),
+        ]);
+        return this.snapshot('Quotes/orders revisados; cambios quedan como proposal.', {
+          quotesFollowUp: quotes?.count || 0,
+          ordersRequiringAction: orders?.count || 0,
+          manualPayments: manualPayments?.count || 0,
+        }, { quotes, orders, manualPayments, statusProposal, markPaidProposal });
+      }
+      case AGENT_IDS.DEV_CODEX_GITHUB: {
+        const [issues, prs, ci, issueDraft, ecosystem] = await Promise.all([
+          run('readGitHubIssuesTool'),
+          run('readGitHubPullRequestsTool'),
+          run('readGitHubActionsStatusTool'),
+          run('createGitHubIssueDraftTool'),
+          run('readOpenClawEcosystemServicesTool'),
+        ]);
+        return this.snapshot('GitHub/Codex revisado en dry-run.', {
+          githubIssues: issues?.count || 0,
+          githubPRs: prs?.count || 0,
+          workflowRuns: ci?.count || 0,
+          ecosystemServices: ecosystem?.count || 0,
+        }, { issues, prs, ci, issueDraft, ecosystem });
+      }
+      case AGENT_IDS.SECURITY_AUDIT: {
+        const [audit, approvals, health, skills, report] = await Promise.all([
+          run('readAuditLogsTool'),
+          run('readApprovalLogsTool'),
+          run('readDataHealthTool'),
+          run('readApprovedClawHubSkillsTool'),
+          run('createSecurityAuditReportTool'),
+        ]);
+        return this.snapshot('Security audit read-only preparado.', {
+          auditLogs: audit?.count || 0,
+          approvals: approvals?.count || 0,
+          dataHealthWarnings: health?.data?.warnings?.length || 0,
+          approvedSkills: skills?.count || 0,
+        }, { audit, approvals, health, skills, report });
+      }
+      default:
+        return null;
+    }
+  }
+
+  snapshot(summary, metrics, raw) {
+    return { summary, metrics, raw };
+  }
+
+  output({ agentId, status, responseText, proposedActions, approvalId, errorCode, dataSnapshot }) {
     return {
       agentId,
       status,
       responseText,
       proposedActions,
       approvalId,
+      dataSnapshot,
       errorCode,
     };
   }

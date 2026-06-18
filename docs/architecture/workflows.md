@@ -79,3 +79,13 @@ Flow:
 2. `security-audit-agent` reads audit/config summary only.
 3. Findings are classified low, medium, high or critical.
 4. Any config change remains a recommendation requiring approval.
+
+## Real Data Workflows v0.1
+
+- Daily briefing: lee leads, quotes, orders, GitHub, audit y data health.
+- B2B follow-up: lee leads y genera draft sin envio.
+- Quotes/orders review: detecta follow-ups, ordenes pendientes y pagos manuales.
+- GitHub/Codex issue draft: resume issues/PRs/CI y genera draft.
+- Security audit review: resume denials, approvals, warnings y servicios OpenClaw.
+
+Lobster define shells dry-run para estos workflows; no ejecuta automatizacion real.

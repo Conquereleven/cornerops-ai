@@ -6,6 +6,8 @@ const { WorkflowRegistry } = require('../workflows/WorkflowRegistry');
 const { AgentOrchestrator } = require('./AgentOrchestrator');
 const { AgentRegistry } = require('./AgentRegistry');
 const { coreAgentDefinitions } = require('./definitions');
+const dataCore = require('../data');
+const { createAgentTools } = require('./tools');
 const openclaw = require('../../integrations/openclaw');
 
 const agentRegistry = new AgentRegistry({
@@ -29,6 +31,7 @@ const agentPermissionPolicy = new AgentPermissionPolicy({
 });
 
 const workflowRegistry = new WorkflowRegistry();
+const agentTools = createAgentTools(dataCore);
 
 const agentOrchestrator = new AgentOrchestrator({
   auditService: agentAuditService,
@@ -44,6 +47,7 @@ const agentOrchestrator = new AgentOrchestrator({
   openclawConfig: openclaw.config,
   permissionPolicy: agentPermissionPolicy,
   registry: agentRegistry,
+  tools: agentTools,
 });
 
 module.exports = {
@@ -57,6 +61,8 @@ module.exports = {
   agentOrchestrator,
   agentPermissionPolicy,
   agentRegistry,
+  agentTools,
   coreAgentDefinitions,
+  dataCore,
   workflowRegistry,
 };

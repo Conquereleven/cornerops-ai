@@ -70,3 +70,16 @@ The earlier worker layer remains available:
 
 The Core Agent Pack sits above these workers as the operating-system layer for
 future multichannel workflows.
+
+## Real Data + Ecosystem v0.1
+
+Los agentes ahora pueden adjuntar `dataSnapshot` usando tools internas:
+
+- `daily-briefing-agent`: leads, follow-ups, quotes, orders, GitHub, audit y data health.
+- `b2b-sales-agent`: leads y drafts comerciales.
+- `quotes-orders-agent`: quotes, orders, pagos manuales y proposals approval-required.
+- `dev-codex-github-agent`: issues, PRs, CI, drafts GitHub y estado OpenClaw ecosystem.
+- `security-audit-agent`: audit logs, approvals, skills aprobados y data health.
+
+Las tools pasan por `DataAccessPolicy`, services y repositories. Ninguna tool
+approval-required ejecuta cambios reales en v0.1.
