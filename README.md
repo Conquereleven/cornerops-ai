@@ -27,6 +27,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Real Data + OpenClaw Ecosystem v0.1 con datos canonicos mock/read-only,
   tools internas para agentes, GitHub dry-run, data health, audit logs
   sanitizados y adapters controlados para servicios OpenClaw.
+- Context & Knowledge Layer v0.2 con local-first archives mock, source registry,
+  context search, crawler stubs, SDK bridges, native tool policy, PII masking y
+  demos sin credenciales.
 
 ## Inicio rápido
 
@@ -122,6 +125,25 @@ CLAWHUB_READ_ONLY=true
 CLAWHUB_ALLOWLIST_ONLY=true
 LOBSTER_ENABLED=false
 LOBSTER_DRY_RUN=true
+
+CORNEROPS_CONTEXT_LAYER_ENABLED=false
+CORNEROPS_CONTEXT_MODE=mock
+CORNEROPS_CONTEXT_DRY_RUN=true
+CORNEROPS_CONTEXT_READ_ONLY=true
+CORNEROPS_CONTEXT_REQUIRE_APPROVAL=true
+CORNEROPS_CONTEXT_AUDIT_ENABLED=true
+CORNEROPS_LOCAL_ARCHIVES_PATH=./.cornerops/archives
+CORNEROPS_LOCAL_ARCHIVES_DB=./.cornerops/archives/context.sqlite
+CORNEROPS_CONTEXT_RETENTION_DAYS=180
+CORNEROPS_CONTEXT_PII_MASKING=true
+CRAWLERS_ENABLED=false
+GITCRAWL_ENABLED=false
+SLACRAWL_ENABLED=false
+WACRAWL_ENABLED=false
+NOTCRAWL_ENABLED=false
+TELECRAWL_ENABLED=false
+FS_SAFE_ENABLED=true
+CLAWSAFE_ROOT=./.cornerops
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY`, `INTERNAL_API_KEY` y los tokens de WhatsApp son
@@ -207,6 +229,9 @@ mensajes. Sin Supabase, `source` será `memory`.
 | `POST` | `/api/github/issues/draft` | Draft de issue sin escritura real |
 | `GET` | `/api/audit-logs`, `/api/approvals`, `/api/data-health` | Torre de control |
 | `GET` | `/api/openclaw-ecosystem/services`, `/api/openclaw-ecosystem/skills` | Ecosistema OpenClaw controlado |
+| `GET` | `/api/context/search`, `/api/context/sources`, `/api/context/health` | Context & Knowledge Layer |
+| `GET` | `/api/local-archives/records` | Local archive mock records |
+| `GET` | `/api/crawlers`, `/api/native-tools` | Crawler/native tool registries |
 | `GET` | `/api/conversations`, `/api/conversations/:id` | Conversaciones |
 | `GET` | `/api/worker-runs` | Ejecuciones de workers |
 | `GET/POST` | `/api/webhooks/whatsapp` | Verificación y entrada WhatsApp |
@@ -259,6 +284,10 @@ npm run demo:agents
 npm run demo:real-data
 npm run demo:ecosystem
 npm run demo:cornerops-control-tower
+npm run demo:context
+npm run demo:crawlers
+npm run demo:knowledge-search
+npm run demo:context-health
 ```
 
 Las pruebas fuerzan modo local y no llaman servicios externos.

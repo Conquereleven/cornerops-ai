@@ -83,3 +83,10 @@ Los agentes ahora pueden adjuntar `dataSnapshot` usando tools internas:
 
 Las tools pasan por `DataAccessPolicy`, services y repositories. Ninguna tool
 approval-required ejecuta cambios reales en v0.1.
+
+## Context & Knowledge Layer v0.2
+
+Los agentes pueden usar context tools para buscar archivos locales mock,
+mensajes archivados, notas, PDFs y GitHub archive context. Si una fuente esta
+deshabilitada o no hay resultados, el agente debe reportar contexto faltante y
+no inventar historial.

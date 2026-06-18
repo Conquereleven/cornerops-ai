@@ -179,6 +179,128 @@ const baseEnv = {
     process.env.CLICKCLACK_DRY_RUN === undefined
       ? true
       : parseBoolean(process.env.CLICKCLACK_DRY_RUN),
+  corneropsContextLayerEnabled: parseBoolean(process.env.CORNEROPS_CONTEXT_LAYER_ENABLED),
+  corneropsContextMode: parseEnum(
+    process.env.CORNEROPS_CONTEXT_MODE,
+    ['mock', 'read_only', 'sync_allowed', 'disabled'],
+    'mock',
+  ),
+  corneropsContextDryRun:
+    process.env.CORNEROPS_CONTEXT_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_DRY_RUN),
+  corneropsContextReadOnly:
+    process.env.CORNEROPS_CONTEXT_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_READ_ONLY),
+  corneropsContextRequireApproval:
+    process.env.CORNEROPS_CONTEXT_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_REQUIRE_APPROVAL),
+  corneropsContextAuditEnabled:
+    process.env.CORNEROPS_CONTEXT_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_AUDIT_ENABLED),
+  corneropsLocalArchivesEnabled: parseBoolean(process.env.CORNEROPS_LOCAL_ARCHIVES_ENABLED),
+  corneropsLocalArchivesPath: process.env.CORNEROPS_LOCAL_ARCHIVES_PATH || './.cornerops/archives',
+  corneropsLocalArchivesDb: process.env.CORNEROPS_LOCAL_ARCHIVES_DB || './.cornerops/archives/context.sqlite',
+  corneropsContextRetentionDays: parseInteger(process.env.CORNEROPS_CONTEXT_RETENTION_DAYS, 180, {
+    min: 1,
+    max: 3650,
+  }),
+  corneropsContextPiiMasking:
+    process.env.CORNEROPS_CONTEXT_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_PII_MASKING),
+  corneropsContextMaxResults: parseInteger(process.env.CORNEROPS_CONTEXT_MAX_RESULTS, 20, {
+    min: 1,
+    max: 100,
+  }),
+  crawlersEnabled: parseBoolean(process.env.CRAWLERS_ENABLED),
+  gitcrawlEnabled: parseBoolean(process.env.GITCRAWL_ENABLED),
+  slacrawlEnabled: parseBoolean(process.env.SLACRAWL_ENABLED),
+  wacrawlEnabled: parseBoolean(process.env.WACRAWL_ENABLED),
+  notcrawlEnabled: parseBoolean(process.env.NOTCRAWL_ENABLED),
+  telecrawlEnabled: parseBoolean(process.env.TELECRAWL_ENABLED),
+  discrawlEnabled: parseBoolean(process.env.DISCRAWL_ENABLED),
+  graincrawlEnabled: parseBoolean(process.env.GRAINCrawl_ENABLED || process.env.GRAINCRAWL_ENABLED),
+  imsgcrawlEnabled: parseBoolean(process.env.IMSGCRAWL_ENABLED),
+  photoscrawlEnabled: parseBoolean(process.env.PHOTOSCRAWL_ENABLED),
+  gitcrawlDryRun:
+    process.env.GITCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GITCRAWL_DRY_RUN),
+  slacrawlDryRun:
+    process.env.SLACRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.SLACRAWL_DRY_RUN),
+  wacrawlDryRun:
+    process.env.WACRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.WACRAWL_DRY_RUN),
+  notcrawlDryRun:
+    process.env.NOTCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.NOTCRAWL_DRY_RUN),
+  telecrawlDryRun:
+    process.env.TELECRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELECRAWL_DRY_RUN),
+  discrawlDryRun:
+    process.env.DISCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.DISCRAWL_DRY_RUN),
+  githubContextEnabled: parseBoolean(process.env.GITHUB_CONTEXT_ENABLED),
+  slackContextEnabled: parseBoolean(process.env.SLACK_CONTEXT_ENABLED),
+  whatsappContextEnabled: parseBoolean(process.env.WHATSAPP_CONTEXT_ENABLED),
+  telegramContextEnabled: parseBoolean(process.env.TELEGRAM_CONTEXT_ENABLED),
+  notionContextEnabled: parseBoolean(process.env.NOTION_CONTEXT_ENABLED),
+  googleWorkspaceContextEnabled: parseBoolean(process.env.GOOGLE_WORKSPACE_CONTEXT_ENABLED),
+  mcporterEnabled: parseBoolean(process.env.MCPORTER_ENABLED),
+  mcporterDryRun:
+    process.env.MCPORTER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.MCPORTER_DRY_RUN),
+  acpEnabled: parseBoolean(process.env.ACP_ENABLED),
+  acpDryRun:
+    process.env.ACP_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.ACP_DRY_RUN),
+  pluginInspectorEnabled: parseBoolean(process.env.PLUGIN_INSPECTOR_ENABLED),
+  clawbenchEnabled: parseBoolean(process.env.CLAWBENCH_ENABLED),
+  clawbenchDryRun:
+    process.env.CLAWBENCH_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWBENCH_DRY_RUN),
+  clawpatchEnabled: parseBoolean(process.env.CLAWPATCH_ENABLED),
+  clawpatchDryRun:
+    process.env.CLAWPATCH_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWPATCH_DRY_RUN),
+  fsSafeEnabled:
+    process.env.FS_SAFE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.FS_SAFE_ENABLED),
+  clawsafeRoot: process.env.CLAWSAFE_ROOT || './.cornerops',
+  clawsafeAllowOutsideRoot: parseBoolean(process.env.CLAWSAFE_ALLOW_OUTSIDE_ROOT),
+  gogcliEnabled: parseBoolean(process.env.GOGCLI_ENABLED),
+  gogcliDryRun:
+    process.env.GOGCLI_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GOGCLI_DRY_RUN),
+  wacliEnabled: parseBoolean(process.env.WACLI_ENABLED),
+  wacliDryRun:
+    process.env.WACLI_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.WACLI_DRY_RUN),
+  goplacesEnabled: parseBoolean(process.env.GOPLACES_ENABLED),
+  goplacesDryRun:
+    process.env.GOPLACES_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GOPLACES_DRY_RUN),
+  clawpdfEnabled: parseBoolean(process.env.CLAWPDF_ENABLED),
+  ffmpegWasmEnabled: parseBoolean(process.env.FFMPEG_WASM_ENABLED),
+  rastermillEnabled: parseBoolean(process.env.RASTERMILL_ENABLED),
 };
 
 const getEnvWarnings = () => {
@@ -220,6 +342,15 @@ const getEnvWarnings = () => {
   }
   if (baseEnv.openclawEcosystemEnabled && baseEnv.openclawDryRun) {
     warnings.push('OPENCLAW_ECOSYSTEM_ENABLED=true while OpenClaw dry run flags are active; ecosystem calls are simulated.');
+  }
+  if (baseEnv.corneropsContextLayerEnabled && baseEnv.corneropsContextDryRun) {
+    warnings.push('CORNEROPS_CONTEXT_LAYER_ENABLED=true while CORNEROPS_CONTEXT_DRY_RUN=true; context sync remains simulated.');
+  }
+  if (baseEnv.crawlersEnabled && !baseEnv.corneropsContextLayerEnabled) {
+    warnings.push('CRAWLERS_ENABLED=true but CORNEROPS_CONTEXT_LAYER_ENABLED=false; crawler adapters remain disabled.');
+  }
+  if (!baseEnv.clawsafeAllowOutsideRoot && !baseEnv.clawsafeRoot) {
+    warnings.push('CLAWSAFE_ROOT is missing; filesystem access will remain blocked.');
   }
   if (
     baseEnv.openclawEnabled &&

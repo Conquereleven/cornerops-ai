@@ -1,0 +1,25 @@
+[
+  {
+    "id": "ctx-telegram-distributor-001",
+    "sourceId": "telegram_archive",
+    "sourceType": "thread",
+    "externalId": "tg-thread-001",
+    "title": "UAE distributor dried chiles request",
+    "text": "Mock Telegram history: UAE distributor asked about dried chiles, MOQ and import lead times. Mark assumptions if supplier availability is unknown.",
+    "author": "masked-distributor",
+    "participants": ["masked-distributor", "cornerops-operator"],
+    "threadId": "tg-thread-001",
+    "tags": ["telegram", "supplier", "dried-chiles", "uae"],
+    "entities": ["UAE", "dried chiles", "MOQ"],
+    "relatedLeadId": "lead-distribuidor-chiles-003",
+    "piiLevel": "high",
+    "provenance": {
+      "adapter": "telecrawl",
+      "originalSource": "mock_telegram_archive",
+      "importedAt": "2026-06-18T12:30:00.000Z",
+      "checksum": "mock-tg-001"
+    },
+    "createdAt": "2026-06-12T12:00:00.000Z",
+    "updatedAt": "2026-06-12T12:20:00.000Z"
+  }
+]

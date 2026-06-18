@@ -1,0 +1,25 @@
+[
+  {
+    "id": "ctx-github-manual-payments-001",
+    "sourceId": "github_archive",
+    "sourceType": "issue",
+    "externalId": "41",
+    "title": "Bug: Bank Transfer manual payment flow does not update history",
+    "text": "Manual payment Bank Transfer confirmation should create an internal note and keep payment history immutable. Related to order_status_change approval.",
+    "author": "dev-operator",
+    "url": "https://github.com/Conquereleven/cornerops-ai/issues/41",
+    "tags": ["github", "manual-payments", "bank-transfer", "bug"],
+    "entities": ["Bank Transfer", "manual payments", "orders"],
+    "relatedGitHubIssue": "41",
+    "piiLevel": "medium",
+    "provenance": {
+      "adapter": "gitcrawl",
+      "originalSource": "mock_github_issue",
+      "importedAt": "2026-06-18T10:00:00.000Z",
+      "sourceCreatedAt": "2026-06-15T10:00:00.000Z",
+      "checksum": "mock-gh-001"
+    },
+    "createdAt": "2026-06-15T10:00:00.000Z",
+    "updatedAt": "2026-06-16T10:00:00.000Z"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "id": "clawbench-report-001",
+  "status": "dry_run",
+  "scores": {
+    "routing": 0.92,
+    "policy": 0.98,
+    "contextRetrieval": 0.87,
+    "toolSafety": 0.99
+  },
+  "recommendations": [
+    "Add more quote/payment context fixtures.",
+    "Persist context access audit logs before real sync."
+  ]
+}

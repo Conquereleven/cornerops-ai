@@ -5,6 +5,7 @@ const dataRoutes = require('./routes/data');
 const internalRoutes = require('./routes/internal');
 const whatsappRoutes = require('./routes/whatsapp');
 const openclawRoutes = require('./routes/openclaw');
+const contextRoutes = require('./routes/context');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const env = require('./config/env');
@@ -48,6 +49,7 @@ app.use('/api/ivr', ivrRoutes);
 app.use('/api/internal', internalRoutes);
 app.use('/api/openclaw', openclawRoutes);
 app.use('/api/webhooks/whatsapp', whatsappRoutes);
+app.use('/api', contextRoutes);
 app.use('/api', dataRoutes);
 
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');

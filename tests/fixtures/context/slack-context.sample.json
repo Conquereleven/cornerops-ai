@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ctx-slack-manual-payments-001",
+    "sourceId": "slack_archive",
+    "sourceType": "thread",
+    "externalId": "slack-thread-001",
+    "title": "Manual payments follow-up",
+    "text": "Ops discussed that Bank Transfer and CoD orders need approval before marking paid. Payment status changes must never bypass HumanApprovalService.",
+    "author": "ops-lead",
+    "participants": ["ops-lead", "finance-operator"],
+    "channelName": "cornerops-ops",
+    "threadId": "slack-thread-001",
+    "tags": ["slack", "manual-payments", "approvals"],
+    "entities": ["Bank Transfer", "CoD", "HumanApprovalService"],
+    "piiLevel": "medium",
+    "provenance": {
+      "adapter": "slacrawl",
+      "originalSource": "mock_slack_thread",
+      "importedAt": "2026-06-18T11:00:00.000Z",
+      "checksum": "mock-slack-001"
+    },
+    "createdAt": "2026-06-16T11:00:00.000Z",
+    "updatedAt": "2026-06-16T11:20:00.000Z"
+  },
+  {
+    "id": "ctx-slack-products-002",
+    "sourceId": "slack_archive",
+    "sourceType": "message",
+    "externalId": "slack-message-002",
+    "title": "Product mentions",
+    "text": "Sales asked about Tajin, Pulparindo and Valentina availability for a restaurant follow-up. Use verified stock before promising delivery.",
+    "author": "sales-operator",
+    "channelName": "cornerops-sales",
+    "tags": ["slack", "products", "sales"],
+    "entities": ["Tajin", "Pulparindo", "Valentina"],
+    "relatedLeadId": "lead-restaurante-tajin-001",
+    "piiLevel": "medium",
+    "provenance": {
+      "adapter": "slacrawl",
+      "originalSource": "mock_slack_message",
+      "importedAt": "2026-06-18T11:10:00.000Z",
+      "checksum": "mock-slack-002"
+    },
+    "createdAt": "2026-06-17T09:30:00.000Z",
+    "updatedAt": "2026-06-17T09:30:00.000Z"
+  }
+]

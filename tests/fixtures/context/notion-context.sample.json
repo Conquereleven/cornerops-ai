@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ctx-notion-supplier-001",
+    "sourceId": "notion_archive",
+    "sourceType": "note",
+    "externalId": "notion-note-001",
+    "title": "UAE supplier onboarding notes",
+    "text": "Notion mock note: UAE supplier onboarding checklist mentions import docs, dried chiles compliance, preferred payment terms and catalog review cadence.",
+    "normalizedMarkdown": "## UAE supplier onboarding\n- Import docs\n- Dried chiles compliance\n- Payment terms\n- Catalog review cadence",
+    "author": "ops-notes",
+    "tags": ["notion", "supplier", "uae", "dried-chiles"],
+    "entities": ["UAE", "supplier", "dried chiles"],
+    "piiLevel": "medium",
+    "provenance": {
+      "adapter": "notcrawl",
+      "originalSource": "mock_notion_export",
+      "importedAt": "2026-06-18T13:00:00.000Z",
+      "checksum": "mock-notion-001"
+    },
+    "createdAt": "2026-06-10T08:00:00.000Z",
+    "updatedAt": "2026-06-14T08:00:00.000Z"
+  }
+]

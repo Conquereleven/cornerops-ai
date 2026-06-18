@@ -1,0 +1,9 @@
+{
+  "id": "plugin-inspector-report-001",
+  "status": "dry_run",
+  "riskLevel": "high",
+  "findings": [
+    "Command execution permission requires approval.",
+    "Filesystem access must stay inside CLAWSAFE_ROOT."
+  ]
+}

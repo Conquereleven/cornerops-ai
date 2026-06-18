@@ -1,0 +1,5 @@
+[
+  { "id": "gogcli", "enabled": false, "mode": "dry_run", "riskLevel": "high" },
+  { "id": "wacli", "enabled": false, "mode": "read_only", "riskLevel": "critical" },
+  { "id": "goplaces", "enabled": false, "mode": "dry_run", "riskLevel": "medium" }
+]

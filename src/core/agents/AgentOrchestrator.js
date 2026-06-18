@@ -297,6 +297,8 @@ class AgentOrchestrator {
           prs,
           audit,
           health,
+          context,
+          contextHealth,
         ] = await Promise.all([
           run('readLeadsTool'),
           run('readLeadsNeedingFollowUpTool'),
@@ -307,6 +309,8 @@ class AgentOrchestrator {
           run('readGitHubPullRequestsTool'),
           run('readAuditLogsTool'),
           run('readDataHealthTool'),
+          run('searchContextTool'),
+          run('runContextHealthCheckTool'),
         ]);
         return this.snapshot('Briefing enriquecido con datos mock/read-only.', {
           leads: leads?.count || 0,
@@ -318,24 +322,33 @@ class AgentOrchestrator {
           githubPRs: prs?.count || 0,
           auditLogs: audit?.count || 0,
           dataHealthWarnings: health?.data?.warnings?.length || 0,
-        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health });
+          contextResults: context?.count || 0,
+          contextHealthWarnings: contextHealth?.data?.warnings?.length || 0,
+        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health, context, contextHealth });
       }
       case AGENT_IDS.B2B_SALES: {
-        const [leads, followUpLeads, draft] = await Promise.all([
+        const [leads, followUpLeads, history, products, suppliers, draft] = await Promise.all([
           run('readLeadsTool'),
           run('readLeadsNeedingFollowUpTool'),
+          run('findLeadCommunicationHistoryTool'),
+          run('findProductMentionsTool'),
+          run('findSupplierContextTool'),
           run('draftB2BMessageTool'),
         ]);
         return this.snapshot('Sales draft generado con leads mock/read-only.', {
           leads: leads?.count || 0,
           leadsFollowUp: followUpLeads?.count || 0,
-        }, { leads, followUpLeads, draft });
+          communicationHistory: history?.count || 0,
+          productMentions: products?.count || 0,
+          supplierContext: suppliers?.count || 0,
+        }, { leads, followUpLeads, history, products, suppliers, draft });
       }
       case AGENT_IDS.QUOTES_ORDERS: {
-        const [quotes, orders, manualPayments, statusProposal, markPaidProposal] = await Promise.all([
+        const [quotes, orders, manualPayments, relatedContext, statusProposal, markPaidProposal] = await Promise.all([
           run('readQuotesNeedingFollowUpTool'),
           run('readOrdersRequiringActionTool'),
           run('readManualPaymentOrdersTool'),
+          run('searchContextTool'),
           run('proposeOrderStatusChangeTool'),
           run('proposeManualPaymentMarkPaidTool'),
         ]);
@@ -343,37 +356,44 @@ class AgentOrchestrator {
           quotesFollowUp: quotes?.count || 0,
           ordersRequiringAction: orders?.count || 0,
           manualPayments: manualPayments?.count || 0,
-        }, { quotes, orders, manualPayments, statusProposal, markPaidProposal });
+          relatedContext: relatedContext?.count || 0,
+        }, { quotes, orders, manualPayments, relatedContext, statusProposal, markPaidProposal });
       }
       case AGENT_IDS.DEV_CODEX_GITHUB: {
-        const [issues, prs, ci, issueDraft, ecosystem] = await Promise.all([
+        const [issues, prs, ci, issueDraft, ecosystem, githubContext] = await Promise.all([
           run('readGitHubIssuesTool'),
           run('readGitHubPullRequestsTool'),
           run('readGitHubActionsStatusTool'),
           run('createGitHubIssueDraftTool'),
           run('readOpenClawEcosystemServicesTool'),
+          run('findRelatedGitHubContextTool'),
         ]);
         return this.snapshot('GitHub/Codex revisado en dry-run.', {
           githubIssues: issues?.count || 0,
           githubPRs: prs?.count || 0,
           workflowRuns: ci?.count || 0,
           ecosystemServices: ecosystem?.count || 0,
-        }, { issues, prs, ci, issueDraft, ecosystem });
+          githubContext: githubContext?.count || 0,
+        }, { issues, prs, ci, issueDraft, ecosystem, githubContext });
       }
       case AGENT_IDS.SECURITY_AUDIT: {
-        const [audit, approvals, health, skills, report] = await Promise.all([
+        const [audit, approvals, health, skills, report, contextHealth, highPii] = await Promise.all([
           run('readAuditLogsTool'),
           run('readApprovalLogsTool'),
           run('readDataHealthTool'),
           run('readApprovedClawHubSkillsTool'),
           run('createSecurityAuditReportTool'),
+          run('runContextHealthCheckTool'),
+          run('searchContextTool'),
         ]);
         return this.snapshot('Security audit read-only preparado.', {
           auditLogs: audit?.count || 0,
           approvals: approvals?.count || 0,
           dataHealthWarnings: health?.data?.warnings?.length || 0,
           approvedSkills: skills?.count || 0,
-        }, { audit, approvals, health, skills, report });
+          contextHealthWarnings: contextHealth?.data?.warnings?.length || 0,
+          contextAccessResults: highPii?.count || 0,
+        }, { audit, approvals, health, skills, report, contextHealth, highPii });
       }
       default:
         return null;
