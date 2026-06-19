@@ -5,6 +5,7 @@ const {
 } = require('../core/security/SecuritySanitizer');
 
 const log = (level, message, metadata = {}) => {
+  if (process.env.CORNEROPS_CLI_MODE === 'true' && level === 'info') return;
   const safeMetadata = env.corneropsLogSanitization
     ? sanitizeLogMetadata(metadata, { maxBytes: env.corneropsMaxAuditPayloadBytes })
     : metadata;

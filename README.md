@@ -214,6 +214,29 @@ Arquitectura: [`business data read-only`](docs/architecture/business-data-read-o
 Operación: [`beta workflow`](docs/beta/operator-workflow-v0.4.md) y
 [`onboarding runbook`](docs/runbooks/business-data-read-only-onboarding.md).
 
+## Interactive Beta v0.5
+
+El fundador puede operar CornerOps localmente mediante una CLI segura. Cada
+respuesta muestra fuente, aprobación, warnings y `auditId`; los datos mock se
+etiquetan explícitamente y ninguna aprobación ejecuta acciones reales.
+
+```bash
+npm run cornerops -- help
+npm run cornerops -- briefing
+npm run cornerops -- ask "Which B2B leads need follow-up?"
+npm run cornerops -- ask "Which quotes need follow-up?"
+npm run cornerops -- control
+npm run cornerops -- approvals
+npm run cornerops -- audit denied
+npm run demo:interactive-beta
+```
+
+`npm run cornerops` abre una sesión interactiva local. La API operator permanece
+apagada con `CORNEROPS_API_ENABLED=false` y la vista web queda fuera de v0.5.
+Consulta [`quickstart`](docs/operator/quickstart-v0.5.md),
+[`commands`](docs/operator/commands-v0.5.md) y
+[`founder workflow`](docs/operator/founder-workflow-v0.5.md).
+
 ## Chat
 
 ```bash

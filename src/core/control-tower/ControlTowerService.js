@@ -119,6 +119,17 @@ class ControlTowerService {
         mode: this.config.corneropsFirstRealSourceMode,
         ready: github.connected && github.readOnly,
       },
+      operatorInterface: {
+        enabled: this.config.corneropsOperatorInterfaceEnabled,
+        interactiveBetaEnabled: this.config.corneropsInteractiveBetaEnabled,
+        mode: this.config.corneropsOperatorInterfaceMode,
+        dryRun: this.config.corneropsOperatorDryRun,
+        readOnly: this.config.corneropsOperatorReadOnly,
+        requireApproval: this.config.corneropsOperatorRequireApproval,
+        cliEnabled: this.config.corneropsCliEnabled,
+        apiEnabled: this.config.corneropsApiEnabled,
+        webUiEnabled: this.config.corneropsWebUiEnabled,
+      },
       disabledExternalSources: this.getExternalSources().filter((source) => !source.enabled),
       realSourcesEnabled: this.getExternalSources().filter((source) => source.enabled),
       lastDemoRun: {
@@ -131,6 +142,7 @@ class ControlTowerService {
   }
 
   getMode() {
+    if (this.config.corneropsInteractiveBetaEnabled) return 'interactive_beta';
     if (this.config.corneropsInternalBetaEnabled) return 'internal_beta';
     if (this.config.corneropsBetaMode) return 'beta';
     if (this.config.corneropsRealSourceOnboardingEnabled) return 'read_only';
@@ -174,6 +186,11 @@ class ControlTowerService {
     ].some(Boolean);
     if (nativeToolsEnabled) warnings.push('CRITICAL: native host tools are enabled.');
     if (this.config.clawhubEnabled) warnings.push('CRITICAL: ClawHub execution is enabled.');
+    if (this.config.corneropsOperatorDryRun === false) warnings.push('CRITICAL: operator dry-run mode is disabled.');
+    if (this.config.corneropsOperatorReadOnly === false) warnings.push('CRITICAL: operator read-only mode is disabled.');
+    if (this.config.corneropsOperatorRequireApproval === false) warnings.push('CRITICAL: operator approvals are disabled.');
+    if (this.config.corneropsRequireAuditForOperatorRequests === false) warnings.push('CRITICAL: operator request auditing is disabled.');
+    if (this.config.openclawOperatorChannelEnabled) warnings.push('CRITICAL: OpenClaw operator channel is enabled.');
     const forbiddenRealSources = [
       ['Slack context', this.config.slackContextEnabled],
       ['WhatsApp context', this.config.whatsappContextEnabled],
@@ -240,7 +257,11 @@ class ControlTowerService {
     ]);
     return {
       status: betaStatus,
-      betaMode: Boolean(this.config.corneropsInternalBetaEnabled || this.config.corneropsBetaMode),
+      betaMode: Boolean(
+        this.config.corneropsInteractiveBetaEnabled
+        || this.config.corneropsInternalBetaEnabled
+        || this.config.corneropsBetaMode,
+      ),
       businessData: {
         enabled: this.config.corneropsBusinessDataEnabled,
         mode: report.businessData.mode === 'real_read_only' ? 'read_only' : 'mock',
@@ -278,6 +299,7 @@ class ControlTowerService {
       disabledExternalSources: report.disabledExternalSources,
       realSourcesEnabled: report.realSourcesEnabled,
       lastDemoRun: report.lastDemoRun,
+      operatorInterface: report.operatorInterface,
       generatedAt: new Date().toISOString(),
     };
   }

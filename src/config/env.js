@@ -55,6 +55,62 @@ const baseEnv = {
   corneropsInternalBetaEnabled: parseBoolean(
     process.env.CORNEROPS_INTERNAL_BETA_ENABLED,
   ),
+  corneropsInteractiveBetaEnabled: parseBoolean(
+    process.env.CORNEROPS_INTERACTIVE_BETA_ENABLED,
+  ),
+  corneropsOperatorInterfaceEnabled:
+    process.env.CORNEROPS_OPERATOR_INTERFACE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_INTERFACE_ENABLED),
+  corneropsOperatorInterfaceMode: parseEnum(
+    process.env.CORNEROPS_OPERATOR_INTERFACE_MODE,
+    ['cli', 'api', 'web'],
+    'cli',
+  ),
+  corneropsOperatorDryRun:
+    process.env.CORNEROPS_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_DRY_RUN),
+  corneropsOperatorReadOnly:
+    process.env.CORNEROPS_OPERATOR_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_READ_ONLY),
+  corneropsOperatorRequireApproval:
+    process.env.CORNEROPS_OPERATOR_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REQUIRE_APPROVAL),
+  corneropsOperatorAllowedChannels: parseCsv(
+    process.env.CORNEROPS_OPERATOR_ALLOWED_CHANNELS || 'cli,api,web',
+  ),
+  corneropsOperatorDefaultAgent:
+    process.env.CORNEROPS_OPERATOR_DEFAULT_AGENT || 'cornerops-router-agent',
+  corneropsOperatorMaxResponseChars: parseInteger(
+    process.env.CORNEROPS_OPERATOR_MAX_RESPONSE_CHARS,
+    12000,
+    { min: 1000, max: 50000 },
+  ),
+  corneropsOperatorShowSourceLabels:
+    process.env.CORNEROPS_OPERATOR_SHOW_SOURCE_LABELS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_SOURCE_LABELS),
+  corneropsOperatorShowApprovalStatus:
+    process.env.CORNEROPS_OPERATOR_SHOW_APPROVAL_STATUS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_APPROVAL_STATUS),
+  corneropsOperatorShowAuditId:
+    process.env.CORNEROPS_OPERATOR_SHOW_AUDIT_ID === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_AUDIT_ID),
+  corneropsCliEnabled:
+    process.env.CORNEROPS_CLI_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CLI_ENABLED),
+  corneropsApiEnabled: parseBoolean(process.env.CORNEROPS_API_ENABLED),
+  corneropsWebUiEnabled: parseBoolean(process.env.CORNEROPS_WEB_UI_ENABLED),
+  corneropsRequireAuditForOperatorRequests:
+    process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS),
   corneropsBusinessDataEnabled: parseBoolean(
     process.env.CORNEROPS_BUSINESS_DATA_ENABLED,
   ),
@@ -208,6 +264,9 @@ const baseEnv = {
       ? true
       : parseBoolean(process.env.CORNEROPS_DB_PII_MASKING),
   openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
+  openclawOperatorChannelEnabled: parseBoolean(
+    process.env.OPENCLAW_OPERATOR_CHANNEL_ENABLED,
+  ),
   openclawBaseUrl:
     process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
   openclawGatewayToken: process.env.OPENCLAW_GATEWAY_TOKEN || '',
@@ -479,6 +538,17 @@ const getEnvWarnings = () => {
   }
   if (!baseEnv.corneropsDbReadOnly || baseEnv.corneropsDbAllowWrites) {
     warnings.push('Business database safety flags are unsafe; v0.4 business reads will fail closed.');
+  }
+  if (
+    !baseEnv.corneropsOperatorDryRun
+    || !baseEnv.corneropsOperatorReadOnly
+    || !baseEnv.corneropsOperatorRequireApproval
+    || !baseEnv.corneropsRequireAuditForOperatorRequests
+  ) {
+    warnings.push('Operator interface safety flags are unsafe; requests will fail closed.');
+  }
+  if (baseEnv.openclawOperatorChannelEnabled) {
+    warnings.push('OpenClaw operator channel is enabled; v0.5 requires it to remain disabled.');
   }
   if (baseEnv.corneropsBusinessDataEnabled) {
     const readOnlyCredentialAvailable = baseEnv.corneropsDatabaseProvider === 'supabase'
