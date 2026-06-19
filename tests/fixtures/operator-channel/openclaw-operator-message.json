@@ -1,0 +1,10 @@
+{
+  "id": "openclaw-operator-001",
+  "text": "Show security audit risks",
+  "metadata": {
+    "userId": "founder-001",
+    "channelId": "operator-dm-001",
+    "sourceProvider": "telegram",
+    "requestId": "gateway-request-001"
+  }
+}

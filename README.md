@@ -237,6 +237,26 @@ Consulta [`quickstart`](docs/operator/quickstart-v0.5.md),
 [`commands`](docs/operator/commands-v0.5.md) y
 [`founder workflow`](docs/operator/founder-workflow-v0.5.md).
 
+## Real Operator Channel v0.6
+
+CornerOps now has a generic, allowlist-only operator-channel boundary and a
+credential-free mock demo. Telegram private DM is the first real provider
+prepared, but global/provider flags and reply delivery remain disabled and
+dry-run by default. A strict OpenClaw bridge is available; Slack events,
+WhatsApp, groups, proactive sends, customer channels and all production writes
+remain disabled.
+
+```bash
+npm run demo:operator-channel
+npm run demo:real-operator-channel
+```
+
+Every accepted message still flows through CornerOps policy,
+`OperatorCommandRouter`, approvals and sanitized audit. See the
+[`channel guide`](docs/operator/real-operator-channel-v0.6.md),
+[`setup runbook`](docs/runbooks/operator-channel-setup.md) and
+[`security model`](docs/security/operator-channel-security-v0.6.md).
+
 ## Chat
 
 ```bash

@@ -2,6 +2,11 @@
 
 Control Tower is the internal operator report for beta readiness. It exposes system health, beta mode, business-data mode, schema discovery, contract confidence, agents, GitHub, OpenClaw, context, audit, approvals, security warnings and disabled risky sources.
 
+Since v0.6 it also exposes `operatorChannel`: selected provider, enabled state,
+mode, dry-run/reply state, allowlist counts, last inbound/outbound timestamps,
+rejections during the last 24 hours, Telegram readiness, Slack deferral and the
+OpenClaw bridge state. Counters and timestamps are process-local in v0.6.
+
 Commands:
 
 ```bash

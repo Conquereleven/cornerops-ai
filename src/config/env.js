@@ -111,6 +111,77 @@ const baseEnv = {
     process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS),
+  corneropsRealOperatorChannelEnabled: parseBoolean(
+    process.env.CORNEROPS_REAL_OPERATOR_CHANNEL_ENABLED,
+  ),
+  corneropsOperatorChannelProvider: parseEnum(
+    process.env.CORNEROPS_OPERATOR_CHANNEL_PROVIDER,
+    ['mock', 'telegram', 'slack', 'openclaw'],
+    'mock',
+  ),
+  corneropsOperatorChannelMode: parseEnum(
+    process.env.CORNEROPS_OPERATOR_CHANNEL_MODE,
+    ['read_only'],
+    'read_only',
+  ),
+  corneropsOperatorChannelDryRun:
+    process.env.CORNEROPS_OPERATOR_CHANNEL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_CHANNEL_DRY_RUN),
+  corneropsOperatorChannelRequireApproval:
+    process.env.CORNEROPS_OPERATOR_CHANNEL_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_CHANNEL_REQUIRE_APPROVAL),
+  corneropsOperatorAllowedUserIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_USER_IDS),
+  corneropsOperatorAllowedChannelIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_CHANNEL_IDS),
+  corneropsOperatorAllowedChatIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_CHAT_IDS),
+  corneropsOperatorReplyEnabled:
+    process.env.CORNEROPS_OPERATOR_REPLY_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REPLY_ENABLED),
+  corneropsOperatorReplyDryRun:
+    process.env.CORNEROPS_OPERATOR_REPLY_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REPLY_DRY_RUN),
+  corneropsOperatorRejectUnknownSenders:
+    process.env.CORNEROPS_OPERATOR_REJECT_UNKNOWN_SENDERS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REJECT_UNKNOWN_SENDERS),
+  corneropsOperatorRequireAllowlist:
+    process.env.CORNEROPS_OPERATOR_REQUIRE_ALLOWLIST === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REQUIRE_ALLOWLIST),
+  corneropsOperatorMaxMessageChars: parseInteger(
+    process.env.CORNEROPS_OPERATOR_MAX_MESSAGE_CHARS,
+    12000,
+    { min: 1000, max: 50000 },
+  ),
+  corneropsOperatorPiiMasking:
+    process.env.CORNEROPS_OPERATOR_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_PII_MASKING),
+  corneropsOperatorLogSanitization:
+    process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION),
+  telegramOperatorEnabled: parseBoolean(process.env.TELEGRAM_OPERATOR_ENABLED),
+  telegramOperatorBotToken: process.env.TELEGRAM_OPERATOR_BOT_TOKEN || '',
+  telegramOperatorAllowedChatIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS),
+  telegramOperatorAllowedUserIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_USER_IDS),
+  telegramOperatorWebhookSecret: process.env.TELEGRAM_OPERATOR_WEBHOOK_SECRET || '',
+  telegramOperatorDryRun:
+    process.env.TELEGRAM_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_DRY_RUN),
+  slackOperatorEnabled: parseBoolean(process.env.SLACK_OPERATOR_ENABLED),
+  slackOperatorBotToken: process.env.SLACK_OPERATOR_BOT_TOKEN || '',
+  slackOperatorSigningSecret: process.env.SLACK_OPERATOR_SIGNING_SECRET || '',
+  slackOperatorAllowedChannelIds: parseCsv(process.env.SLACK_OPERATOR_ALLOWED_CHANNEL_IDS),
+  slackOperatorAllowedUserIds: parseCsv(process.env.SLACK_OPERATOR_ALLOWED_USER_IDS),
+  slackOperatorDryRun:
+    process.env.SLACK_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.SLACK_OPERATOR_DRY_RUN),
   corneropsBusinessDataEnabled: parseBoolean(
     process.env.CORNEROPS_BUSINESS_DATA_ENABLED,
   ),
@@ -267,6 +338,19 @@ const baseEnv = {
   openclawOperatorChannelEnabled: parseBoolean(
     process.env.OPENCLAW_OPERATOR_CHANNEL_ENABLED,
   ),
+  openclawOperatorChannelDryRun:
+    process.env.OPENCLAW_OPERATOR_CHANNEL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_OPERATOR_CHANNEL_DRY_RUN),
+  openclawOperatorChannelProvider: parseEnum(
+    process.env.OPENCLAW_OPERATOR_CHANNEL_PROVIDER,
+    ['mock', 'telegram', 'slack'],
+    'mock',
+  ),
+  openclawOperatorChannelAllowlistOnly:
+    process.env.OPENCLAW_OPERATOR_CHANNEL_ALLOWLIST_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_OPERATOR_CHANNEL_ALLOWLIST_ONLY),
   openclawBaseUrl:
     process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
   openclawGatewayToken: process.env.OPENCLAW_GATEWAY_TOKEN || '',
@@ -547,8 +631,32 @@ const getEnvWarnings = () => {
   ) {
     warnings.push('Operator interface safety flags are unsafe; requests will fail closed.');
   }
-  if (baseEnv.openclawOperatorChannelEnabled) {
-    warnings.push('OpenClaw operator channel is enabled; v0.5 requires it to remain disabled.');
+  if (
+    baseEnv.corneropsRealOperatorChannelEnabled
+    && (
+      !baseEnv.corneropsOperatorChannelDryRun
+      || !baseEnv.corneropsOperatorChannelRequireApproval
+      || !baseEnv.corneropsOperatorRequireAllowlist
+      || !baseEnv.corneropsOperatorPiiMasking
+      || !baseEnv.corneropsOperatorLogSanitization
+    )
+  ) {
+    warnings.push('Real operator channel safety flags are unsafe; messages will fail closed.');
+  }
+  if (
+    baseEnv.corneropsRealOperatorChannelEnabled
+    && baseEnv.corneropsOperatorChannelProvider !== 'mock'
+    && !baseEnv.corneropsOperatorAllowedUserIds.length
+    && !baseEnv.telegramOperatorAllowedUserIds.length
+    && !baseEnv.slackOperatorAllowedUserIds.length
+  ) {
+    warnings.push('Real operator channel is enabled without an operator user allowlist.');
+  }
+  if (baseEnv.openclawOperatorChannelEnabled && !baseEnv.openclawOperatorChannelDryRun) {
+    warnings.push('OpenClaw operator channel real replies are enabled; v0.6 requires dry-run.');
+  }
+  if (baseEnv.openclawOperatorChannelEnabled && !baseEnv.openclawOperatorChannelAllowlistOnly) {
+    warnings.push('OpenClaw operator channel allowlist enforcement is disabled.');
   }
   if (baseEnv.corneropsBusinessDataEnabled) {
     const readOnlyCredentialAvailable = baseEnv.corneropsDatabaseProvider === 'supabase'

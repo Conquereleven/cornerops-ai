@@ -19,6 +19,7 @@ class ControlTowerService {
     businessDataService,
     dataContractRegistry,
     schemaDiscoveryService,
+    operatorChannelStatusProvider,
   } = {}) {
     this.agentAuditService = agentAuditService;
     this.agentRegistry = agentRegistry;
@@ -34,6 +35,7 @@ class ControlTowerService {
     this.businessDataService = businessDataService;
     this.dataContractRegistry = dataContractRegistry;
     this.schemaDiscoveryService = schemaDiscoveryService;
+    this.operatorChannelStatusProvider = operatorChannelStatusProvider;
   }
 
   async getReport() {
@@ -62,6 +64,20 @@ class ControlTowerService {
     ]);
     const agents = this.agentRegistry.list();
     const security = this.getSecurityReport();
+    const operatorChannel = this.operatorChannelStatusProvider
+      ? this.operatorChannelStatusProvider()
+      : {
+        enabled: false,
+        provider: 'mock',
+        mode: 'disabled',
+        dryRun: true,
+        replyEnabled: true,
+        allowlistEnabled: true,
+        allowedUsersCount: 0,
+        allowedChannelsCount: 0,
+        rejectedLast24h: 0,
+        warnings: ['Operator channel status provider is unavailable.'],
+      };
     const github = this.githubClient.getStatus();
     const openclawWarnings = [];
     if (!this.openclawConfig.enabled) openclawWarnings.push('OpenClaw is disabled.');
@@ -130,6 +146,29 @@ class ControlTowerService {
         apiEnabled: this.config.corneropsApiEnabled,
         webUiEnabled: this.config.corneropsWebUiEnabled,
       },
+      operatorChannel: {
+        ...operatorChannel,
+        openclawBridge: {
+          enabled: Boolean(this.config.openclawOperatorChannelEnabled),
+          dryRun: this.config.openclawOperatorChannelDryRun !== false,
+        },
+        telegram: {
+          enabled: Boolean(this.config.telegramOperatorEnabled),
+          configured: Boolean(
+            this.config.telegramOperatorBotToken
+            && this.config.telegramOperatorWebhookSecret
+            && this.config.telegramOperatorAllowedChatIds?.length
+            && this.config.telegramOperatorAllowedUserIds?.length
+          ),
+          dryRun: this.config.telegramOperatorDryRun !== false,
+        },
+        slack: {
+          enabled: Boolean(this.config.slackOperatorEnabled),
+          configured: false,
+          status: 'pending',
+          dryRun: this.config.slackOperatorDryRun !== false,
+        },
+      },
       disabledExternalSources: this.getExternalSources().filter((source) => !source.enabled),
       realSourcesEnabled: this.getExternalSources().filter((source) => source.enabled),
       lastDemoRun: {
@@ -190,7 +229,23 @@ class ControlTowerService {
     if (this.config.corneropsOperatorReadOnly === false) warnings.push('CRITICAL: operator read-only mode is disabled.');
     if (this.config.corneropsOperatorRequireApproval === false) warnings.push('CRITICAL: operator approvals are disabled.');
     if (this.config.corneropsRequireAuditForOperatorRequests === false) warnings.push('CRITICAL: operator request auditing is disabled.');
-    if (this.config.openclawOperatorChannelEnabled) warnings.push('CRITICAL: OpenClaw operator channel is enabled.');
+    if (
+      this.config.openclawOperatorChannelEnabled
+      && (
+        this.config.openclawOperatorChannelDryRun === false
+        || this.config.openclawOperatorChannelAllowlistOnly === false
+      )
+    ) warnings.push('CRITICAL: OpenClaw operator channel safety controls are disabled.');
+    if (
+      this.config.corneropsRealOperatorChannelEnabled
+      && (
+        this.config.corneropsOperatorChannelMode !== 'read_only'
+        || this.config.corneropsOperatorChannelDryRun === false
+        || this.config.corneropsOperatorRequireAllowlist === false
+        || this.config.corneropsOperatorPiiMasking === false
+        || this.config.corneropsOperatorLogSanitization === false
+      )
+    ) warnings.push('CRITICAL: real operator channel safety controls are disabled.');
     const forbiddenRealSources = [
       ['Slack context', this.config.slackContextEnabled],
       ['WhatsApp context', this.config.whatsappContextEnabled],
@@ -300,6 +355,7 @@ class ControlTowerService {
       realSourcesEnabled: report.realSourcesEnabled,
       lastDemoRun: report.lastDemoRun,
       operatorInterface: report.operatorInterface,
+      operatorChannel: report.operatorChannel,
       generatedAt: new Date().toISOString(),
     };
   }

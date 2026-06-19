@@ -6,6 +6,7 @@ const { MemoryBridge } = require('./MemoryBridge');
 const { OpenClawGatewayClient } = require('./OpenClawGatewayClient');
 const { ToolExecutionPolicy } = require('./ToolExecutionPolicy');
 const { getOpenClawConfig } = require('./OpenClawConfig');
+const { OpenClawOperatorChannelBridge } = require('./OpenClawOperatorChannelBridge');
 
 const config = getOpenClawConfig();
 const auditLogService = new AuditLogService({
@@ -45,6 +46,7 @@ module.exports = {
   HumanApprovalService,
   MemoryBridge,
   OpenClawGatewayClient,
+  OpenClawOperatorChannelBridge,
   ToolExecutionPolicy,
   getOpenClawConfig,
 };

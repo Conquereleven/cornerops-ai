@@ -4,6 +4,7 @@ const agents = require('../agents');
 const context = require('../context');
 const data = require('../data');
 const { ControlTowerService } = require('./ControlTowerService');
+const { operatorChannelStatusStore } = require('../operator-channel/OperatorChannelStatusStore');
 
 const controlTowerService = new ControlTowerService({
   agentAuditService: agents.agentAuditService,
@@ -20,6 +21,27 @@ const controlTowerService = new ControlTowerService({
   openclawAuditService: openclaw.auditLogService,
   openclawConfig: openclaw.config,
   schemaDiscoveryService: data.schemaDiscoveryService,
+  operatorChannelStatusProvider: () => operatorChannelStatusStore.getStatus({
+    enabled: env.corneropsRealOperatorChannelEnabled,
+    provider: env.corneropsOperatorChannelProvider,
+    dryRun: env.corneropsOperatorChannelDryRun,
+    replyEnabled: env.corneropsOperatorReplyEnabled,
+    replyDryRun: env.corneropsOperatorReplyDryRun,
+    requireAllowlist: env.corneropsOperatorRequireAllowlist,
+    allowedUserIds: [...new Set([
+      ...env.corneropsOperatorAllowedUserIds,
+      ...env.telegramOperatorAllowedUserIds,
+      ...env.slackOperatorAllowedUserIds,
+    ])],
+    allowedChannelIds: [...new Set([
+      ...env.corneropsOperatorAllowedChannelIds,
+      ...env.slackOperatorAllowedChannelIds,
+    ])],
+    allowedChatIds: [...new Set([
+      ...env.corneropsOperatorAllowedChatIds,
+      ...env.telegramOperatorAllowedChatIds,
+    ])],
+  }),
 });
 
 module.exports = {

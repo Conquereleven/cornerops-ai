@@ -29,6 +29,18 @@ const makeService = (overrides = {}) => new ControlTowerService({
   humanApprovalService: { list: () => [] },
   openclawAuditService: { list: () => [] },
   openclawConfig: { enabled: false, dryRun: true, sandboxMode: 'non-main' },
+  operatorChannelStatusProvider: () => ({
+    enabled: true,
+    provider: 'mock',
+    mode: 'mock',
+    dryRun: true,
+    replyEnabled: true,
+    allowlistEnabled: true,
+    allowedUsersCount: 1,
+    allowedChannelsCount: 1,
+    rejectedLast24h: 2,
+    warnings: [],
+  }),
   ...overrides,
 });
 
@@ -44,6 +56,12 @@ describe('CornerOps Control Tower', () => {
     expect(report.approvals).toEqual({ pending: 0, approvedLast24h: 0, rejectedLast24h: 0 });
     expect(report.audit).toEqual({ eventsLast24h: 0, deniedActionsLast24h: 0, errorsLast24h: 0 });
     expect(report.security).toMatchObject({ strictMode: true, piiMasking: true, failClosed: true });
+    expect(report.operatorChannel).toMatchObject({
+      provider: 'mock',
+      mode: 'mock',
+      dryRun: true,
+      rejectedLast24h: 2,
+    });
   });
 
   test('reports unhealthy when fail-closed security is disabled', async () => {

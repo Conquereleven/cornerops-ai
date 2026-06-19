@@ -54,3 +54,17 @@ Approval changes are in-memory simulations. They never execute the proposed writ
 Use `npm run demo:interactive-beta`, `npm run demo:beta` and `npm run demo:control-tower`. Stop an interactive CLI with `exit` or `Ctrl+C`; stop the dev server with `Ctrl+C`. Set `CORNEROPS_OPERATOR_INTERFACE_ENABLED=false` or `CORNEROPS_CLI_ENABLED=false` to disable the interface.
 
 Safety limits: no production writes, external sends, real channel syncs, crawlers, native host tools, external skill installation or deploys.
+
+## Operator channel v0.6
+
+The CLI remains the fallback. Test the chat-shaped path without credentials:
+
+```bash
+npm run demo:operator-channel
+npm run demo:real-operator-channel
+```
+
+The first command uses an allowlisted mock founder. The second only checks
+whether Telegram configuration is present and never sends. Real Telegram setup
+is documented in `docs/runbooks/operator-channel-setup.md`; do not enable
+WhatsApp, Slack events, groups or customer channels in v0.6.

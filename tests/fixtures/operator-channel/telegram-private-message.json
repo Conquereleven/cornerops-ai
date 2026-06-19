@@ -1,0 +1,10 @@
+{
+  "update_id": 900001,
+  "message": {
+    "message_id": 42,
+    "date": 1781910000,
+    "chat": { "id": 123456, "type": "private", "username": "cornerops_founder" },
+    "from": { "id": 123456, "is_bot": false, "username": "cornerops_founder" },
+    "text": "Give me today's briefing"
+  }
+}
