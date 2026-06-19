@@ -299,6 +299,9 @@ class AgentOrchestrator {
           health,
           context,
           contextHealth,
+          businessHealth,
+          schema,
+          contracts,
         ] = await Promise.all([
           run('readLeadsTool'),
           run('readLeadsNeedingFollowUpTool'),
@@ -311,6 +314,9 @@ class AgentOrchestrator {
           run('readDataHealthTool'),
           run('searchContextTool'),
           run('runContextHealthCheckTool'),
+          run('readBusinessDataHealthTool'),
+          run('readSchemaDiscoveryTool'),
+          run('readDataContractsTool'),
         ]);
         return this.snapshot('Briefing enriquecido con datos mock/read-only.', {
           leads: leads?.count || 0,
@@ -324,11 +330,16 @@ class AgentOrchestrator {
           dataHealthWarnings: health?.data?.warnings?.length || 0,
           contextResults: context?.count || 0,
           contextHealthWarnings: contextHealth?.data?.warnings?.length || 0,
-        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health, context, contextHealth });
+          businessDataWarnings: businessHealth?.data?.warnings?.length || 0,
+          mappedEntities: contracts?.count || 0,
+          discoveredTables: schema?.data?.tables?.length || 0,
+        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health, context, contextHealth, businessHealth, schema, contracts });
       }
       case AGENT_IDS.B2B_SALES: {
-        const [leads, followUpLeads, history, products, suppliers, draft] = await Promise.all([
+        const [leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft] = await Promise.all([
           run('readLeadsTool'),
+          run('readLeadByIdTool'),
+          run('readQuotesByLeadTool'),
           run('readLeadsNeedingFollowUpTool'),
           run('findLeadCommunicationHistoryTool'),
           run('findProductMentionsTool'),
@@ -338,16 +349,18 @@ class AgentOrchestrator {
         return this.snapshot('Sales draft generado con leads mock/read-only.', {
           leads: leads?.count || 0,
           leadsFollowUp: followUpLeads?.count || 0,
+          relatedQuotes: relatedQuotes?.count || 0,
           communicationHistory: history?.count || 0,
           productMentions: products?.count || 0,
           supplierContext: suppliers?.count || 0,
-        }, { leads, followUpLeads, history, products, suppliers, draft });
+        }, { leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft });
       }
       case AGENT_IDS.QUOTES_ORDERS: {
-        const [quotes, orders, manualPayments, relatedContext, statusProposal, markPaidProposal] = await Promise.all([
+        const [quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal] = await Promise.all([
           run('readQuotesNeedingFollowUpTool'),
           run('readOrdersRequiringActionTool'),
           run('readManualPaymentOrdersTool'),
+          run('readDataContractsTool'),
           run('searchContextTool'),
           run('proposeOrderStatusChangeTool'),
           run('proposeManualPaymentMarkPaidTool'),
@@ -357,16 +370,18 @@ class AgentOrchestrator {
           ordersRequiringAction: orders?.count || 0,
           manualPayments: manualPayments?.count || 0,
           relatedContext: relatedContext?.count || 0,
-        }, { quotes, orders, manualPayments, relatedContext, statusProposal, markPaidProposal });
+          mappedEntities: contracts?.count || 0,
+        }, { quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal });
       }
       case AGENT_IDS.DEV_CODEX_GITHUB: {
-        const [issues, prs, ci, issueDraft, ecosystem, githubContext] = await Promise.all([
+        const [issues, prs, ci, issueDraft, ecosystem, githubContext, docs] = await Promise.all([
           run('readGitHubIssuesTool'),
           run('readGitHubPullRequestsTool'),
           run('readGitHubActionsStatusTool'),
           run('createGitHubIssueDraftTool'),
           run('readOpenClawEcosystemServicesTool'),
           run('findRelatedGitHubContextTool'),
+          run('readOperationalDocsTool'),
         ]);
         return this.snapshot('GitHub/Codex revisado en dry-run.', {
           githubIssues: issues?.count || 0,
@@ -374,13 +389,17 @@ class AgentOrchestrator {
           workflowRuns: ci?.count || 0,
           ecosystemServices: ecosystem?.count || 0,
           githubContext: githubContext?.count || 0,
-        }, { issues, prs, ci, issueDraft, ecosystem, githubContext });
+          operationalDocs: docs?.count || 0,
+        }, { issues, prs, ci, issueDraft, ecosystem, githubContext, docs });
       }
       case AGENT_IDS.SECURITY_AUDIT: {
-        const [audit, approvals, health, skills, report, contextHealth, highPii] = await Promise.all([
+        const [audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii] = await Promise.all([
           run('readAuditLogsTool'),
           run('readApprovalLogsTool'),
           run('readDataHealthTool'),
+          run('readBusinessDataHealthTool'),
+          run('readSchemaDiscoveryTool'),
+          run('readDataContractsTool'),
           run('readApprovedClawHubSkillsTool'),
           run('createSecurityAuditReportTool'),
           run('runContextHealthCheckTool'),
@@ -390,10 +409,13 @@ class AgentOrchestrator {
           auditLogs: audit?.count || 0,
           approvals: approvals?.count || 0,
           dataHealthWarnings: health?.data?.warnings?.length || 0,
+          businessDataWarnings: businessHealth?.data?.warnings?.length || 0,
+          schemaWarnings: schema?.data?.warnings?.length || 0,
+          contractWarnings: contracts?.data?.flatMap((item) => item.warnings || []).length || 0,
           approvedSkills: skills?.count || 0,
           contextHealthWarnings: contextHealth?.data?.warnings?.length || 0,
           contextAccessResults: highPii?.count || 0,
-        }, { audit, approvals, health, skills, report, contextHealth, highPii });
+        }, { audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii });
       }
       default:
         return null;
@@ -404,7 +426,10 @@ class AgentOrchestrator {
     const missingSources = Object.entries(raw || {})
       .filter(([, value]) => value === null || value?.status === 'denied')
       .map(([key]) => key);
-    return { summary, metrics, raw, missingSources };
+    const sourceModes = [...new Set(Object.values(raw || {})
+      .map((value) => value?.sourceMode || value?.source)
+      .filter(Boolean))];
+    return { summary, metrics, raw, missingSources, sourceModes };
   }
 
   output({ agentId, status, responseText, proposedActions, approvalId, errorCode, dataSnapshot }) {

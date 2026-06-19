@@ -24,13 +24,22 @@ const deniedResult = (toolName, policy) => ({
   data: [],
 });
 
-const readResult = (toolName, data, source = 'mock') => ({
-  toolName,
-  status: 'success',
-  source,
-  count: Array.isArray(data) ? data.length : data ? 1 : 0,
-  data,
-});
+const readResult = (toolName, data, source = 'mock') => {
+  const businessResult = data && typeof data === 'object' && 'meta' in data && 'data' in data;
+  const payload = businessResult ? data.data : data;
+  const metadata = businessResult ? data.meta : undefined;
+  return {
+    toolName,
+    status: 'success',
+    source: metadata?.source || source,
+    sourceMode: metadata?.source || source,
+    readOnly: metadata?.readOnly ?? true,
+    count: metadata?.rowCount ?? (Array.isArray(payload) ? payload.length : payload ? 1 : 0),
+    truncated: metadata?.truncated || false,
+    warnings: metadata?.warnings || [],
+    data: payload,
+  };
+};
 
 const dryRunProposal = (toolName, payload, message = 'Proposal created in dry run.') => ({
   toolName,

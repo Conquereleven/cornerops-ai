@@ -16,6 +16,9 @@ class ControlTowerService {
     openclawAuditService,
     openclawConfig,
     auditLogService,
+    businessDataService,
+    dataContractRegistry,
+    schemaDiscoveryService,
   } = {}) {
     this.agentAuditService = agentAuditService;
     this.agentRegistry = agentRegistry;
@@ -28,6 +31,9 @@ class ControlTowerService {
     this.openclawAuditService = openclawAuditService;
     this.openclawConfig = openclawConfig;
     this.auditLogService = auditLogService;
+    this.businessDataService = businessDataService;
+    this.dataContractRegistry = dataContractRegistry;
+    this.schemaDiscoveryService = schemaDiscoveryService;
   }
 
   async getReport() {
@@ -38,11 +44,21 @@ class ControlTowerService {
         warnings: ['CORNEROPS_CONTROL_TOWER_ENABLED=false'],
       };
     }
-    const [dataHealth, contextHealth, approvals, audit] = await Promise.all([
+    const [dataHealth, contextHealth, approvals, audit, businessData] = await Promise.all([
       this.dataHealthService.getReport(),
       this.contextHealthService.getReport(),
       this.getApprovalsSummary(),
       this.getAuditSummary(),
+      this.businessDataService?.getHealth
+        ? this.businessDataService.getHealth({ agentId: 'control-tower' })
+        : Promise.resolve({
+          status: 'degraded',
+          mode: 'mock',
+          provider: 'mock',
+          readOnlyVerified: true,
+          mappedEntities: [],
+          warnings: ['Business data service is unavailable.'],
+        }),
     ]);
     const agents = this.agentRegistry.list();
     const security = this.getSecurityReport();
@@ -74,6 +90,9 @@ class ControlTowerService {
         warnings: agents.some((agent) => agent.enabled) ? [] : ['No agents are enabled.'],
       },
       dataSources: dataHealth.sources,
+      businessData,
+      schemaDiscovery: this.businessDataService?.getSchemaReport?.() || null,
+      dataContracts: this.dataContractRegistry?.listMappings?.() || [],
       contextSources: contextHealth.sources,
       openclaw: {
         enabled: this.openclawConfig.enabled,
@@ -100,12 +119,19 @@ class ControlTowerService {
         mode: this.config.corneropsFirstRealSourceMode,
         ready: github.connected && github.readOnly,
       },
+      disabledExternalSources: this.getExternalSources().filter((source) => !source.enabled),
+      realSourcesEnabled: this.getExternalSources().filter((source) => source.enabled),
+      lastDemoRun: {
+        available: false,
+        warning: 'Demo summaries are not persisted in v0.4.',
+      },
       warnings,
       generatedAt: new Date().toISOString(),
     };
   }
 
   getMode() {
+    if (this.config.corneropsInternalBetaEnabled) return 'internal_beta';
     if (this.config.corneropsBetaMode) return 'beta';
     if (this.config.corneropsRealSourceOnboardingEnabled) return 'read_only';
     if (this.config.corneropsDryRun) return 'dry_run';
@@ -121,6 +147,10 @@ class ControlTowerService {
     if (!this.config.corneropsRequireApprovalForWrites) warnings.push('CRITICAL: write approvals are disabled.');
     if (!this.config.corneropsRequireApprovalForExternalActions) warnings.push('CRITICAL: external action approvals are disabled.');
     if (!this.config.corneropsRequireAuditForTools) warnings.push('Tool audit requirement is disabled.');
+    if (this.config.corneropsDbReadOnly === false) warnings.push('CRITICAL: database read-only mode is disabled.');
+    if (this.config.corneropsDbAllowWrites) warnings.push('CRITICAL: database writes are enabled.');
+    if (this.config.corneropsDbAuditReads === false) warnings.push('CRITICAL: database read auditing is disabled.');
+    if (this.config.corneropsDbPiiMasking === false) warnings.push('CRITICAL: database PII masking is disabled.');
     if (
       this.config.githubAllowIssueCreation
       || this.config.githubAllowPrWrite
@@ -131,6 +161,19 @@ class ControlTowerService {
     if (this.config.openclawEnabled && this.config.openclawSandboxMode === 'main') {
       warnings.push('CRITICAL: OpenClaw sandbox targets main.');
     }
+    if (this.openclawConfig.enabled && !this.openclawConfig.dryRun) {
+      warnings.push('CRITICAL: OpenClaw real execution is enabled during read-only beta.');
+    }
+    const nativeToolsEnabled = [
+      this.config.gogcliEnabled,
+      this.config.wacliEnabled,
+      this.config.goplacesEnabled,
+      this.config.clawpdfEnabled,
+      this.config.ffmpegWasmEnabled,
+      this.config.rastermillEnabled,
+    ].some(Boolean);
+    if (nativeToolsEnabled) warnings.push('CRITICAL: native host tools are enabled.');
+    if (this.config.clawhubEnabled) warnings.push('CRITICAL: ClawHub execution is enabled.');
     const forbiddenRealSources = [
       ['Slack context', this.config.slackContextEnabled],
       ['WhatsApp context', this.config.whatsappContextEnabled],
@@ -151,7 +194,91 @@ class ControlTowerService {
       requireAuditForTools: this.config.corneropsRequireAuditForTools,
       requireApprovalForWrites: this.config.corneropsRequireApprovalForWrites,
       requireApprovalForExternalActions: this.config.corneropsRequireApprovalForExternalActions,
+      databaseReadOnly: this.config.corneropsDbReadOnly !== false,
+      databaseWritesBlocked: !this.config.corneropsDbAllowWrites,
+      databaseReadsAudited: this.config.corneropsDbAuditReads !== false,
+      databasePiiMasking: this.config.corneropsDbPiiMasking !== false,
+      externalSendsBlocked: !this.openclawConfig.enabled || this.openclawConfig.dryRun,
       warnings,
+    };
+  }
+
+  getExternalSources() {
+    return [
+      { id: 'github', enabled: Boolean(this.config.githubEnabled), mode: this.config.githubReadOnly ? 'read_only' : 'unsafe' },
+      { id: 'slack', enabled: Boolean(this.config.slackContextEnabled), mode: 'disabled_required' },
+      { id: 'whatsapp', enabled: Boolean(this.config.whatsappContextEnabled), mode: 'disabled_required' },
+      { id: 'telegram', enabled: Boolean(this.config.telegramContextEnabled), mode: 'disabled_required' },
+      { id: 'notion', enabled: Boolean(this.config.notionContextEnabled), mode: 'disabled_required' },
+      { id: 'crawlers', enabled: Boolean(this.config.crawlersEnabled), mode: 'disabled_required' },
+      { id: 'native_tools', enabled: [
+        this.config.gogcliEnabled,
+        this.config.wacliEnabled,
+        this.config.goplacesEnabled,
+        this.config.clawpdfEnabled,
+        this.config.ffmpegWasmEnabled,
+        this.config.rastermillEnabled,
+      ].some(Boolean), mode: 'disabled_required' },
+      { id: 'clawhub_execution', enabled: Boolean(this.config.clawhubEnabled), mode: 'disabled_required' },
+    ];
+  }
+
+  async getBetaReport() {
+    const report = await this.getReport();
+    const security = report.security;
+    const critical = security.warnings.some((warning) => warning.startsWith('CRITICAL:'));
+    const realRequestedButUnavailable = this.config.corneropsBusinessDataEnabled
+      && report.businessData.mode !== 'real_read_only';
+    const betaStatus = critical
+      ? 'unhealthy'
+      : realRequestedButUnavailable ? 'degraded' : 'healthy';
+    const businessAgents = new Set([
+      'daily-briefing-agent',
+      'b2b-sales-agent',
+      'quotes-orders-agent',
+      'security-audit-agent',
+    ]);
+    return {
+      status: betaStatus,
+      betaMode: Boolean(this.config.corneropsInternalBetaEnabled || this.config.corneropsBetaMode),
+      businessData: {
+        enabled: this.config.corneropsBusinessDataEnabled,
+        mode: report.businessData.mode === 'real_read_only' ? 'read_only' : 'mock',
+        readOnlyVerified: report.businessData.readOnlyVerified,
+        provider: report.businessData.provider,
+        mappedEntities: report.businessData.mappedEntities,
+        warnings: report.businessData.warnings,
+      },
+      dataContracts: report.dataContracts.map((mapping) => ({
+        entity: mapping.entity,
+        confidence: mapping.confidence,
+        sourceTable: mapping.sourceTable,
+        missingRequiredFields: mapping.missingRequiredFields,
+        warnings: mapping.warnings,
+      })),
+      schemaDiscovery: report.schemaDiscovery,
+      github: report.github,
+      openclaw: report.openclaw,
+      context: { sources: report.contextSources },
+      agents: this.agentRegistry.list().map((agent) => ({
+        id: agent.id,
+        enabled: agent.enabled,
+        canUseBusinessData: businessAgents.has(agent.id),
+        warnings: businessAgents.has(agent.id) ? [] : ['Business data is outside this agent scope.'],
+      })),
+      security: {
+        failClosed: security.failClosed,
+        piiMasking: security.piiMasking && security.databasePiiMasking,
+        writesBlocked: security.databaseWritesBlocked,
+        externalSendsBlocked: security.externalSendsBlocked,
+        warnings: security.warnings,
+      },
+      audit: report.audit,
+      approvals: report.approvals,
+      disabledExternalSources: report.disabledExternalSources,
+      realSourcesEnabled: report.realSourcesEnabled,
+      lastDemoRun: report.lastDemoRun,
+      generatedAt: new Date().toISOString(),
     };
   }
 

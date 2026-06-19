@@ -19,6 +19,12 @@ const defaultSources = (config = {}) => {
     && config.githubEnabled
     && config.githubReadOnly,
   );
+  const businessReadOnly = Boolean(
+    config.businessDataEnabled
+    && config.businessDataMode === 'read_only'
+    && config.dbReadOnly
+    && !config.dbAllowWrites,
+  );
   const base = (id, options = {}) => ({
     id,
     name: options.name || id,
@@ -37,9 +43,9 @@ const defaultSources = (config = {}) => {
     piiLevel: options.piiLevel || 'low',
   });
   return [
-    base('leads', { name: 'Leads', allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'security-audit-agent'] }),
-    base('quotes', { name: 'Quotes', allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
-    base('orders', { name: 'Orders', allowedAgents: ['daily-briefing-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
+    base('leads', { name: 'Leads', adapter: businessReadOnly ? 'business_database' : 'mock', enabled: allowed.has('leads') && (enabled || businessReadOnly), mode: businessReadOnly ? 'read_only' : (config.dataMode || 'mock'), allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'security-audit-agent'] }),
+    base('quotes', { name: 'Quotes', adapter: businessReadOnly ? 'business_database' : 'mock', enabled: allowed.has('quotes') && (enabled || businessReadOnly), mode: businessReadOnly ? 'read_only' : (config.dataMode || 'mock'), allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
+    base('orders', { name: 'Orders', adapter: businessReadOnly ? 'business_database' : 'mock', enabled: allowed.has('orders') && (enabled || businessReadOnly), mode: businessReadOnly ? 'read_only' : (config.dataMode || 'mock'), allowedAgents: ['daily-briefing-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
     base('github', {
       name: 'GitHub',
       adapter: 'github',

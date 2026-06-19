@@ -1,11 +1,13 @@
 class DataHealthService {
   constructor({
+    businessDataService,
     databaseClient,
     dataSourceRegistry,
     ecosystemRegistry,
     githubClient,
     mode = 'mock',
   } = {}) {
+    this.businessDataService = businessDataService;
     this.databaseClient = databaseClient;
     this.dataSourceRegistry = dataSourceRegistry;
     this.ecosystemRegistry = ecosystemRegistry;
@@ -16,6 +18,9 @@ class DataHealthService {
   async getReport() {
     const now = new Date().toISOString();
     const dbHealth = await this.databaseClient.health();
+    const businessData = this.businessDataService
+      ? await this.businessDataService.getHealth({ agentId: 'data-health-service' })
+      : null;
     const githubStatus = this.githubClient?.getStatus?.();
     const sources = this.dataSourceRegistry.list().map((source) => {
       const connected = source.id === 'github'
@@ -42,11 +47,13 @@ class DataHealthService {
     if (this.mode === 'mock') warnings.push('CORNEROPS_DATA_MODE=mock; metrics come from fixtures.');
     if (!dbHealth.connected && dbHealth.provider !== 'mock') warnings.push(`${dbHealth.provider} is not connected.`);
     if (!githubStatus?.connected) warnings.push('GitHub real read-only source is unavailable; fixture data is used.');
+    if (businessData?.warnings?.length) warnings.push(...businessData.warnings);
     return {
       status: warnings.length > 1 ? 'degraded' : 'healthy',
       mode: this.mode,
       sources,
       ecosystemServices,
+      businessData,
       warnings,
     };
   }

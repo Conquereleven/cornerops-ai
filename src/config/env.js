@@ -52,6 +52,25 @@ const baseEnv = {
     'hybrid',
   ),
   corneropsBetaMode: parseBoolean(process.env.CORNEROPS_BETA_MODE),
+  corneropsInternalBetaEnabled: parseBoolean(
+    process.env.CORNEROPS_INTERNAL_BETA_ENABLED,
+  ),
+  corneropsBusinessDataEnabled: parseBoolean(
+    process.env.CORNEROPS_BUSINESS_DATA_ENABLED,
+  ),
+  corneropsBusinessDataMode: parseEnum(
+    process.env.CORNEROPS_BUSINESS_DATA_MODE,
+    ['read_only'],
+    'read_only',
+  ),
+  corneropsBusinessDataDryRun:
+    process.env.CORNEROPS_BUSINESS_DATA_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_BUSINESS_DATA_DRY_RUN),
+  corneropsBusinessDataRequireApproval:
+    process.env.CORNEROPS_BUSINESS_DATA_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_BUSINESS_DATA_REQUIRE_APPROVAL),
   corneropsQaMode:
     process.env.CORNEROPS_QA_MODE === undefined
       ? true
@@ -60,6 +79,14 @@ const baseEnv = {
     process.env.CORNEROPS_CONTROL_TOWER_ENABLED === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_CONTROL_TOWER_ENABLED),
+  corneropsControlTowerMode: parseEnum(
+    process.env.CORNEROPS_CONTROL_TOWER_MODE,
+    ['beta', 'standard'],
+    'beta',
+  ),
+  corneropsControlTowerRequireAuth: parseBoolean(
+    process.env.CORNEROPS_CONTROL_TOWER_REQUIRE_AUTH,
+  ),
   corneropsStrictSecurityMode:
     process.env.CORNEROPS_STRICT_SECURITY_MODE === undefined
       ? true
@@ -151,6 +178,35 @@ const baseEnv = {
   ),
   corneropsDatabaseProvider: process.env.CORNEROPS_DATABASE_PROVIDER || '',
   databaseUrl: process.env.DATABASE_URL || '',
+  readOnlyDatabaseUrl: process.env.READONLY_DATABASE_URL || '',
+  supabaseReadonlyKey: process.env.SUPABASE_READONLY_KEY || '',
+  supabaseSchema: process.env.SUPABASE_SCHEMA || 'public',
+  corneropsDbReadOnly:
+    process.env.CORNEROPS_DB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_READ_ONLY),
+  corneropsDbAllowWrites: parseBoolean(process.env.CORNEROPS_DB_ALLOW_WRITES),
+  corneropsDbSchemaDiscoveryEnabled: parseBoolean(
+    process.env.CORNEROPS_DB_SCHEMA_DISCOVERY_ENABLED,
+  ),
+  corneropsDbQueryTimeoutMs: parseInteger(
+    process.env.CORNEROPS_DB_QUERY_TIMEOUT_MS,
+    10000,
+    { min: 100, max: 30000 },
+  ),
+  corneropsDbMaxRows: parseInteger(
+    process.env.CORNEROPS_DB_MAX_ROWS,
+    100,
+    { min: 1, max: 1000 },
+  ),
+  corneropsDbAuditReads:
+    process.env.CORNEROPS_DB_AUDIT_READS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_AUDIT_READS),
+  corneropsDbPiiMasking:
+    process.env.CORNEROPS_DB_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_PII_MASKING),
   openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
   openclawBaseUrl:
     process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
@@ -420,6 +476,17 @@ const getEnvWarnings = () => {
   }
   if (baseEnv.corneropsDataMode === 'write_enabled' && baseEnv.corneropsDryRun) {
     warnings.push('CORNEROPS_DATA_MODE=write_enabled while CORNEROPS_DRY_RUN=true; writes will remain blocked.');
+  }
+  if (!baseEnv.corneropsDbReadOnly || baseEnv.corneropsDbAllowWrites) {
+    warnings.push('Business database safety flags are unsafe; v0.4 business reads will fail closed.');
+  }
+  if (baseEnv.corneropsBusinessDataEnabled) {
+    const readOnlyCredentialAvailable = baseEnv.corneropsDatabaseProvider === 'supabase'
+      ? Boolean(baseEnv.supabaseUrl && baseEnv.supabaseReadonlyKey)
+      : Boolean(baseEnv.readOnlyDatabaseUrl);
+    if (!readOnlyCredentialAvailable) {
+      warnings.push('Business data is enabled without a dedicated read-only credential; mock fallback will be used.');
+    }
   }
   if (baseEnv.githubEnabled && !baseEnv.githubToken) {
     warnings.push('GITHUB_ENABLED=true but GITHUB_TOKEN is missing; GitHub integration will use mock/dry-run data.');

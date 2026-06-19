@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const {
   contextFromInput,
   deniedResult,
@@ -26,56 +28,63 @@ const createAgentTools = (deps) => {
       toolName: 'readLeadsTool',
       input,
       agentId,
-      loader: (context) => deps.leadService.listLeads({}, context),
+      loader: (context) => deps.businessDataService.listLeads({}, context),
     }),
     readLeadByIdTool: (input, agentId) => read({
       sourceId: 'leads',
       toolName: 'readLeadByIdTool',
       input,
       agentId,
-      loader: (context) => deps.leadService.getLeadById(input.metadata?.leadId || input.leadId, context),
+      loader: (context) => deps.businessDataService.getLeadById(input.metadata?.leadId || input.leadId, context),
     }),
     readLeadsNeedingFollowUpTool: (input, agentId) => read({
       sourceId: 'leads',
       toolName: 'readLeadsNeedingFollowUpTool',
       input,
       agentId,
-      loader: (context) => deps.leadService.findLeadsNeedingFollowUp(context),
+      loader: (context) => deps.businessDataService.findLeadsNeedingFollowUp(context),
     }),
     readQuotesTool: (input, agentId) => read({
       sourceId: 'quotes',
       toolName: 'readQuotesTool',
       input,
       agentId,
-      loader: (context) => deps.quoteService.listQuotes({}, context),
+      loader: (context) => deps.businessDataService.listQuotes({}, context),
     }),
     readQuotesNeedingFollowUpTool: (input, agentId) => read({
       sourceId: 'quotes',
       toolName: 'readQuotesNeedingFollowUpTool',
       input,
       agentId,
-      loader: (context) => deps.quoteService.findQuotesNeedingFollowUp(context),
+      loader: (context) => deps.businessDataService.findQuotesNeedingFollowUp(context),
+    }),
+    readQuotesByLeadTool: (input, agentId) => read({
+      sourceId: 'quotes',
+      toolName: 'readQuotesByLeadTool',
+      input,
+      agentId,
+      loader: (context) => deps.businessDataService.findQuotesByLeadId(input.metadata?.leadId, context),
     }),
     readOrdersTool: (input, agentId) => read({
       sourceId: 'orders',
       toolName: 'readOrdersTool',
       input,
       agentId,
-      loader: (context) => deps.orderService.listOrders({}, context),
+      loader: (context) => deps.businessDataService.listOrders({}, context),
     }),
     readOrdersRequiringActionTool: (input, agentId) => read({
       sourceId: 'orders',
       toolName: 'readOrdersRequiringActionTool',
       input,
       agentId,
-      loader: (context) => deps.orderService.findOrdersRequiringAction(context),
+      loader: (context) => deps.businessDataService.findOrdersRequiringAction(context),
     }),
     readManualPaymentOrdersTool: (input, agentId) => read({
       sourceId: 'orders',
       toolName: 'readManualPaymentOrdersTool',
       input,
       agentId,
-      loader: (context) => deps.orderService.findManualPaymentOrders(context),
+      loader: (context) => deps.businessDataService.findManualPaymentOrders(context),
     }),
     readGitHubIssuesTool: (input, agentId) => read({
       sourceId: 'github',
@@ -113,6 +122,38 @@ const createAgentTools = (deps) => {
       loader: () => deps.approvalService.listApprovals({ limit: 50 }),
     }),
     readDataHealthTool: async () => readResult('readDataHealthTool', await deps.dataHealthService.getReport(), 'internal'),
+    readBusinessDataHealthTool: async (input, agentId) => readResult(
+      'readBusinessDataHealthTool',
+      await deps.businessDataService.getHealth(contextFromInput(input, agentId)),
+      'internal',
+    ),
+    readSchemaDiscoveryTool: async (input, agentId) => {
+      await deps.businessDataService.ensureReady(contextFromInput(input, agentId));
+      return readResult('readSchemaDiscoveryTool', deps.businessDataService.getSchemaReport(), 'internal');
+    },
+    readDataContractsTool: async (input, agentId) => {
+      await deps.businessDataService.ensureReady(contextFromInput(input, agentId));
+      return readResult('readDataContractsTool', deps.businessDataService.getDataContracts(), 'internal');
+    },
+    readOperationalDocsTool: async () => {
+      const docs = [
+        'docs/audits/qa-status-v0.3.md',
+        'docs/beta/internal-beta-readiness-v0.3.md',
+        'docs/beta/internal-beta-readiness-v0.4.md',
+        'docs/audits/business-data-readiness-v0.4.md',
+        'docs/beta/internal-beta-scope-v0.4.md',
+      ].map((relativePath) => {
+        const absolutePath = path.resolve(process.cwd(), relativePath);
+        if (!fs.existsSync(absolutePath)) return { path: relativePath, available: false };
+        const content = fs.readFileSync(absolutePath, 'utf8');
+        return {
+          path: relativePath,
+          available: true,
+          headings: content.split('\n').filter((line) => line.startsWith('#')).slice(0, 12),
+        };
+      });
+      return readResult('readOperationalDocsTool', docs, 'internal');
+    },
     readOpenClawEcosystemServicesTool: async () => readResult('readOpenClawEcosystemServicesTool', deps.ecosystemRegistry.list(), 'internal'),
     readApprovedClawHubSkillsTool: (input, agentId) =>
       deps.clawhubSkillRegistryAdapter.listApprovedSkills(contextFromInput(input, agentId))

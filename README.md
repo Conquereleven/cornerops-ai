@@ -30,6 +30,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Context & Knowledge Layer v0.2 con local-first archives mock, source registry,
   context search, crawler stubs, SDK bridges, native tool policy, PII masking y
   demos sin credenciales.
+- Internal Beta & Business Data v0.4 con frontera DB SELECT-only, schema
+  discovery auditado, contratos Lead/Quote/Order, repositorios read-only,
+  metadata de fuente, PII masking y Control Tower beta.
 
 ## Inicio rápido
 
@@ -192,6 +195,25 @@ Runbooks: [`QA v0.3`](docs/runbooks/qa-hardening-v0.3.md),
 [`beta ops`](docs/runbooks/internal-beta-ops.md) y
 [`GitHub read-only`](docs/runbooks/first-real-source-github.md).
 
+## Internal beta v0.4
+
+El onboarding de datos de negocio usa `SUPABASE_READONLY_KEY` o una conexión
+Postgres dedicada. Nunca reutiliza `SUPABASE_SERVICE_ROLE_KEY`. Sin credenciales
+read-only, todo sigue funcionando con fixtures sanitizados.
+
+```bash
+npm run control:tower:beta
+npm run demo:business-data
+npm run demo:control-tower
+npm run demo:beta
+```
+
+Arquitectura: [`business data read-only`](docs/architecture/business-data-read-only.md),
+[`data contracts`](docs/architecture/business-data-contracts.md) y
+[`Control Tower v0.4`](docs/architecture/control-tower-v0.4.md).
+Operación: [`beta workflow`](docs/beta/operator-workflow-v0.4.md) y
+[`onboarding runbook`](docs/runbooks/business-data-read-only-onboarding.md).
+
 ## Chat
 
 ```bash
@@ -250,6 +272,7 @@ mensajes. Sin Supabase, `source` será `memory`.
 | `GET` | `/api/github/issues`, `/api/github/pull-requests`, `/api/github/workflow-runs` | GitHub mock/read-only |
 | `POST` | `/api/github/issues/draft` | Draft de issue sin escritura real |
 | `GET` | `/api/audit-logs`, `/api/approvals`, `/api/data-health` | Torre de control |
+| `GET` | `/api/control-tower/beta`, `/api/control-tower/data-contracts`, `/api/control-tower/schema-discovery` | Operación beta y contratos read-only |
 | `GET` | `/api/openclaw-ecosystem/services`, `/api/openclaw-ecosystem/skills` | Ecosistema OpenClaw controlado |
 | `GET` | `/api/context/search`, `/api/context/sources`, `/api/context/health` | Context & Knowledge Layer |
 | `GET` | `/api/local-archives/records` | Local archive mock records |
@@ -310,6 +333,9 @@ npm run demo:context
 npm run demo:crawlers
 npm run demo:knowledge-search
 npm run demo:context-health
+npm run demo:business-data
+npm run demo:control-tower
+npm run control:tower:beta
 ```
 
 Las pruebas fuerzan modo local y no llaman servicios externos.

@@ -1,6 +1,10 @@
 const env = require('../../config/env');
+const { createClient } = require('@supabase/supabase-js');
 const openclaw = require('../../integrations/openclaw');
+const { DatabaseSafetyPolicy } = require('../../integrations/database/DatabaseSafetyPolicy');
 const { DatabaseClient } = require('../../integrations/database/DatabaseClient');
+const { ReadOnlyDatabaseAdapter } = require('../../integrations/database/ReadOnlyDatabaseAdapter');
+const { SchemaDiscoveryService } = require('../../integrations/database/SchemaDiscoveryService');
 const { MockDataAdapter } = require('../../integrations/database/adapters/MockDataAdapter');
 const { GitHubClient } = require('../../integrations/github/GitHubClient');
 const { GitHubIssueService } = require('../../integrations/github/GitHubIssueService');
@@ -21,6 +25,11 @@ const { QuoteRepository } = require('../domain/quotes/QuoteRepository');
 const { QuoteService } = require('../domain/quotes/QuoteService');
 const { OrderRepository } = require('../domain/orders/OrderRepository');
 const { OrderService } = require('../domain/orders/OrderService');
+const { LeadReadOnlyRepository } = require('../domain/leads/LeadReadOnlyRepository');
+const { QuoteReadOnlyRepository } = require('../domain/quotes/QuoteReadOnlyRepository');
+const { OrderReadOnlyRepository } = require('../domain/orders/OrderReadOnlyRepository');
+const { BusinessDataService } = require('../domain/business/BusinessDataService');
+const { BusinessDataContractRegistry } = require('../data-contracts');
 const { OpenClawEcosystemRegistry } = require('../openclaw-ecosystem/OpenClawEcosystemRegistry');
 const { OpenClawEcosystemPolicy } = require('../openclaw-ecosystem/OpenClawEcosystemPolicy');
 const { CraboxRunnerAdapter } = require('../openclaw-ecosystem/adapters/CraboxRunnerAdapter');
@@ -43,11 +52,15 @@ const normalizer = new DataNormalizer();
 const dataSourceRegistry = new DataSourceRegistry({
   config: {
     allowedDataSources: env.corneropsAllowedDataSources,
+    businessDataEnabled: env.corneropsBusinessDataEnabled,
+    businessDataMode: env.corneropsBusinessDataMode,
     dataMode: env.corneropsDataMode,
     firstRealSource: env.corneropsFirstRealSource,
     firstRealSourceMode: env.corneropsFirstRealSourceMode,
     githubEnabled: env.githubEnabled,
     githubReadOnly: env.githubReadOnly,
+    dbReadOnly: env.corneropsDbReadOnly,
+    dbAllowWrites: env.corneropsDbAllowWrites,
     realDataEnabled: env.corneropsRealDataEnabled,
     realSourceOnboardingEnabled: env.corneropsRealSourceOnboardingEnabled,
   },
@@ -66,6 +79,76 @@ const auditLogRepository = new AuditLogRepository({
 const auditLogService = new AuditLogService({
   repository: auditLogRepository,
   enabled: env.corneropsAuditEnabled,
+});
+const databaseSafetyPolicy = new DatabaseSafetyPolicy({
+  allowWrites: env.corneropsDbAllowWrites,
+  auditReads: env.corneropsDbAuditReads,
+  failClosed: env.corneropsFailClosed,
+  maxRows: env.corneropsDbMaxRows,
+  queryTimeoutMs: env.corneropsDbQueryTimeoutMs,
+  readOnly: env.corneropsDbReadOnly,
+});
+const businessSupabaseClient = env.corneropsBusinessDataEnabled
+  && env.corneropsDatabaseProvider === 'supabase'
+  && env.supabaseUrl
+  && env.supabaseReadonlyKey
+  ? createClient(env.supabaseUrl, env.supabaseReadonlyKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  : null;
+const readOnlyDatabaseAdapter = new ReadOnlyDatabaseAdapter({
+  auditLogService,
+  config: {
+    allowWrites: env.corneropsDbAllowWrites,
+    auditReads: env.corneropsDbAuditReads,
+    businessDataEnabled: env.corneropsBusinessDataEnabled,
+    credentialsAvailable: env.corneropsDatabaseProvider === 'supabase'
+      ? Boolean(env.supabaseUrl && env.supabaseReadonlyKey)
+      : Boolean(env.readOnlyDatabaseUrl),
+    dryRun: env.corneropsBusinessDataDryRun,
+    maxRows: env.corneropsDbMaxRows,
+    mode: env.corneropsBusinessDataMode,
+    piiMasking: env.corneropsDbPiiMasking,
+    provider: env.corneropsDatabaseProvider || 'mock',
+    queryTimeoutMs: env.corneropsDbQueryTimeoutMs,
+    readOnly: env.corneropsDbReadOnly,
+    schema: env.supabaseSchema,
+  },
+  mockAdapter: mockDataAdapter,
+  safetyPolicy: databaseSafetyPolicy,
+  supabaseClient: businessSupabaseClient,
+});
+const schemaDiscoveryService = new SchemaDiscoveryService({
+  adapter: readOnlyDatabaseAdapter,
+  auditLogService,
+  enabled: env.corneropsDbSchemaDiscoveryEnabled,
+});
+const businessDataContractRegistry = new BusinessDataContractRegistry();
+const leadReadOnlyRepository = new LeadReadOnlyRepository({
+  adapter: readOnlyDatabaseAdapter,
+  contractRegistry: businessDataContractRegistry,
+  maxRows: env.corneropsDbMaxRows,
+  normalizer,
+});
+const quoteReadOnlyRepository = new QuoteReadOnlyRepository({
+  adapter: readOnlyDatabaseAdapter,
+  contractRegistry: businessDataContractRegistry,
+  maxRows: env.corneropsDbMaxRows,
+  normalizer,
+});
+const orderReadOnlyRepository = new OrderReadOnlyRepository({
+  adapter: readOnlyDatabaseAdapter,
+  contractRegistry: businessDataContractRegistry,
+  maxRows: env.corneropsDbMaxRows,
+  normalizer,
+});
+const businessDataService = new BusinessDataService({
+  auditLogService,
+  contractRegistry: businessDataContractRegistry,
+  leadRepository: leadReadOnlyRepository,
+  orderRepository: orderReadOnlyRepository,
+  quoteRepository: quoteReadOnlyRepository,
+  schemaDiscoveryService,
 });
 const approvalService = new ApprovalService({
   humanApprovalService: openclaw.humanApprovalService,
@@ -127,6 +210,7 @@ const dataSyncService = new DataSyncService({
   intervalMinutes: env.corneropsSyncIntervalMinutes,
 });
 const dataHealthService = new DataHealthService({
+  businessDataService,
   databaseClient,
   dataSourceRegistry,
   ecosystemRegistry,
@@ -160,6 +244,9 @@ module.exports = {
   clickclackChatAdapter,
   crabfleetMissionControlAdapter,
   craboxRunnerAdapter,
+  businessDataContractRegistry,
+  businessDataService,
+  databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,
   dataSourceRegistry,
@@ -173,9 +260,14 @@ module.exports = {
   githubPullRequestService,
   githubWebhookHandler,
   leadService,
+  leadReadOnlyRepository,
   lobsterWorkflowShellAdapter,
   mockDataAdapter,
   octopoolRelay,
   orderService,
+  orderReadOnlyRepository,
   quoteService,
+  quoteReadOnlyRepository,
+  readOnlyDatabaseAdapter,
+  schemaDiscoveryService,
 };

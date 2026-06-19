@@ -5,6 +5,8 @@ const root = path.resolve(__dirname, '..');
 const demos = [
   'scripts/demo-agents.js',
   'scripts/demo-real-data.js',
+  'scripts/demo-business-data.js',
+  'scripts/control-tower-beta.js',
   'scripts/demo-ecosystem.js',
   'scripts/demo-context.js',
   'scripts/demo-context-health.js',

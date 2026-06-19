@@ -31,7 +31,7 @@ describe('v0.3 demos', () => {
   test('demo:beta runs without credentials or external writes', () => {
     const result = runScript('scripts/demo-beta.js');
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('CornerOps internal beta demo v0.3');
+    expect(result.stdout).toContain('CornerOps internal beta demo v0.4');
     expect(result.stdout).toContain('GitHub engineering');
     expect(result.stdout).toContain('security review');
   });

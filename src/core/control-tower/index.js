@@ -9,14 +9,17 @@ const controlTowerService = new ControlTowerService({
   agentAuditService: agents.agentAuditService,
   agentRegistry: agents.agentRegistry,
   auditLogService: data.auditLogService,
+  businessDataService: data.businessDataService,
   config: env,
   contextHealthService: context.contextHealthService,
   dataHealthService: data.dataHealthService,
+  dataContractRegistry: data.businessDataContractRegistry,
   ecosystemRegistry: data.ecosystemRegistry,
   githubClient: data.githubClient,
   humanApprovalService: openclaw.humanApprovalService,
   openclawAuditService: openclaw.auditLogService,
   openclawConfig: openclaw.config,
+  schemaDiscoveryService: data.schemaDiscoveryService,
 });
 
 module.exports = {
