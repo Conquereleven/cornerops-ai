@@ -1,12 +1,23 @@
 class OpenClawEcosystemPolicy {
-  constructor({ dryRun = true, ecosystemEnabled = false, requireApproval = true } = {}) {
+  constructor({ auditEnabled = true, dryRun = true, ecosystemEnabled = false, requireApproval = true, requireAudit = true } = {}) {
+    this.auditEnabled = auditEnabled;
     this.dryRun = dryRun;
     this.ecosystemEnabled = ecosystemEnabled;
     this.requireApproval = requireApproval;
+    this.requireAudit = requireAudit;
   }
 
   evaluate({ agentId, operation, service } = {}) {
     if (!service) return this.deny('OpenClaw ecosystem service not found.');
+    if (this.requireAudit && !this.auditEnabled) {
+      return this.deny('OpenClaw ecosystem use denied because audit logging is unavailable.');
+    }
+    if (!['low', 'medium', 'high', 'critical'].includes(service.riskLevel)) {
+      return this.deny('OpenClaw ecosystem risk is unknown.');
+    }
+    if (!['read_only', 'dry_run', 'approval_required', 'document_only', 'disabled'].includes(service.mode)) {
+      return this.deny('OpenClaw ecosystem mode is unknown.');
+    }
     if (!this.ecosystemEnabled || !service.enabled) {
       return this.deny(`Service ${service.id} is disabled.`);
     }

@@ -4,6 +4,7 @@ class LocalArchiveRegistry {
   }
 
   register(id, adapter) {
+    if (this.adapters.has(id)) throw new Error(`Duplicate local archive adapter id: ${id}`);
     this.adapters.set(id, adapter);
     return this.get(id);
   }

@@ -12,6 +12,13 @@ const ALL_AGENTS = [
 const defaultSources = (config = {}) => {
   const allowed = new Set(config.allowedDataSources || DATA_SOURCE_IDS);
   const enabled = config.realDataEnabled || config.dataMode === 'mock';
+  const githubRealReadOnly = Boolean(
+    config.realSourceOnboardingEnabled
+    && config.firstRealSource === 'github'
+    && config.firstRealSourceMode === 'read_only'
+    && config.githubEnabled
+    && config.githubReadOnly,
+  );
   const base = (id, options = {}) => ({
     id,
     name: options.name || id,
@@ -33,7 +40,15 @@ const defaultSources = (config = {}) => {
     base('leads', { name: 'Leads', allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'security-audit-agent'] }),
     base('quotes', { name: 'Quotes', allowedAgents: ['daily-briefing-agent', 'b2b-sales-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
     base('orders', { name: 'Orders', allowedAgents: ['daily-briefing-agent', 'quotes-orders-agent', 'security-audit-agent'] }),
-    base('github', { name: 'GitHub', adapter: 'github', allowedAgents: ['daily-briefing-agent', 'dev-codex-github-agent', 'security-audit-agent'], piiLevel: 'none' }),
+    base('github', {
+      name: 'GitHub',
+      adapter: 'github',
+      enabled: enabled || githubRealReadOnly,
+      mode: githubRealReadOnly ? 'read_only' : (config.dataMode || 'mock'),
+      allowedAgents: ['daily-briefing-agent', 'dev-codex-github-agent', 'security-audit-agent'],
+      allowedOperations: [DATA_OPERATIONS.READ, DATA_OPERATIONS.DRAFT],
+      piiLevel: 'none',
+    }),
     base('audit_logs', { name: 'Audit logs', adapter: 'internal_api', allowedAgents: ['daily-briefing-agent', 'security-audit-agent'], piiLevel: 'medium' }),
     base('approvals', { name: 'Approvals', adapter: 'internal_api', allowedAgents: ['quotes-orders-agent', 'dev-codex-github-agent', 'security-audit-agent'], piiLevel: 'low' }),
     base('agent_logs', { name: 'Agent logs', adapter: 'internal_api', allowedAgents: ['security-audit-agent'], piiLevel: 'low' }),
@@ -50,6 +65,7 @@ class DataSourceRegistry {
 
   register(source) {
     if (!source?.id) throw new Error('Data source id is required.');
+    if (this.sources.has(source.id)) throw new Error(`Duplicate data source id: ${source.id}`);
     this.sources.set(source.id, { ...source });
     return this.get(source.id);
   }

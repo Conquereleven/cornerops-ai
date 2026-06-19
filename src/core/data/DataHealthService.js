@@ -16,13 +16,20 @@ class DataHealthService {
   async getReport() {
     const now = new Date().toISOString();
     const dbHealth = await this.databaseClient.health();
-    const sources = this.dataSourceRegistry.list().map((source) => ({
-      id: source.id,
-      enabled: source.enabled,
-      connected: source.adapter === 'mock' ? true : dbHealth.connected,
-      lastCheckedAt: now,
-      error: source.enabled ? undefined : 'disabled_by_feature_flag',
-    }));
+    const githubStatus = this.githubClient?.getStatus?.();
+    const sources = this.dataSourceRegistry.list().map((source) => {
+      const connected = source.id === 'github'
+        ? Boolean(githubStatus?.connected || source.mode === 'mock')
+        : source.adapter === 'mock' || dbHealth.connected;
+      return {
+        id: source.id,
+        enabled: source.enabled,
+        mode: source.mode,
+        connected,
+        lastCheckedAt: now,
+        error: source.enabled ? undefined : 'disabled_by_feature_flag',
+      };
+    });
     const ecosystemServices = this.ecosystemRegistry.list().map((service) => ({
       id: service.id,
       enabled: service.enabled,
@@ -34,7 +41,7 @@ class DataHealthService {
     const warnings = [];
     if (this.mode === 'mock') warnings.push('CORNEROPS_DATA_MODE=mock; metrics come from fixtures.');
     if (!dbHealth.connected && dbHealth.provider !== 'mock') warnings.push(`${dbHealth.provider} is not connected.`);
-    if (!this.githubClient?.config?.enabled) warnings.push('GitHub integration is disabled; fixture data is used.');
+    if (!githubStatus?.connected) warnings.push('GitHub real read-only source is unavailable; fixture data is used.');
     return {
       status: warnings.length > 1 ? 'degraded' : 'healthy',
       mode: this.mode,

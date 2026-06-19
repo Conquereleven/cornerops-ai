@@ -23,13 +23,13 @@ class AgentAuditService {
       intent: event.intent || 'unknown',
       riskLevel: event.riskLevel || 'low',
       status: event.status || 'pending',
-      policyDecision: event.policyDecision || 'allowed',
+      policyDecision: event.policyDecision || 'denied',
       approvalId: event.approvalId,
       proposedActions: sanitize(event.proposedActions || []),
       sanitizedInput: sanitize(event.input || {}),
       sanitizedOutput: sanitize(event.output || {}),
       errorCode: event.errorCode,
-      errorMessage: event.errorMessage,
+      errorMessage: event.errorMessage ? sanitize({ message: event.errorMessage }).message : undefined,
       createdAt: new Date().toISOString(),
     };
     auditEvents.unshift(auditEvent);

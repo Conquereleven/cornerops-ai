@@ -93,6 +93,7 @@ class OpenClawEcosystemRegistry {
 
   register(service) {
     if (!service?.id) throw new Error('OpenClaw ecosystem service id is required.');
+    if (this.services.has(service.id)) throw new Error(`Duplicate ecosystem service id: ${service.id}`);
     this.services.set(service.id, { ...service });
     return this.get(service.id);
   }

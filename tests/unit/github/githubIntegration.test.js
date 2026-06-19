@@ -10,21 +10,21 @@ describe('GitHub integration dry-run', () => {
     expect(issues.length).toBeGreaterThan(0);
   });
 
-  test('GitHubClient does not create issue when dry run is active', async () => {
+  test('GitHubClient blocks issue creation while read-only is active', async () => {
     const result = await dataCore.githubIssueService.createIssue({
       title: 'Bug de pagos manuales',
       body: 'Repro steps',
       requestId: 'req-test',
     });
-    expect(result.status).toBe('dry_run');
-    expect(result.message).toMatch(/GITHUB_DRY_RUN=true/);
+    expect(result.status).toBe('denied');
+    expect(result.message).toMatch(/GITHUB_READ_ONLY=true/);
   });
 
   test('GitHubClient asks for approval when dry run is disabled', async () => {
     const client = new GitHubClient({
       adapter: dataCore.mockDataAdapter,
       approvalService: dataCore.approvalService,
-      config: { dryRun: false },
+      config: { allowIssueCreation: true, dryRun: false, readOnly: false },
     });
     const result = await client.createIssue({
       title: 'Needs approval',

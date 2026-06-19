@@ -43,9 +43,10 @@ describe('real data control tower API', () => {
     await request(app)
       .post('/api/github/issues')
       .send({ title: 'Bug dry-run', body: 'No real issue' })
-      .expect(201)
+      .expect(403)
       .expect((res) => {
-        expect(res.body.status).toBe('dry_run');
+        expect(res.body.status).toBe('denied');
+        expect(res.body.message).toMatch(/GITHUB_READ_ONLY=true/);
       });
 
     await request(app)

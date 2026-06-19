@@ -53,14 +53,22 @@ const FORBIDDEN_ACTIONS = new Set([
 ]);
 
 class ToolExecutionPolicy {
-  constructor({ requireApproval = true, allowedTools = [] } = {}) {
+  constructor({ auditEnabled = true, requireApproval = true, requireAudit = true, allowedTools = [] } = {}) {
+    this.auditEnabled = auditEnabled;
     this.requireApproval = requireApproval;
+    this.requireAudit = requireAudit;
     this.allowedTools = new Set(allowedTools);
   }
 
   evaluate({ actionType = 'unknown', toolName, userRole = 'operator' } = {}) {
+    if (this.requireAudit && !this.auditEnabled) {
+      return this.deny(actionType, toolName, 'Tool execution denied because audit logging is unavailable.');
+    }
     if (this.allowedTools.size && toolName && !this.allowedTools.has(toolName)) {
       return this.deny(actionType, toolName, 'Tool is not in OPENCLAW_ALLOWED_TOOLS.');
+    }
+    if (!actionType || actionType === 'unknown') {
+      return this.deny(actionType, toolName, 'Unknown action denied by fail-closed policy.');
     }
     if (FORBIDDEN_ACTIONS.has(actionType)) {
       return this.deny(actionType, toolName, 'Action is forbidden by default.');
@@ -104,12 +112,7 @@ class ToolExecutionPolicy {
         'Sensitive action requires approval.',
       );
     }
-    return this.decision(
-      POLICY_DECISIONS.REQUIRES_CONFIRMATION,
-      actionType,
-      toolName,
-      'Unknown actions require confirmation by default.',
-    );
+    return this.deny(actionType, toolName, 'Unknown action denied by fail-closed policy.');
   }
 
   deny(actionType, toolName, reason) {

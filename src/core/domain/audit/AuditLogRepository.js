@@ -1,5 +1,6 @@
 const { randomUUID } = require('crypto');
-const { maskPii } = require('../../data/DataAccessPolicy');
+const env = require('../../../config/env');
+const { sanitizeAuditPayload } = require('../../security/SecuritySanitizer');
 
 class AuditLogRepository {
   constructor({ adapter, enabled = true } = {}) {
@@ -22,12 +23,18 @@ class AuditLogRepository {
       operation: input.operation,
       entityType: input.entityType,
       entityId: input.entityId,
-      policyDecision: input.policyDecision || 'dry_run',
+      policyDecision: input.policyDecision || 'denied',
       status: input.status || 'success',
-      sanitizedInput: maskPii(input.sanitizedInput || input.input || {}),
-      sanitizedOutput: maskPii(input.sanitizedOutput || input.output || {}),
+      sanitizedInput: sanitizeAuditPayload(input.sanitizedInput || input.input || {}, {
+        maxBytes: env.corneropsMaxAuditPayloadBytes,
+      }),
+      sanitizedOutput: sanitizeAuditPayload(input.sanitizedOutput || input.output || {}, {
+        maxBytes: env.corneropsMaxAuditPayloadBytes,
+      }),
       errorCode: input.errorCode,
-      errorMessage: input.errorMessage,
+      errorMessage: input.errorMessage
+        ? sanitizeAuditPayload({ message: input.errorMessage }).message
+        : undefined,
       latencyMs: input.latencyMs,
       createdAt: new Date().toISOString(),
     };

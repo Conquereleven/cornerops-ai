@@ -51,6 +51,61 @@ const baseEnv = {
     ['mock', 'hybrid', 'supabase'],
     'hybrid',
   ),
+  corneropsBetaMode: parseBoolean(process.env.CORNEROPS_BETA_MODE),
+  corneropsQaMode:
+    process.env.CORNEROPS_QA_MODE === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_QA_MODE),
+  corneropsControlTowerEnabled:
+    process.env.CORNEROPS_CONTROL_TOWER_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTROL_TOWER_ENABLED),
+  corneropsStrictSecurityMode:
+    process.env.CORNEROPS_STRICT_SECURITY_MODE === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_STRICT_SECURITY_MODE),
+  corneropsFailClosed:
+    process.env.CORNEROPS_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_FAIL_CLOSED),
+  corneropsRequireAuditForTools:
+    process.env.CORNEROPS_REQUIRE_AUDIT_FOR_TOOLS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_AUDIT_FOR_TOOLS),
+  corneropsRequireApprovalForWrites:
+    process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_WRITES === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_WRITES),
+  corneropsRequireApprovalForExternalActions:
+    process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_EXTERNAL_ACTIONS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_EXTERNAL_ACTIONS),
+  corneropsPiiMasking:
+    process.env.CORNEROPS_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_PII_MASKING),
+  corneropsLogSanitization:
+    process.env.CORNEROPS_LOG_SANITIZATION === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_LOG_SANITIZATION),
+  corneropsMaxAuditPayloadBytes: parseInteger(
+    process.env.CORNEROPS_MAX_AUDIT_PAYLOAD_BYTES,
+    12000,
+    { min: 1024, max: 100000 },
+  ),
+  corneropsRealSourceOnboardingEnabled: parseBoolean(
+    process.env.CORNEROPS_REAL_SOURCE_ONBOARDING_ENABLED,
+  ),
+  corneropsFirstRealSource: parseEnum(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE,
+    ['github'],
+    'github',
+  ),
+  corneropsFirstRealSourceMode: parseEnum(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_MODE,
+    ['read_only'],
+    'read_only',
+  ),
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
@@ -130,6 +185,10 @@ const baseEnv = {
   openclawAllowedUsers: parseCsv(process.env.OPENCLAW_ALLOWED_USERS),
   openclawAllowedTools: parseCsv(process.env.OPENCLAW_ALLOWED_TOOLS),
   githubEnabled: parseBoolean(process.env.GITHUB_ENABLED),
+  githubReadOnly:
+    process.env.GITHUB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.GITHUB_READ_ONLY),
   githubDryRun:
     process.env.GITHUB_DRY_RUN === undefined
       ? true
@@ -138,7 +197,14 @@ const baseEnv = {
   githubOwner: process.env.GITHUB_OWNER || '',
   githubRepo: process.env.GITHUB_REPO || 'cornerops-ai',
   githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
-  githubApiVersion: process.env.GITHUB_API_VERSION || '2026-03-10',
+  githubApiVersion: parseEnum(
+    process.env.GITHUB_API_VERSION,
+    ['2022-11-28'],
+    '2022-11-28',
+  ),
+  githubAllowIssueCreation: parseBoolean(process.env.GITHUB_ALLOW_ISSUE_CREATION),
+  githubAllowPrWrite: parseBoolean(process.env.GITHUB_ALLOW_PR_WRITE),
+  githubAllowWorkflowTrigger: parseBoolean(process.env.GITHUB_ALLOW_WORKFLOW_TRIGGER),
   openclawEcosystemEnabled: parseBoolean(process.env.OPENCLAW_ECOSYSTEM_ENABLED),
   craboxEnabled: parseBoolean(process.env.CRABOX_ENABLED),
   craboxDryRun:
@@ -330,6 +396,27 @@ const getEnvWarnings = () => {
   }
   if (!baseEnv.corneropsRequireApproval) {
     warnings.push('CORNEROPS_REQUIRE_APPROVAL=false; only use this in isolated tests.');
+  }
+  if (!baseEnv.corneropsFailClosed) {
+    warnings.push('CORNEROPS_FAIL_CLOSED=false; unknown actions may not be safely denied.');
+  }
+  if (!baseEnv.corneropsPiiMasking || !baseEnv.corneropsLogSanitization) {
+    warnings.push('PII masking or log sanitization is disabled.');
+  }
+  if (
+    baseEnv.corneropsRealSourceOnboardingEnabled
+    && (!baseEnv.githubEnabled || !baseEnv.githubReadOnly)
+  ) {
+    warnings.push('Real-source onboarding requires GitHub enabled in read-only mode.');
+  }
+  if (baseEnv.githubEnabled && !baseEnv.githubReadOnly) {
+    warnings.push('GITHUB_READ_ONLY=false; internal beta requires read-only GitHub.');
+  }
+  if (
+    baseEnv.githubReadOnly
+    && (baseEnv.githubAllowIssueCreation || baseEnv.githubAllowPrWrite || baseEnv.githubAllowWorkflowTrigger)
+  ) {
+    warnings.push('GitHub write flags are ignored while GITHUB_READ_ONLY=true.');
   }
   if (baseEnv.corneropsDataMode === 'write_enabled' && baseEnv.corneropsDryRun) {
     warnings.push('CORNEROPS_DATA_MODE=write_enabled while CORNEROPS_DRY_RUN=true; writes will remain blocked.');

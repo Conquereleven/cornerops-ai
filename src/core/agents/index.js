@@ -27,9 +27,11 @@ const agentMemoryService = new AgentMemoryService();
 
 const agentPermissionPolicy = new AgentPermissionPolicy({
   agentsEnabled: env.corneropsAgentsEnabled,
+  auditEnabled: env.corneropsAuditEnabled,
   allowedUsers: env.corneropsAgentAllowedUsers,
   dryRun: env.corneropsDryRun,
   requireApproval: env.corneropsRequireApproval,
+  requireAudit: env.corneropsRequireAuditForTools,
 });
 
 const workflowRegistry = new WorkflowRegistry();

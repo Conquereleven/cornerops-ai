@@ -44,12 +44,19 @@ const dataSourceRegistry = new DataSourceRegistry({
   config: {
     allowedDataSources: env.corneropsAllowedDataSources,
     dataMode: env.corneropsDataMode,
+    firstRealSource: env.corneropsFirstRealSource,
+    firstRealSourceMode: env.corneropsFirstRealSourceMode,
+    githubEnabled: env.githubEnabled,
+    githubReadOnly: env.githubReadOnly,
     realDataEnabled: env.corneropsRealDataEnabled,
+    realSourceOnboardingEnabled: env.corneropsRealSourceOnboardingEnabled,
   },
 });
 const dataAccessPolicy = new DataAccessPolicy({
   allowedUsers: env.corneropsAgentAllowedUsers,
+  auditEnabled: env.corneropsAuditEnabled,
   dryRun: env.corneropsDryRun,
+  requireAudit: env.corneropsRequireAuditForTools,
   requireApproval: env.corneropsRequireApproval,
 });
 const auditLogRepository = new AuditLogRepository({
@@ -65,9 +72,11 @@ const approvalService = new ApprovalService({
 });
 const ecosystemRegistry = new OpenClawEcosystemRegistry({ config: env });
 const ecosystemPolicy = new OpenClawEcosystemPolicy({
+  auditEnabled: env.corneropsAuditEnabled,
   dryRun: env.corneropsDryRun || env.openclawDryRun,
   ecosystemEnabled: env.openclawEcosystemEnabled,
   requireApproval: env.openclawRequireApproval,
+  requireAudit: env.corneropsRequireAuditForTools,
 });
 const octopoolRelay = new OctopoolGitHubRelayAdapter({
   adapter: mockDataAdapter,
@@ -77,10 +86,19 @@ const octopoolRelay = new OctopoolGitHubRelayAdapter({
 const githubClient = new GitHubClient({
   adapter: mockDataAdapter,
   approvalService,
+  auditLogService,
   config: {
+    allowIssueCreation: env.githubAllowIssueCreation,
+    allowPrWrite: env.githubAllowPrWrite,
+    allowWorkflowTrigger: env.githubAllowWorkflowTrigger,
+    apiVersion: env.githubApiVersion,
     enabled: env.githubEnabled,
     dryRun: env.githubDryRun,
+    firstRealSource: env.corneropsFirstRealSource,
+    firstRealSourceMode: env.corneropsFirstRealSourceMode,
     owner: env.githubOwner,
+    readOnly: env.githubReadOnly,
+    realSourceOnboardingEnabled: env.corneropsRealSourceOnboardingEnabled,
     repo: env.githubRepo,
     token: env.githubToken,
     webhookSecret: env.githubWebhookSecret,

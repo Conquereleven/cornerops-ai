@@ -161,6 +161,18 @@ const listGitHubIssues = async (req, res, next) => {
   }
 };
 
+const getGitHubIssue = async (req, res, next) => {
+  try {
+    const issue = await dataCore.githubIssueService.getIssue(req.params.number, {
+      requestId: req.get('x-request-id'), userId: 'api', channel: 'web', agentId: 'dev-codex-github-agent',
+    });
+    if (!issue) return res.status(404).json({ error: true, message: 'GitHub issue not found' });
+    return res.json(issue);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const listGitHubPullRequests = async (req, res, next) => {
   try {
     return res.json(await dataCore.githubPullRequestService.listPullRequests({ state: req.query.state || 'open' }, {
@@ -174,6 +186,18 @@ const listGitHubPullRequests = async (req, res, next) => {
   }
 };
 
+const getGitHubPullRequest = async (req, res, next) => {
+  try {
+    const pullRequest = await dataCore.githubPullRequestService.getPullRequest(req.params.number, {
+      requestId: req.get('x-request-id'), userId: 'api', channel: 'web', agentId: 'dev-codex-github-agent',
+    });
+    if (!pullRequest) return res.status(404).json({ error: true, message: 'GitHub pull request not found' });
+    return res.json(pullRequest);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const listGitHubWorkflowRuns = async (req, res, next) => {
   try {
     return res.json(await dataCore.githubActionsService.listWorkflowRuns({}, {
@@ -181,6 +205,28 @@ const listGitHubWorkflowRuns = async (req, res, next) => {
       userId: 'api',
       channel: 'web',
       agentId: 'dev-codex-github-agent',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getGitHubWorkflowRun = async (req, res, next) => {
+  try {
+    const run = await dataCore.githubActionsService.getWorkflowRun(req.params.id, {
+      requestId: req.get('x-request-id'), userId: 'api', channel: 'web', agentId: 'dev-codex-github-agent',
+    });
+    if (!run) return res.status(404).json({ error: true, message: 'GitHub workflow run not found' });
+    return res.json(run);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getGitHubRepository = async (req, res, next) => {
+  try {
+    return res.json(await dataCore.githubClient.getRepositoryMetadata({
+      requestId: req.get('x-request-id'), userId: 'api', channel: 'web', agentId: 'dev-codex-github-agent',
     }));
   } catch (error) {
     return next(error);
@@ -206,7 +252,10 @@ const createGitHubIssue = async (req, res, next) => {
       userId: req.body.userId || 'api',
       channel: 'web',
     }, req.body.approvalId);
-    return res.status(result.status === 'needs_approval' ? 202 : 201).json(result);
+    const statusCode = result.status === 'denied'
+      ? 403
+      : result.status === 'needs_approval' ? 202 : 201;
+    return res.status(statusCode).json(result);
   } catch (error) {
     return next(error);
   }
@@ -670,8 +719,12 @@ module.exports = {
   getQuote,
   listQuotesFollowUp,
   listGitHubIssues,
+  getGitHubIssue,
   listGitHubPullRequests,
+  getGitHubPullRequest,
   listGitHubWorkflowRuns,
+  getGitHubWorkflowRun,
+  getGitHubRepository,
   createGitHubIssueDraft,
   createGitHubIssue,
   listAuditLogs,

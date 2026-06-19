@@ -1,5 +1,6 @@
 const { randomUUID } = require('crypto');
 const { APPROVAL_STATUS } = require('./types');
+const { sanitizeAuditPayload } = require('../../core/security/SecuritySanitizer');
 
 const approvals = [];
 
@@ -25,7 +26,7 @@ class HumanApprovalService {
       createdBy,
       reason,
       impact,
-      payloadSummary: payload,
+      payloadSummary: sanitizeAuditPayload(payload || {}),
       status: APPROVAL_STATUS.PENDING,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -57,6 +58,9 @@ class HumanApprovalService {
   }
 
   updateStatus(id, status, actor) {
+    if (![APPROVAL_STATUS.APPROVED, APPROVAL_STATUS.REJECTED].includes(status)) {
+      return null;
+    }
     const approval = approvals.find((item) => item.id === id);
     if (!approval) return null;
     if (approval.status !== APPROVAL_STATUS.PENDING) {
@@ -70,6 +74,11 @@ class HumanApprovalService {
       updatedAt: new Date().toISOString(),
     });
     return { ...approval };
+  }
+
+  isApproved(id) {
+    const approval = this.getApproval(id);
+    return Boolean(approval && approval.status === APPROVAL_STATUS.APPROVED);
   }
 
   clearForTests() {

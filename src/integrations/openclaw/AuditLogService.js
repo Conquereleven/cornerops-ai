@@ -1,37 +1,14 @@
 const { randomUUID } = require('crypto');
 const logger = require('../../utils/logger');
 const { AUDIT_STATUS } = require('./types');
-
-const SENSITIVE_KEYS = [
-  'apiKey',
-  'authorization',
-  'password',
-  'secret',
-  'token',
-  'accessToken',
-  'refreshToken',
-  'OPENCLAW_GATEWAY_TOKEN',
-  'OPENCLAW_GATEWAY_PASSWORD',
-];
+const env = require('../../config/env');
+const { sanitizeAuditPayload } = require('../../core/security/SecuritySanitizer');
 
 const auditLogs = [];
 
-const isSensitiveKey = (key) =>
-  SENSITIVE_KEYS.some((sensitive) =>
-    String(key).toLowerCase().includes(String(sensitive).toLowerCase()),
-  );
-
-const sanitize = (value, depth = 0) => {
-  if (depth > 6) return '[Truncated]';
-  if (Array.isArray(value)) return value.map((item) => sanitize(item, depth + 1));
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(
-    Object.entries(value).map(([key, entry]) => [
-      key,
-      isSensitiveKey(key) ? '[REDACTED]' : sanitize(entry, depth + 1),
-    ]),
-  );
-};
+const sanitize = (value) => sanitizeAuditPayload(value, {
+  maxBytes: env.corneropsMaxAuditPayloadBytes,
+});
 
 class AuditLogService {
   constructor({ enabled = true } = {}) {
@@ -49,12 +26,14 @@ class AuditLogService {
       conversationId: event.conversationId || '',
       actionType: event.actionType || 'unknown',
       toolName: event.toolName,
-      policyDecision: event.policyDecision || 'allowed',
+      policyDecision: event.policyDecision || 'denied',
       status: event.status || AUDIT_STATUS.PENDING,
       sanitizedInput: sanitize(event.input || event.sanitizedInput || {}),
       sanitizedOutput: sanitize(event.output || event.sanitizedOutput || {}),
       errorCode: event.errorCode,
-      errorMessage: event.errorMessage,
+      errorMessage: event.errorMessage
+        ? sanitizeAuditPayload({ message: event.errorMessage }).message
+        : undefined,
       latencyMs: event.latencyMs,
       approvalId: event.approvalId,
       createdAt: new Date().toISOString(),

@@ -32,6 +32,7 @@ class CrawlerRegistry {
 
   register(crawler) {
     if (!crawler?.id) throw new Error('Crawler id is required.');
+    if (this.crawlers.has(crawler.id)) throw new Error(`Duplicate crawler id: ${crawler.id}`);
     this.crawlers.set(crawler.id, { ...crawler });
     return this.get(crawler.id);
   }

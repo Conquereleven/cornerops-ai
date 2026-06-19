@@ -39,6 +39,9 @@ class BaseAgent {
         .map(([key, value]) => `${key}=${value}`)
         .join(', ')}.`);
     }
+    if (dataSnapshot.missingSources?.length) {
+      lines.push('', `Fuentes no disponibles: ${dataSnapshot.missingSources.join(', ')}.`);
+    }
     return lines.join('\n');
   }
 

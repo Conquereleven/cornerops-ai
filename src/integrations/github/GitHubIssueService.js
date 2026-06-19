@@ -7,6 +7,10 @@ class GitHubIssueService {
     return this.client.listIssues(filters, context);
   }
 
+  getIssue(issueNumber, context) {
+    return this.client.getIssue(issueNumber, context);
+  }
+
   createIssueDraft(input) {
     return this.client.createIssueDraft(input);
   }

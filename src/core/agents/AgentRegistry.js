@@ -29,6 +29,9 @@ class AgentRegistry {
     if (!agent?.id) {
       throw new Error('Agent definition requires an id.');
     }
+    if (this.agents.has(agent.id)) {
+      throw new Error(`Duplicate agent id: ${agent.id}`);
+    }
     this.agents.set(agent.id, cloneAgent(agent));
     return this.get(agent.id);
   }

@@ -170,6 +170,28 @@ para auth y políticas futuras.
 
 Consulta [`docs/supabase-setup.md`](docs/supabase-setup.md) para el runbook.
 
+## Internal beta v0.3
+
+La fase v0.3 endurece el sistema antes de conectar más fuentes. CornerOps sigue
+siendo el cerebro y OpenClaw permanece como gateway/capa de capacidades
+controladas. Por defecto GitHub, OpenClaw, crawlers, canales y herramientas
+nativas no realizan acciones reales.
+
+```bash
+npm run qa
+npm run control:tower
+npm run demo:beta
+```
+
+El primer source real permitido es GitHub en read-only y requiere simultáneamente
+`CORNEROPS_REAL_SOURCE_ONBOARDING_ENABLED=true`, `GITHUB_ENABLED=true`,
+`GITHUB_READ_ONLY=true` y un token de mínimo privilegio. Las escrituras siguen
+bloqueadas por `GITHUB_ALLOW_* = false` y `GITHUB_DRY_RUN=true`.
+
+Runbooks: [`QA v0.3`](docs/runbooks/qa-hardening-v0.3.md),
+[`beta ops`](docs/runbooks/internal-beta-ops.md) y
+[`GitHub read-only`](docs/runbooks/first-real-source-github.md).
+
 ## Chat
 
 ```bash

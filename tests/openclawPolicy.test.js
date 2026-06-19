@@ -33,4 +33,11 @@ describe('ToolExecutionPolicy', () => {
       toolName: 'shell.exec',
     }).policyDecision).toBe('denied');
   });
+
+  test('denies unknown actions instead of requesting approval', () => {
+    const policy = new ToolExecutionPolicy({ requireApproval: true });
+    const result = policy.evaluate({ actionType: 'unknown_future_action' });
+    expect(result.policyDecision).toBe('denied');
+    expect(result.allowed).toBe(false);
+  });
 });

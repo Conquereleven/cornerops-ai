@@ -19,6 +19,8 @@ describe('AgentOrchestrator', () => {
     expect(result.status).toBe('dry_run');
     expect(result.proposedActions.map((action) => action.toolName))
       .toContain('read_orders');
+    expect(result.dataSnapshot.missingSources).toContain('orders');
+    expect(result.responseText).toMatch(/Fuentes no disponibles:/);
     expect(auditService.list()).toHaveLength(1);
   });
 

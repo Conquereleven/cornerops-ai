@@ -168,7 +168,7 @@ class AgentOrchestrator {
 
   routeMessage(input) {
     const text = normalizeText(input.text);
-    if (hasAny(text, ['seguridad', 'security', 'audit', 'auditoria', 'logs', 'rechazad', 'riesgo', 'permisos'])) {
+    if (hasAny(text, ['seguridad', 'security', 'audit', 'auditoria', 'logs', 'rechazad', 'denied', 'riesgo', 'risk', 'permisos', 'high-risk tool'])) {
       return this.route(AGENT_IDS.SECURITY_AUDIT, 'security_audit', 0.94, 'Security/audit intent detected.', RISK_LEVELS.LOW);
     }
     if (
@@ -180,7 +180,7 @@ class AgentOrchestrator {
         : RISK_LEVELS.MEDIUM;
       return this.route(AGENT_IDS.DEV_CODEX_GITHUB, 'dev_codex_github', 0.92, 'Technical GitHub/Codex intent detected.', risk);
     }
-    if (hasAny(text, ['quote', 'cotizacion', 'cotiza', 'orden', 'pedido', 'pago', 'pagada', 'pagado', 'bank transfer', 'cod', 'contra entrega', 'manual'])) {
+    if (hasAny(text, ['quote', 'cotizacion', 'cotiza', 'order', 'orden', 'pedido', 'payment', 'pago', 'pagada', 'pagado', 'bank transfer', 'cod', 'contra entrega', 'manual'])) {
       const risk = hasAny(text, ['marca', 'marcar', 'cambia', 'cambiar', 'pagada', 'pagado', 'paid'])
         ? RISK_LEVELS.HIGH
         : RISK_LEVELS.MEDIUM;
@@ -401,7 +401,10 @@ class AgentOrchestrator {
   }
 
   snapshot(summary, metrics, raw) {
-    return { summary, metrics, raw };
+    const missingSources = Object.entries(raw || {})
+      .filter(([, value]) => value === null || value?.status === 'denied')
+      .map(([key]) => key);
+    return { summary, metrics, raw, missingSources };
   }
 
   output({ agentId, status, responseText, proposedActions, approvalId, errorCode, dataSnapshot }) {

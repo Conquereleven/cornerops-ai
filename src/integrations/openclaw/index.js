@@ -13,7 +13,9 @@ const auditLogService = new AuditLogService({
 });
 const humanApprovalService = new HumanApprovalService();
 const toolExecutionPolicy = new ToolExecutionPolicy({
+  auditEnabled: config.auditEnabled,
   requireApproval: config.requireApproval,
+  requireAudit: true,
   allowedTools: config.allowedTools,
 });
 const memoryBridge = new MemoryBridge();

@@ -65,6 +65,7 @@ const contextAccessPolicy = new ContextAccessPolicy({
   dryRun: env.corneropsContextDryRun,
   piiMasking: env.corneropsContextPiiMasking,
   readOnly: env.corneropsContextReadOnly,
+  requireAudit: env.corneropsRequireAuditForTools,
   requireApproval: env.corneropsContextRequireApproval,
 });
 const localArchiveMockAdapter = new LocalArchiveMockAdapter({ normalizer: contextNormalizer });
@@ -100,10 +101,12 @@ const contextIngestionService = new ContextIngestionService({
 });
 const crawlerRegistry = new CrawlerRegistry({ config: env });
 const crawlerPolicy = new CrawlerPolicy({
+  auditEnabled: env.corneropsContextAuditEnabled,
   crawlersEnabled: env.crawlersEnabled && env.corneropsContextLayerEnabled,
   dryRun: env.corneropsContextDryRun,
   readOnly: env.corneropsContextReadOnly,
   requireApproval: env.corneropsContextRequireApproval,
+  requireAudit: env.corneropsRequireAuditForTools,
 });
 const crawlerDeps = {
   auditLogService: dataCore.auditLogService,
@@ -123,8 +126,10 @@ const crawlerAdapters = {
 };
 const nativeToolRegistry = new NativeToolRegistry({ config: env });
 const nativeToolPolicy = new NativeToolPolicy({
+  auditEnabled: env.corneropsContextAuditEnabled,
   dryRun: env.corneropsContextDryRun,
   requireApproval: env.corneropsContextRequireApproval,
+  requireAudit: env.corneropsRequireAuditForTools,
 });
 const fsSafeBoundary = new FsSafeBoundary({
   allowOutsideRoot: env.clawsafeAllowOutsideRoot,

@@ -1,6 +1,11 @@
 const { maskPii } = require('../data/DataAccessPolicy');
 
 const piiRank = Object.freeze({ none: 0, low: 1, medium: 2, high: 3 });
+const KNOWN_MODES = new Set(['mock', 'read_only', 'sync_allowed', 'approval_required', 'disabled']);
+const KNOWN_OPERATIONS = new Set([
+  'search', 'read', 'summarize', 'dry_run_sync', 'sync', 'write', 'enable', 'delete',
+  'retention_change',
+]);
 
 const maskContextRecord = (record = {}) => {
   const masked = maskPii(record);
@@ -23,6 +28,7 @@ class ContextAccessPolicy {
     dryRun = true,
     piiMasking = true,
     readOnly = true,
+    requireAudit = true,
     requireApproval = true,
   } = {}) {
     this.allowedUsers = new Set(allowedUsers);
@@ -30,11 +36,24 @@ class ContextAccessPolicy {
     this.dryRun = dryRun;
     this.piiMasking = piiMasking;
     this.readOnly = readOnly;
+    this.requireAudit = requireAudit;
     this.requireApproval = requireApproval;
   }
 
   evaluate({ agentId, channel = 'internal', operation = 'search', source, userId } = {}) {
     if (!source) return this.deny('Context source is required.');
+    if (!source.id || !KNOWN_MODES.has(source.mode)) {
+      return this.deny('Context source identity or mode is unknown.');
+    }
+    if (!KNOWN_OPERATIONS.has(operation)) {
+      return this.deny(`Unknown context operation: ${operation || 'missing'}.`);
+    }
+    if (this.requireAudit && !this.auditEnabled) {
+      return this.deny('Context access denied because audit logging is unavailable.');
+    }
+    if (!(source.piiLevel in piiRank)) {
+      return this.deny(`Unknown PII level for ${source.id}.`);
+    }
     if (!source.enabled || source.mode === 'disabled') return this.deny(`Context source ${source.id} is disabled.`);
     if (!source.searchable && ['search', 'summarize'].includes(operation)) {
       return this.deny(`Context source ${source.id} is not searchable.`);

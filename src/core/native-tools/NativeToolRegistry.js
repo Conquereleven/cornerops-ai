@@ -34,6 +34,7 @@ class NativeToolRegistry {
 
   register(tool) {
     if (!tool?.id) throw new Error('Native tool id is required.');
+    if (this.tools.has(tool.id)) throw new Error(`Duplicate native tool id: ${tool.id}`);
     this.tools.set(tool.id, { ...tool });
     return this.get(tool.id);
   }

@@ -57,6 +57,7 @@ class ContextSourceRegistry {
     if (!source?.id || !CONTEXT_SOURCE_IDS.includes(source.id)) {
       throw new Error(`Invalid context source id: ${source?.id}`);
     }
+    if (this.sources.has(source.id)) throw new Error(`Duplicate context source id: ${source.id}`);
     this.sources.set(source.id, { ...source });
     return this.get(source.id);
   }

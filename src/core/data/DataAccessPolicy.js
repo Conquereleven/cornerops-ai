@@ -1,59 +1,40 @@
-const { DATA_OPERATIONS } = require('./dataTypes');
+const { DATA_MODES, DATA_OPERATIONS } = require('./dataTypes');
+const {
+  maskEmail,
+  maskPhone,
+  sanitizeValue,
+} = require('../security/SecuritySanitizer');
 
-const maskEmail = (email) => {
-  const value = String(email || '');
-  const [user, domain] = value.split('@');
-  if (!user || !domain) return value;
-  return `${user.slice(0, 2)}***@${domain}`;
-};
-
-const maskPhone = (phone) => {
-  const value = String(phone || '');
-  if (value.length <= 4) return value;
-  return `${value.slice(0, 3)}******${value.slice(-4)}`;
-};
-
-const SENSITIVE_KEYS = [
-  'authorization',
-  'password',
-  'secret',
-  'token',
-  'service_role',
-  'api_key',
-  'apikey',
-];
-
-const isSensitiveKey = (key) =>
-  SENSITIVE_KEYS.some((entry) => String(key).toLowerCase().includes(entry));
-
-const maskPii = (value, depth = 0) => {
-  if (depth > 6) return '[Truncated]';
-  if (Array.isArray(value)) return value.map((item) => maskPii(item, depth + 1));
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(Object.entries(value).map(([key, entry]) => {
-    const normalized = String(key).toLowerCase();
-    if (isSensitiveKey(key)) return [key, '[REDACTED]'];
-    if (normalized.includes('email')) return [key, maskEmail(entry)];
-    if (normalized.includes('phone') || normalized.includes('whatsapp')) {
-      return [key, maskPhone(entry)];
-    }
-    return [key, maskPii(entry, depth + 1)];
-  }));
-};
+const maskPii = (value) => sanitizeValue(value);
+const KNOWN_OPERATIONS = new Set(Object.values(DATA_OPERATIONS));
+const KNOWN_MODES = new Set(DATA_MODES);
 
 class DataAccessPolicy {
   constructor({
     allowedUsers = [],
+    auditEnabled = true,
     dryRun = true,
+    requireAudit = true,
     requireApproval = true,
   } = {}) {
     this.allowedUsers = new Set(allowedUsers);
+    this.auditEnabled = auditEnabled;
     this.dryRun = dryRun;
+    this.requireAudit = requireAudit;
     this.requireApproval = requireApproval;
   }
 
   evaluate({ agentId, channel, dataSource, operation, userId } = {}) {
     if (!dataSource) return this.deny('Data source is required.');
+    if (!dataSource.id || !KNOWN_MODES.has(dataSource.mode)) {
+      return this.deny('Data source identity or mode is unknown.');
+    }
+    if (!KNOWN_OPERATIONS.has(operation)) {
+      return this.deny(`Unknown data operation: ${operation || 'missing'}.`);
+    }
+    if (this.requireAudit && !this.auditEnabled) {
+      return this.deny('Data access denied because audit logging is unavailable.');
+    }
     if (!dataSource.enabled) return this.deny(`Data source ${dataSource.id} is disabled.`);
     if (this.allowedUsers.size && !this.allowedUsers.has(userId)) {
       return this.deny('User is not authorized for data access.');

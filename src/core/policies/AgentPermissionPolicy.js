@@ -1,27 +1,41 @@
-const { PERMISSION_LEVELS } = require('../agents/agentTypes');
+const { AGENT_IDS, CHANNELS, PERMISSION_LEVELS } = require('../agents/agentTypes');
 const { ToolExecutionPolicy } = require('./ToolExecutionPolicy');
 
 class AgentPermissionPolicy {
   constructor({
     agentsEnabled = true,
+    auditEnabled = true,
     allowedUsers = [],
     dryRun = true,
     requireApproval = true,
+    requireAudit = true,
     toolExecutionPolicy = new ToolExecutionPolicy(),
   } = {}) {
     this.agentsEnabled = agentsEnabled;
+    this.auditEnabled = auditEnabled;
     this.allowedUsers = new Set(allowedUsers);
     this.dryRun = dryRun;
     this.requireApproval = requireApproval;
+    this.requireAudit = requireAudit;
     this.toolExecutionPolicy = toolExecutionPolicy;
+    this.knownAgentIds = new Set(Object.values(AGENT_IDS));
   }
 
   evaluate({ agent, input, proposedActions = [] }) {
     if (!this.agentsEnabled) {
       return this.deny('Agents are disabled by configuration.');
     }
-    if (!agent || !agent.enabled) {
+    if (proposedActions.length && this.requireAudit && !this.auditEnabled) {
+      return this.deny('Agent tool use denied because audit logging is unavailable.');
+    }
+    if (!agent || !this.knownAgentIds.has(agent.id) || !agent.enabled) {
       return this.deny('Agent is not enabled.');
+    }
+    if (!Object.values(PERMISSION_LEVELS).includes(agent.permissionLevel)) {
+      return this.deny('Agent permission level is unknown.');
+    }
+    if (!input || !CHANNELS.includes(input.channel)) {
+      return this.deny('Input channel is unknown.');
     }
     if (!agent.allowedChannels.includes(input.channel)) {
       return this.deny(`Channel ${input.channel} is not allowed for ${agent.id}.`);
