@@ -86,7 +86,6 @@ class ReadOnlyDatabaseAdapter {
       || (this.config.provider === 'postgres' && this.postgresQuery);
     return Boolean(
       this.config.businessDataEnabled
-      && !this.config.dryRun
       && this.config.mode === 'read_only'
       && this.config.readOnly
       && !this.config.allowWrites

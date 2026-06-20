@@ -19,7 +19,9 @@ const createAgentTools = (deps) => {
     });
     if (!policy.allowed) return deniedResult(toolName, policy);
     const data = await loader(contextFromInput(input, agentId));
-    return readResult(toolName, data, policy.dryRun ? 'mock' : sourceId);
+    const source = deps.dataSourceRegistry.get(sourceId);
+    const sourceMode = source?.mode === 'read_only' ? 'real_read_only' : 'mock';
+    return readResult(toolName, data, sourceMode);
   };
 
   return {

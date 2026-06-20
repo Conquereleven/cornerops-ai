@@ -28,6 +28,7 @@ class GitHubClient {
       firstRealSourceMode: 'read_only',
       readOnly: true,
       realSourceOnboardingEnabled: false,
+      firstRealSourceEnabled: false,
       ...config,
     };
     this.fetchImpl = fetchImpl;
@@ -229,8 +230,8 @@ class GitHubClient {
   canUseRealReads() {
     return Boolean(
       this.config.enabled
-      && this.config.realSourceOnboardingEnabled
-      && this.config.firstRealSource === 'github'
+      && (this.config.realSourceOnboardingEnabled || this.config.firstRealSourceEnabled)
+      && ['github', 'auto'].includes(this.config.firstRealSource)
       && this.config.firstRealSourceMode === 'read_only'
       && this.config.readOnly
       && this.config.token
@@ -313,7 +314,9 @@ class GitHubClient {
     const warnings = [];
     if (!this.config.enabled) warnings.push('GitHub integration is disabled.');
     if (this.config.enabled && !configured) warnings.push('GitHub credentials or repository configuration are missing; mock data is used.');
-    if (!this.config.realSourceOnboardingEnabled) warnings.push('Real-source onboarding is disabled.');
+    if (!this.config.realSourceOnboardingEnabled && !this.config.firstRealSourceEnabled) {
+      warnings.push('Real-source onboarding is disabled.');
+    }
     if (!this.config.readOnly) warnings.push('GitHub is not in read-only mode.');
     return {
       enabled: Boolean(this.config.enabled),

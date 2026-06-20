@@ -65,7 +65,10 @@ class OperatorCommandRouter {
           : hasAny(text, ['error', 'errores']) ? 'errors' : 'recent',
       };
     }
-    if (hasAny(text, ['control tower', 'system health', 'estado del sistema', 'show system', 'status del sistema'])) {
+    if (
+      ['status', 'estado'].includes(text)
+      || hasAny(text, ['control tower', 'system health', 'estado del sistema', 'show system', 'status del sistema'])
+    ) {
       return { intent: OPERATOR_INTENTS.CONTROL_TOWER_STATUS };
     }
     if (hasAny(text, ['data health', 'salud de datos', 'data sources', 'fuentes de datos'])) {
@@ -290,10 +293,13 @@ class OperatorCommandRouter {
 
   async controlTowerStatus() {
     const report = await this.controlTowerService.getBetaReport();
+    const sourceMode = report.firstRealSource?.mode === 'read_only'
+      ? 'real_read_only'
+      : report.businessData.mode === 'read_only' ? 'read_only' : 'mock';
     return {
       agentId: 'operator-control-tower',
       status: 'success',
-      sourceMode: report.businessData.mode === 'read_only' ? 'read_only' : 'mock',
+      sourceMode,
       warnings: [...report.businessData.warnings, ...report.security.warnings],
       answerText: [
         `Control Tower status: ${report.status}.`,
@@ -311,7 +317,7 @@ class OperatorCommandRouter {
     return {
       agentId: 'operator-data-health',
       status: 'success',
-      sourceMode: report.businessData?.mode === 'real_read_only' ? 'read_only' : 'mock',
+      sourceMode: report.businessData?.mode === 'real_read_only' ? 'real_read_only' : 'mock',
       warnings: report.warnings || [],
       answerText: [
         `Data health: ${report.status}.`,
@@ -420,7 +426,9 @@ class OperatorCommandRouter {
     return {
       agentId: 'cornerops-router-agent',
       status: 'success',
-      sourceMode: report.businessData.mode === 'read_only' ? 'read_only' : 'mock',
+      sourceMode: report.firstRealSource?.mode === 'read_only'
+        ? 'real_read_only'
+        : report.businessData.mode === 'read_only' ? 'read_only' : 'mock',
       warnings: prefix ? [prefix] : [],
       answerText: [
         prefix,

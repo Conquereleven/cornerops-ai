@@ -10,6 +10,7 @@ class OperatorChannelService {
     responseService,
     router,
     statusStore,
+    rejectionTrackingService,
   } = {}) {
     this.auditLogService = auditLogService;
     this.chatFormatter = chatFormatter;
@@ -19,6 +20,7 @@ class OperatorChannelService {
     this.responseService = responseService;
     this.router = router;
     this.statusStore = statusStore;
+    this.rejectionTrackingService = rejectionTrackingService;
   }
 
   async handleInbound(input = {}) {
@@ -59,6 +61,17 @@ class OperatorChannelService {
       );
     }
     if (!decision.allowed) {
+      await this.rejectionTrackingService?.record({
+        provider: message.provider,
+        reason: decision.code || 'operator_channel_policy_error',
+        riskLevel: decision.riskLevel,
+        chatId: message.chatId || message.channelId,
+        userId: message.userId,
+        username: message.username,
+        messageId: message.id,
+        text: message.text,
+        auditId: inboundAudit?.id,
+      });
       return this.blocked(message, decision, decision.reason, decision.code, inboundAudit?.id);
     }
     try {

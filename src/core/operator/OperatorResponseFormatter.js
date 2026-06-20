@@ -18,12 +18,14 @@ class OperatorResponseFormatter {
 
   inferSourceMode(sourceModes = []) {
     const modes = new Set(sourceModes.filter(Boolean).map((mode) => {
-      if (mode === 'real_read_only' || mode === 'read_only') return 'read_only';
+      if (mode === 'real_read_only') return 'real_read_only';
+      if (mode === 'read_only') return 'read_only';
       if (mode === 'mock' || mode === 'fixture') return 'mock';
       return null;
     }).filter(Boolean));
     if (modes.size > 1) return 'mixed';
     if (modes.has('read_only')) return 'read_only';
+    if (modes.has('real_read_only')) return 'real_read_only';
     if (modes.has('mock')) return 'mock';
     return 'disabled';
   }

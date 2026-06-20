@@ -22,7 +22,7 @@ describe('Operator formatter and sessions v0.5', () => {
   test('infers mock, read-only, mixed and disabled modes', () => {
     const formatter = new OperatorResponseFormatter();
     expect(formatter.inferSourceMode(['mock'])).toBe('mock');
-    expect(formatter.inferSourceMode(['real_read_only'])).toBe('read_only');
+    expect(formatter.inferSourceMode(['real_read_only'])).toBe('real_read_only');
     expect(formatter.inferSourceMode(['mock', 'read_only'])).toBe('mixed');
     expect(formatter.inferSourceMode(['internal'])).toBe('disabled');
   });

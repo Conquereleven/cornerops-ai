@@ -407,6 +407,25 @@ frontend/                   # Command Center React + Vite
 docs/                       # Runbooks y roadmaps
 ```
 
+## Telegram + First Read-Only Source v0.7
+
+v0.7 adds restart-safe replay protection, persistent rejection tracking,
+operator rate limiting and a first-source selector. Telegram remains a
+founder-only private DM transport and is disabled until credentials and exact
+allowlists are configured. The selector uses a verified read-only business DB,
+then GitHub, otherwise labeled mock data.
+
+```bash
+npm run telegram:check
+npm run demo:telegram-activation
+npm run demo:first-real-source
+npm run demo:v0.7
+```
+
+See the [Telegram runbook](docs/runbooks/telegram-operator-runbook-v0.7.md),
+[source runbook](docs/runbooks/first-real-source-v0.7.md) and
+[replay security model](docs/security/replay-protection-v0.7.md).
+
 ## Core Agent Pack v0.1
 
 El primer paquete operativo vive en `src/core`:
@@ -445,7 +464,7 @@ Prioridades siguientes:
 - Persistir approvals y audit logs.
 - Agregar UI de aprobaciones al Command Center.
 - Conectar Slack sandbox con allowlist.
-- Preparar WhatsApp/Telegram reales con firma y permisos.
+- Migrar stores de seguridad a un backend transaccional antes de escalar réplicas.
 - Añadir RBAC administrativo.
 
 Consulta [`CODEX_CHECKPOINT.md`](CODEX_CHECKPOINT.md),

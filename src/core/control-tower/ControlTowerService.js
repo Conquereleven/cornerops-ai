@@ -20,6 +20,8 @@ class ControlTowerService {
     dataContractRegistry,
     schemaDiscoveryService,
     operatorChannelStatusProvider,
+    operatorChannelSecurityProvider,
+    firstRealSourceReadinessService,
   } = {}) {
     this.agentAuditService = agentAuditService;
     this.agentRegistry = agentRegistry;
@@ -36,6 +38,8 @@ class ControlTowerService {
     this.dataContractRegistry = dataContractRegistry;
     this.schemaDiscoveryService = schemaDiscoveryService;
     this.operatorChannelStatusProvider = operatorChannelStatusProvider;
+    this.operatorChannelSecurityProvider = operatorChannelSecurityProvider;
+    this.firstRealSourceReadinessService = firstRealSourceReadinessService;
   }
 
   async getReport() {
@@ -46,7 +50,15 @@ class ControlTowerService {
         warnings: ['CORNEROPS_CONTROL_TOWER_ENABLED=false'],
       };
     }
-    const [dataHealth, contextHealth, approvals, audit, businessData] = await Promise.all([
+    const [
+      dataHealth,
+      contextHealth,
+      approvals,
+      audit,
+      businessData,
+      operatorChannelSecurity,
+      firstRealSource,
+    ] = await Promise.all([
       this.dataHealthService.getReport(),
       this.contextHealthService.getReport(),
       this.getApprovalsSummary(),
@@ -60,6 +72,16 @@ class ControlTowerService {
           readOnlyVerified: true,
           mappedEntities: [],
           warnings: ['Business data service is unavailable.'],
+        }),
+      this.operatorChannelSecurityProvider
+        ? this.operatorChannelSecurityProvider()
+        : Promise.resolve(null),
+      this.firstRealSourceReadinessService?.getReport
+        ? this.firstRealSourceReadinessService.getReport()
+        : Promise.resolve({
+          selectedSource: 'mock', mode: 'mock', ready: false,
+          readOnlyVerified: false, credentialsPresent: false,
+          warnings: ['First real source readiness service is unavailable.'],
         }),
     ]);
     const agents = this.agentRegistry.list();
@@ -130,10 +152,13 @@ class ControlTowerService {
       demoMode: this.config.corneropsQaMode,
       dryRun: this.config.corneropsDryRun,
       realSourceOnboarding: {
-        enabled: this.config.corneropsRealSourceOnboardingEnabled,
-        source: this.config.corneropsFirstRealSource,
-        mode: this.config.corneropsFirstRealSourceMode,
-        ready: github.connected && github.readOnly,
+        enabled: Boolean(
+          this.config.corneropsRealSourceOnboardingEnabled
+          || this.config.corneropsFirstRealSourceEnabled,
+        ),
+        source: firstRealSource.selectedSource,
+        mode: firstRealSource.mode,
+        ready: firstRealSource.ready,
       },
       operatorInterface: {
         enabled: this.config.corneropsOperatorInterfaceEnabled,
@@ -169,6 +194,21 @@ class ControlTowerService {
           dryRun: this.config.slackOperatorDryRun !== false,
         },
       },
+      telegram: operatorChannelSecurity?.telegram || {
+        enabled: false,
+        realMode: false,
+        dryRun: true,
+        replyEnabled: true,
+        replyDryRun: true,
+        allowedUsersCount: 0,
+        allowedChatsCount: 0,
+        rejectsGroups: true,
+        replayProtection: { enabled: false, storeHealthy: false, ttlSeconds: 0 },
+        rejectionTracking: { enabled: false, storeHealthy: false, rejectedLast24h: 0 },
+        rateLimiting: { enabled: false, storeHealthy: false, limitPerMinute: 0 },
+        warnings: ['Telegram security status provider is unavailable.'],
+      },
+      firstRealSource,
       disabledExternalSources: this.getExternalSources().filter((source) => !source.enabled),
       realSourcesEnabled: this.getExternalSources().filter((source) => source.enabled),
       lastDemoRun: {
@@ -185,6 +225,7 @@ class ControlTowerService {
     if (this.config.corneropsInternalBetaEnabled) return 'internal_beta';
     if (this.config.corneropsBetaMode) return 'beta';
     if (this.config.corneropsRealSourceOnboardingEnabled) return 'read_only';
+    if (this.config.corneropsFirstRealSourceEnabled) return 'read_only';
     if (this.config.corneropsDryRun) return 'dry_run';
     return 'mock';
   }
@@ -246,6 +287,19 @@ class ControlTowerService {
         || this.config.corneropsOperatorLogSanitization === false
       )
     ) warnings.push('CRITICAL: real operator channel safety controls are disabled.');
+    if (
+      this.config.corneropsTelegramRealMode
+      && (
+        !this.config.corneropsTelegramActivationEnabled
+        || !this.config.corneropsTelegramReadOnly
+        || !this.config.corneropsTelegramFailClosed
+        || !this.config.corneropsReplayProtectionEnabled
+        || !this.config.corneropsReplayFailClosed
+        || !this.config.corneropsRejectionStoreEnabled
+        || !this.config.corneropsRateLimitingEnabled
+        || this.config.corneropsReplayStoreProvider !== 'file'
+      )
+    ) warnings.push('CRITICAL: Telegram real mode lacks persistent fail-closed security controls.');
     const forbiddenRealSources = [
       ['Slack context', this.config.slackContextEnabled],
       ['WhatsApp context', this.config.whatsappContextEnabled],
@@ -299,8 +353,13 @@ class ControlTowerService {
     const report = await this.getReport();
     const security = report.security;
     const critical = security.warnings.some((warning) => warning.startsWith('CRITICAL:'));
-    const realRequestedButUnavailable = this.config.corneropsBusinessDataEnabled
-      && report.businessData.mode !== 'real_read_only';
+    const realRequestedButUnavailable = (
+      this.config.corneropsBusinessDataEnabled
+      && report.businessData.mode !== 'real_read_only'
+    ) || (
+      this.config.corneropsFirstRealSourceEnabled
+      && report.firstRealSource.mode !== 'read_only'
+    );
     const betaStatus = critical
       ? 'unhealthy'
       : realRequestedButUnavailable ? 'degraded' : 'healthy';
@@ -356,6 +415,8 @@ class ControlTowerService {
       lastDemoRun: report.lastDemoRun,
       operatorInterface: report.operatorInterface,
       operatorChannel: report.operatorChannel,
+      telegram: report.telegram,
+      firstRealSource: report.firstRealSource,
       generatedAt: new Date().toISOString(),
     };
   }

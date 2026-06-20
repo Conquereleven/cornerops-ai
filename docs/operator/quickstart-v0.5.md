@@ -68,3 +68,15 @@ The first command uses an allowlisted mock founder. The second only checks
 whether Telegram configuration is present and never sends. Real Telegram setup
 is documented in `docs/runbooks/operator-channel-setup.md`; do not enable
 WhatsApp, Slack events, groups or customer channels in v0.6.
+
+## v0.7 verification
+
+```bash
+npm run telegram:check
+npm run demo:telegram-activation
+npm run demo:first-real-source
+npm run demo:v0.7
+```
+
+These commands do not require credentials and do not send real messages. Use
+`docs/runbooks/telegram-operator-runbook-v0.7.md` for one-founder activation.

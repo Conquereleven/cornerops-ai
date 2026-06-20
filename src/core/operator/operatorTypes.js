@@ -6,7 +6,7 @@ const OPERATOR_STATUSES = Object.freeze([
   'dry_run',
   'error',
 ]);
-const OPERATOR_SOURCE_MODES = Object.freeze(['mock', 'read_only', 'mixed', 'disabled']);
+const OPERATOR_SOURCE_MODES = Object.freeze(['mock', 'read_only', 'real_read_only', 'mixed', 'disabled']);
 
 const OPERATOR_INTENTS = Object.freeze({
   APPROVAL_ACTION: 'approval_action',

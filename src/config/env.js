@@ -164,6 +164,22 @@ const baseEnv = {
     process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION),
+  corneropsTelegramActivationEnabled: parseBoolean(
+    process.env.CORNEROPS_TELEGRAM_ACTIVATION_ENABLED,
+  ),
+  corneropsTelegramRealMode: parseBoolean(process.env.CORNEROPS_TELEGRAM_REAL_MODE),
+  corneropsTelegramDryRun:
+    process.env.CORNEROPS_TELEGRAM_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_DRY_RUN),
+  corneropsTelegramReadOnly:
+    process.env.CORNEROPS_TELEGRAM_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_READ_ONLY),
+  corneropsTelegramFailClosed:
+    process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED),
   telegramOperatorEnabled: parseBoolean(process.env.TELEGRAM_OPERATOR_ENABLED),
   telegramOperatorBotToken: process.env.TELEGRAM_OPERATOR_BOT_TOKEN || '',
   telegramOperatorAllowedChatIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS),
@@ -173,6 +189,69 @@ const baseEnv = {
     process.env.TELEGRAM_OPERATOR_DRY_RUN === undefined
       ? true
       : parseBoolean(process.env.TELEGRAM_OPERATOR_DRY_RUN),
+  telegramOperatorRequireDm:
+    process.env.TELEGRAM_OPERATOR_REQUIRE_DM === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REQUIRE_DM),
+  telegramOperatorRejectGroups:
+    process.env.TELEGRAM_OPERATOR_REJECT_GROUPS === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REJECT_GROUPS),
+  telegramOperatorReplyEnabled:
+    process.env.TELEGRAM_OPERATOR_REPLY_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REPLY_ENABLED),
+  telegramOperatorReplyDryRun:
+    process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN),
+  corneropsReplayProtectionEnabled:
+    process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED),
+  corneropsReplayStoreProvider: parseEnum(
+    process.env.CORNEROPS_REPLAY_STORE_PROVIDER,
+    ['file', 'memory'],
+    'file',
+  ),
+  corneropsReplayStorePath:
+    process.env.CORNEROPS_REPLAY_STORE_PATH || './.cornerops/security/replay-store.json',
+  corneropsReplayTtlSeconds: parseInteger(
+    process.env.CORNEROPS_REPLAY_TTL_SECONDS,
+    86400,
+    { min: 60, max: 2592000 },
+  ),
+  corneropsReplayFailClosed:
+    process.env.CORNEROPS_REPLAY_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REPLAY_FAIL_CLOSED),
+  corneropsRejectionStoreEnabled:
+    process.env.CORNEROPS_REJECTION_STORE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REJECTION_STORE_ENABLED),
+  corneropsRejectionStorePath:
+    process.env.CORNEROPS_REJECTION_STORE_PATH || './.cornerops/security/rejections.json',
+  corneropsRejectionRetentionDays: parseInteger(
+    process.env.CORNEROPS_REJECTION_RETENTION_DAYS,
+    30,
+    { min: 1, max: 365 },
+  ),
+  corneropsRateLimitingEnabled:
+    process.env.CORNEROPS_RATE_LIMITING_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_RATE_LIMITING_ENABLED),
+  corneropsOperatorRateLimitPerMinute: parseInteger(
+    process.env.CORNEROPS_OPERATOR_RATE_LIMIT_PER_MINUTE,
+    12,
+    { min: 1, max: 600 },
+  ),
+  corneropsOperatorRateLimitBurst: parseInteger(
+    process.env.CORNEROPS_OPERATOR_RATE_LIMIT_BURST,
+    20,
+    { min: 1, max: 1000 },
+  ),
+  corneropsRateLimitStorePath:
+    process.env.CORNEROPS_RATE_LIMIT_STORE_PATH || './.cornerops/security/rate-limits.json',
   slackOperatorEnabled: parseBoolean(process.env.SLACK_OPERATOR_ENABLED),
   slackOperatorBotToken: process.env.SLACK_OPERATOR_BOT_TOKEN || '',
   slackOperatorSigningSecret: process.env.SLACK_OPERATOR_SIGNING_SECRET || '',
@@ -250,15 +329,25 @@ const baseEnv = {
   corneropsRealSourceOnboardingEnabled: parseBoolean(
     process.env.CORNEROPS_REAL_SOURCE_ONBOARDING_ENABLED,
   ),
+  corneropsFirstRealSourceEnabled: parseBoolean(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_ENABLED,
+  ),
   corneropsFirstRealSource: parseEnum(
     process.env.CORNEROPS_FIRST_REAL_SOURCE,
-    ['github'],
-    'github',
+    ['auto', 'business_db', 'github', 'mock'],
+    'auto',
   ),
   corneropsFirstRealSourceMode: parseEnum(
     process.env.CORNEROPS_FIRST_REAL_SOURCE_MODE,
     ['read_only'],
     'read_only',
+  ),
+  corneropsFirstRealSourceDryRun:
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_FIRST_REAL_SOURCE_DRY_RUN),
+  corneropsPreferredRealSourceOrder: parseCsv(
+    process.env.CORNEROPS_PREFERRED_REAL_SOURCE_ORDER || 'business_db,github',
   ),
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
@@ -657,6 +746,36 @@ const getEnvWarnings = () => {
   }
   if (baseEnv.openclawOperatorChannelEnabled && !baseEnv.openclawOperatorChannelAllowlistOnly) {
     warnings.push('OpenClaw operator channel allowlist enforcement is disabled.');
+  }
+  if (
+    baseEnv.corneropsTelegramRealMode
+    && (
+      !baseEnv.corneropsTelegramActivationEnabled
+      || !baseEnv.telegramOperatorEnabled
+      || !baseEnv.corneropsTelegramReadOnly
+      || !baseEnv.corneropsTelegramFailClosed
+      || baseEnv.corneropsReplayStoreProvider !== 'file'
+      || !baseEnv.corneropsReplayProtectionEnabled
+      || !baseEnv.corneropsReplayFailClosed
+      || !baseEnv.corneropsRejectionStoreEnabled
+      || !baseEnv.corneropsRateLimitingEnabled
+    )
+  ) {
+    warnings.push('Telegram real mode is missing persistent fail-closed safety controls.');
+  }
+  if (
+    baseEnv.corneropsTelegramActivationEnabled
+    && (
+      !baseEnv.telegramOperatorBotToken
+      || !baseEnv.telegramOperatorWebhookSecret
+      || !baseEnv.telegramOperatorAllowedChatIds.length
+      || !baseEnv.telegramOperatorAllowedUserIds.length
+    )
+  ) {
+    warnings.push('Telegram activation is missing credentials or founder allowlists.');
+  }
+  if (baseEnv.corneropsFirstRealSourceEnabled && baseEnv.corneropsFirstRealSourceMode !== 'read_only') {
+    warnings.push('First real source mode is unsafe; mock fallback will be used.');
   }
   if (baseEnv.corneropsBusinessDataEnabled) {
     const readOnlyCredentialAvailable = baseEnv.corneropsDatabaseProvider === 'supabase'

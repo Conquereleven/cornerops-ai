@@ -6,7 +6,11 @@ const { telegramOperatorChannelAdapter } = require('../core/operator-channel');
 const router = express.Router();
 
 router.post('/telegram/webhook', async (req, res, next) => {
-  if (!env.corneropsRealOperatorChannelEnabled || !env.telegramOperatorEnabled) {
+  if (
+    !env.corneropsRealOperatorChannelEnabled
+    || !env.corneropsTelegramActivationEnabled
+    || !env.telegramOperatorEnabled
+  ) {
     const audit = await data.auditLogService.record({
       requestId: req.get('x-request-id'),
       eventType: 'operator_channel_webhook_denied',

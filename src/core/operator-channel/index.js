@@ -12,6 +12,7 @@ const { OperatorChannelResponseService } = require('./OperatorChannelResponseSer
 const { OperatorChannelRouter } = require('./OperatorChannelRouter');
 const { OperatorChannelService } = require('./OperatorChannelService');
 const { operatorChannelStatusStore } = require('./OperatorChannelStatusStore');
+const { createOperatorSecurityServices } = require('../security');
 
 const providerAllowlist = (provider) => {
   if (provider === 'telegram') {
@@ -40,7 +41,11 @@ const config = {
   enabled: env.corneropsRealOperatorChannelEnabled,
   provider: env.corneropsOperatorChannelProvider,
   providerEnabled: env.corneropsOperatorChannelProvider === 'mock'
-    || (env.corneropsOperatorChannelProvider === 'telegram' && env.telegramOperatorEnabled)
+    || (
+      env.corneropsOperatorChannelProvider === 'telegram'
+      && env.telegramOperatorEnabled
+      && env.corneropsTelegramActivationEnabled
+    )
     || (env.corneropsOperatorChannelProvider === 'openclaw' && env.openclawOperatorChannelEnabled),
   mode: env.corneropsOperatorChannelMode,
   dryRun: env.corneropsOperatorChannelDryRun,
@@ -61,17 +66,35 @@ const config = {
   requireApprovalForWrites: env.corneropsRequireApprovalForWrites,
 };
 
+const operatorSecurity = createOperatorSecurityServices({
+  auditLogService: data.auditLogService,
+  config: env,
+});
+
 const mockOperatorChannelAdapter = new MockOperatorChannelAdapter({ dryRun: true });
 const telegramOperatorChannelAdapter = new TelegramOperatorChannelAdapter({
   config: {
-    enabled: env.telegramOperatorEnabled,
+    enabled: env.telegramOperatorEnabled && env.corneropsTelegramActivationEnabled,
+    realMode: env.corneropsTelegramRealMode,
     botToken: env.telegramOperatorBotToken,
     allowedChatIds: env.telegramOperatorAllowedChatIds,
     allowedUserIds: env.telegramOperatorAllowedUserIds,
     webhookSecret: env.telegramOperatorWebhookSecret,
-    dryRun: env.telegramOperatorDryRun,
-    replyEnabled: env.corneropsOperatorReplyEnabled,
+    dryRun: env.telegramOperatorDryRun || env.corneropsTelegramDryRun,
+    failClosed: env.corneropsTelegramFailClosed,
+    persistentSecurity: env.corneropsReplayStoreProvider === 'file'
+      && env.corneropsReplayProtectionEnabled
+      && env.corneropsRejectionStoreEnabled
+      && env.corneropsRateLimitingEnabled,
+    readOnly: env.corneropsTelegramReadOnly,
+    rejectGroups: env.telegramOperatorRejectGroups,
+    replyDryRun: env.telegramOperatorReplyDryRun || env.corneropsOperatorReplyDryRun,
+    replyEnabled: env.telegramOperatorReplyEnabled && env.corneropsOperatorReplyEnabled,
+    requireDm: env.telegramOperatorRequireDm,
   },
+  rateLimitService: operatorSecurity.operatorRateLimitService,
+  rejectionTrackingService: operatorSecurity.rejectionTrackingService,
+  replayProtectionService: operatorSecurity.replayProtectionService,
 });
 const openClawOperatorChannelBridge = new OpenClawOperatorChannelBridge({
   config: {
@@ -103,6 +126,7 @@ const operatorChannelService = new OperatorChannelService({
   responseService: operatorChannelResponseService,
   router: operatorChannelRouter,
   statusStore: operatorChannelStatusStore,
+  rejectionTrackingService: operatorSecurity.rejectionTrackingService,
 });
 
 mockOperatorChannelAdapter.connect(operatorChannelService);
@@ -121,6 +145,9 @@ module.exports = {
   operatorChannelService,
   operatorChannelStatusStore,
   operatorChatResponseFormatter,
+  operatorRateLimitService: operatorSecurity.operatorRateLimitService,
+  rejectionTrackingService: operatorSecurity.rejectionTrackingService,
+  replayProtectionService: operatorSecurity.replayProtectionService,
   telegramOperatorChannelAdapter,
   MockOperatorChannelAdapter,
   OperatorChannelMessageNormalizer,

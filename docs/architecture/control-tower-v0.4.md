@@ -7,6 +7,11 @@ mode, dry-run/reply state, allowlist counts, last inbound/outbound timestamps,
 rejections during the last 24 hours, Telegram readiness, Slack deferral and the
 OpenClaw bridge state. Counters and timestamps are process-local in v0.6.
 
+v0.7 adds persistent Telegram replay/rejection/rate-limit store health, group
+rejection, action/reply modes and first-real-source readiness. In-memory
+channel timestamps remain observational; rejection totals come from the
+persistent store.
+
 Commands:
 
 ```bash

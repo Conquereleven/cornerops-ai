@@ -8,6 +8,7 @@ const required = [
 const missing = required.filter((key) => !process.env[key]);
 const configured = process.env.CORNEROPS_REAL_OPERATOR_CHANNEL_ENABLED === 'true'
   && process.env.CORNEROPS_OPERATOR_CHANNEL_PROVIDER === 'telegram'
+  && process.env.CORNEROPS_TELEGRAM_ACTIVATION_ENABLED === 'true'
   && process.env.TELEGRAM_OPERATOR_ENABLED === 'true'
   && !missing.length;
 

@@ -41,6 +41,28 @@ const makeService = (overrides = {}) => new ControlTowerService({
     rejectedLast24h: 2,
     warnings: [],
   }),
+  operatorChannelSecurityProvider: async () => ({
+    telegram: {
+      enabled: false,
+      realMode: false,
+      dryRun: true,
+      replyEnabled: true,
+      replyDryRun: true,
+      allowedUsersCount: 1,
+      allowedChatsCount: 1,
+      rejectsGroups: true,
+      replayProtection: { enabled: true, storeHealthy: true, ttlSeconds: 86400 },
+      rejectionTracking: { enabled: true, storeHealthy: true, rejectedLast24h: 2 },
+      rateLimiting: { enabled: true, storeHealthy: true, limitPerMinute: 12 },
+      warnings: [],
+    },
+  }),
+  firstRealSourceReadinessService: {
+    getReport: async () => ({
+      selectedSource: 'mock', mode: 'mock', ready: false,
+      readOnlyVerified: false, credentialsPresent: false, warnings: [],
+    }),
+  },
   ...overrides,
 });
 
@@ -62,6 +84,13 @@ describe('CornerOps Control Tower', () => {
       dryRun: true,
       rejectedLast24h: 2,
     });
+    expect(report.telegram).toMatchObject({
+      rejectsGroups: true,
+      replayProtection: { storeHealthy: true },
+      rejectionTracking: { rejectedLast24h: 2 },
+      rateLimiting: { limitPerMinute: 12 },
+    });
+    expect(report.firstRealSource).toMatchObject({ selectedSource: 'mock', mode: 'mock' });
   });
 
   test('reports unhealthy when fail-closed security is disabled', async () => {

@@ -13,17 +13,19 @@ const defaultSources = (config = {}) => {
   const allowed = new Set(config.allowedDataSources || DATA_SOURCE_IDS);
   const enabled = config.realDataEnabled || config.dataMode === 'mock';
   const githubRealReadOnly = Boolean(
-    config.realSourceOnboardingEnabled
-    && config.firstRealSource === 'github'
+    (config.realSourceOnboardingEnabled || config.firstRealSourceEnabled)
+    && ['github', 'auto'].includes(config.firstRealSource)
     && config.firstRealSourceMode === 'read_only'
     && config.githubEnabled
-    && config.githubReadOnly,
+    && config.githubReadOnly
+    && config.githubCredentialsPresent,
   );
   const businessReadOnly = Boolean(
     config.businessDataEnabled
     && config.businessDataMode === 'read_only'
     && config.dbReadOnly
-    && !config.dbAllowWrites,
+    && !config.dbAllowWrites
+    && config.dbCredentialsPresent,
   );
   const base = (id, options = {}) => ({
     id,

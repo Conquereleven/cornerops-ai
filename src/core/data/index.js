@@ -39,6 +39,29 @@ const { LobsterWorkflowShellAdapter } = require('../openclaw-ecosystem/adapters/
 const { ClawSweeperTriageAdapter } = require('../openclaw-ecosystem/adapters/ClawSweeperTriageAdapter');
 const { CrabfleetMissionControlAdapter } = require('../openclaw-ecosystem/adapters/CrabfleetMissionControlAdapter');
 const { ClickClackChatAdapter } = require('../openclaw-ecosystem/adapters/ClickClackChatAdapter');
+const { FirstRealSourceReadinessService, FirstRealSourceSelector } = require('../real-source');
+
+const businessDbConfigured = Boolean(
+  env.corneropsBusinessDataEnabled
+  && env.corneropsBusinessDataMode === 'read_only'
+  && env.corneropsDbReadOnly
+  && !env.corneropsDbAllowWrites
+  && env.corneropsDatabaseProvider === 'supabase'
+  && env.supabaseUrl
+  && env.supabaseReadonlyKey,
+);
+const githubConfigured = Boolean(
+  env.githubEnabled
+  && env.githubReadOnly
+  && env.githubToken
+  && env.githubOwner
+  && env.githubRepo,
+);
+const selectedConfiguredFirstSource = !env.corneropsFirstRealSourceEnabled
+  ? 'mock'
+  : env.corneropsFirstRealSource === 'auto'
+    ? businessDbConfigured ? 'business_db' : githubConfigured ? 'github' : 'mock'
+    : env.corneropsFirstRealSource;
 
 const mockDataAdapter = new MockDataAdapter();
 const databaseClient = new DatabaseClient({
@@ -55,14 +78,20 @@ const dataSourceRegistry = new DataSourceRegistry({
     businessDataEnabled: env.corneropsBusinessDataEnabled,
     businessDataMode: env.corneropsBusinessDataMode,
     dataMode: env.corneropsDataMode,
-    firstRealSource: env.corneropsFirstRealSource,
+    firstRealSource: selectedConfiguredFirstSource,
+    firstRealSourceEnabled: env.corneropsFirstRealSourceEnabled,
     firstRealSourceMode: env.corneropsFirstRealSourceMode,
     githubEnabled: env.githubEnabled,
     githubReadOnly: env.githubReadOnly,
+    githubCredentialsPresent: Boolean(env.githubToken && env.githubOwner && env.githubRepo),
     dbReadOnly: env.corneropsDbReadOnly,
     dbAllowWrites: env.corneropsDbAllowWrites,
+    dbCredentialsPresent: env.corneropsDatabaseProvider === 'supabase'
+      ? Boolean(env.supabaseUrl && env.supabaseReadonlyKey)
+      : Boolean(env.readOnlyDatabaseUrl),
     realDataEnabled: env.corneropsRealDataEnabled,
-    realSourceOnboardingEnabled: env.corneropsRealSourceOnboardingEnabled,
+    realSourceOnboardingEnabled:
+      env.corneropsRealSourceOnboardingEnabled || env.corneropsFirstRealSourceEnabled,
   },
 });
 const dataAccessPolicy = new DataAccessPolicy({
@@ -177,11 +206,13 @@ const githubClient = new GitHubClient({
     apiVersion: env.githubApiVersion,
     enabled: env.githubEnabled,
     dryRun: env.githubDryRun,
-    firstRealSource: env.corneropsFirstRealSource,
+    firstRealSource: selectedConfiguredFirstSource,
+    firstRealSourceEnabled: env.corneropsFirstRealSourceEnabled,
     firstRealSourceMode: env.corneropsFirstRealSourceMode,
     owner: env.githubOwner,
     readOnly: env.githubReadOnly,
-    realSourceOnboardingEnabled: env.corneropsRealSourceOnboardingEnabled,
+    realSourceOnboardingEnabled:
+      env.corneropsRealSourceOnboardingEnabled || env.corneropsFirstRealSourceEnabled,
     repo: env.githubRepo,
     token: env.githubToken,
     webhookSecret: env.githubWebhookSecret,
@@ -192,6 +223,19 @@ const githubClient = new GitHubClient({
 const githubIssueService = new GitHubIssueService({ client: githubClient });
 const githubPullRequestService = new GitHubPullRequestService({ client: githubClient });
 const githubActionsService = new GitHubActionsService({ client: githubClient });
+const firstRealSourceSelector = new FirstRealSourceSelector({
+  config: {
+    enabled: env.corneropsFirstRealSourceEnabled,
+    mode: env.corneropsFirstRealSourceMode,
+    preferredOrder: env.corneropsPreferredRealSourceOrder,
+    source: env.corneropsFirstRealSource,
+  },
+});
+const firstRealSourceReadinessService = new FirstRealSourceReadinessService({
+  databaseAdapter: readOnlyDatabaseAdapter,
+  githubClient,
+  selector: firstRealSourceSelector,
+});
 const githubWebhookHandler = new GitHubWebhookHandler({ auditLogService, client: githubClient });
 const leadService = new LeadService({
   auditLogService,
@@ -254,6 +298,8 @@ module.exports = {
   databaseClient,
   ecosystemPolicy,
   ecosystemRegistry,
+  firstRealSourceReadinessService,
+  firstRealSourceSelector,
   githubActionsService,
   githubClient,
   githubIssueService,

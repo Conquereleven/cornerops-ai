@@ -35,10 +35,16 @@ describe('Operator channel integrations v0.6', () => {
         botToken: 'test-token-not-real',
         webhookSecret: 'secret',
         allowedChatIds: ['123456'],
+        allowedUserIds: ['123456'],
         dryRun: true,
       },
     });
-    await expect(adapter.sendReply({ chatId: '123456', text: 'safe reply' })).resolves.toMatchObject({ status: 'dry_run' });
+    await expect(adapter.sendReply({
+      chatId: '123456',
+      userId: '123456',
+      text: 'safe reply',
+      inReplyToMessageId: 'telegram-42',
+    })).resolves.toMatchObject({ status: 'dry_run' });
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -51,10 +57,19 @@ describe('Operator channel integrations v0.6', () => {
         botToken: '123456:secret-test-token',
         webhookSecret: 'secret',
         allowedChatIds: ['123456'],
+        allowedUserIds: ['123456'],
         dryRun: false,
+        realMode: true,
+        replyDryRun: false,
       },
     });
-    const result = await adapter.sendReply({ chatId: '123456', text: 'safe reply', dryRun: false });
+    const result = await adapter.sendReply({
+      chatId: '123456',
+      userId: '123456',
+      text: 'safe reply',
+      dryRun: false,
+      inReplyToMessageId: 'telegram-42',
+    });
     expect(result).toEqual({
       status: 'error',
       warnings: ['Telegram operator reply transport failed.'],

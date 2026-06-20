@@ -24,6 +24,8 @@ class OperatorChannelResponseService {
       userId: message.userId,
       text,
       dryRun: policy.dryRun,
+      inReplyToMessageId: message.id,
+      externalMessageId: message.metadata?.telegramMessageId,
     });
     if (result.status === OPERATOR_CHANNEL_STATUSES.SENT || result.status === OPERATOR_CHANNEL_STATUSES.DRY_RUN) {
       this.statusStore.recordOutbound();

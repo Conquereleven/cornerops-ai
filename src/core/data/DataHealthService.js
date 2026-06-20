@@ -26,10 +26,15 @@ class DataHealthService {
       const connected = source.id === 'github'
         ? Boolean(githubStatus?.connected || source.mode === 'mock')
         : source.adapter === 'mock' || dbHealth.connected;
+      const mode = source.id === 'github'
+        ? (githubStatus?.mode || 'mock')
+        : ['leads', 'quotes', 'orders'].includes(source.id) && businessData
+          ? (businessData.mode === 'real_read_only' ? 'real_read_only' : 'mock')
+          : source.mode;
       return {
         id: source.id,
         enabled: source.enabled,
-        mode: source.mode,
+        mode,
         connected,
         lastCheckedAt: now,
         error: source.enabled ? undefined : 'disabled_by_feature_flag',
