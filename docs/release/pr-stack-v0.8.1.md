@@ -9,6 +9,8 @@
 
 PR #20 contained the full v0.7 history while #19 was open. Merge-tree simulations showed no conflicts and reproduced each branch tree exactly. After #19 merged, #20 was synchronized with `main` through merge commit `cac9c21`; no rebase or history rewrite was needed.
 
+At the start of the audit, `main` at `7f46608` was 12 commits behind the v0.7 branch and 13 commits behind the v0.8 branch. After the ordered merges, `main` matched the v0.8 tree exactly. Package scripts and release documentation were checked together; the documented `qa`, `demo:v0.8`, `build`, and `start` commands exist and match `package.json`.
+
 ## Merge order and validation
 
 1. Merge #19.

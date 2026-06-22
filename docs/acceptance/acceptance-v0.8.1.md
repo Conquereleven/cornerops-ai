@@ -27,7 +27,7 @@ Created:
 
 Modified:
 
-- Environment, server bind, CI, README, package scripts and ignore rules
+- Environment, server bind, README, package scripts and ignore rules
 - Approval, audit, operator-session and security-store wiring
 - Control Tower and operator-channel persistent safety checks
 - Existing Approval Center demo wording
@@ -42,6 +42,22 @@ Modified:
 - Merged-baseline v0.8 demos and server/API smoke: passed
 - Loopback bind and persisted audit recovery after process restart: passed
 - GitHub branch and post-merge CI: passed
+
+## Commands run
+
+```bash
+git merge-tree --write-tree <base> <feature>
+npm ci                         # GitHub Actions clean runner
+npm --prefix frontend ci      # GitHub Actions clean runner
+npm run qa
+npm run demo:persistence
+npm run demo:v0.8
+npm run build
+npm start
+git diff --check origin/main...HEAD
+```
+
+The local server smoke also exercised `/health`, `/control-tower`, protected status APIs, and audited Operator Ask with real integrations and credentials forced off.
 
 ## Runtime posture
 
