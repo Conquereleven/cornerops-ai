@@ -1,0 +1,73 @@
+[
+  {
+    "id": "quote-followup-001",
+    "quoteNumber": "Q-2026-001",
+    "leadId": "lead-restaurante-tajin-001",
+    "customerName": "Operador B2B",
+    "companyName": "Restaurante Sol del Desierto",
+    "status": "follow_up_needed",
+    "currency": "AED",
+    "subtotal": 1800,
+    "total": 1890,
+    "items": [
+      { "sku": "TAJIN-142G", "name": "Tajin 142g", "quantity": 48, "unitPrice": 18, "total": 864 },
+      { "sku": "PULPARINDO-20P", "name": "Pulparindo caja 20p", "quantity": 36, "unitPrice": 26, "total": 936 }
+    ],
+    "createdAt": "2026-06-14T10:00:00.000Z",
+    "updatedAt": "2026-06-16T10:00:00.000Z",
+    "sentAt": "2026-06-14T10:30:00.000Z",
+    "nextFollowUpAt": "2026-06-18T09:00:00.000Z"
+  },
+  {
+    "id": "quote-accepted-002",
+    "quoteNumber": "Q-2026-002",
+    "leadId": "lead-tienda-valentina-002",
+    "customerName": "Compras",
+    "companyName": "Latina Mini Market",
+    "status": "accepted",
+    "currency": "AED",
+    "subtotal": 1200,
+    "total": 1260,
+    "items": [
+      { "sku": "VALENTINA-370ML", "name": "Valentina 370ml", "quantity": 60, "unitPrice": 20, "total": 1200 }
+    ],
+    "createdAt": "2026-06-10T10:00:00.000Z",
+    "updatedAt": "2026-06-12T13:00:00.000Z",
+    "sentAt": "2026-06-10T12:00:00.000Z"
+  },
+  {
+    "id": "quote-expired-003",
+    "quoteNumber": "Q-2026-003",
+    "leadId": "lead-distribuidor-chiles-003",
+    "customerName": "Category Manager",
+    "companyName": "GCC Specialty Foods",
+    "status": "expired",
+    "currency": "AED",
+    "subtotal": 3400,
+    "total": 3570,
+    "items": [
+      { "sku": "CHILE-ANCHO-1KG", "name": "Chile ancho 1kg", "quantity": 20, "unitPrice": 85, "total": 1700 },
+      { "sku": "CHILE-GUAJILLO-1KG", "name": "Chile guajillo 1kg", "quantity": 20, "unitPrice": 85, "total": 1700 }
+    ],
+    "createdAt": "2026-05-28T09:00:00.000Z",
+    "updatedAt": "2026-06-11T09:00:00.000Z",
+    "sentAt": "2026-05-28T10:00:00.000Z",
+    "expiresAt": "2026-06-11T23:59:59.000Z"
+  },
+  {
+    "id": "quote-draft-004",
+    "quoteNumber": "Q-2026-004",
+    "leadId": "lead-uae-mexican-products-004",
+    "customerName": "Sourcing",
+    "companyName": "UAE Gourmet Imports",
+    "status": "draft",
+    "currency": "AED",
+    "subtotal": 2400,
+    "total": 2520,
+    "items": [
+      { "sku": "PINATA-FOLD", "name": "Pinata plegable", "quantity": 30, "unitPrice": 80, "total": 2400 }
+    ],
+    "createdAt": "2026-06-17T15:00:00.000Z",
+    "updatedAt": "2026-06-17T15:00:00.000Z"
+  }
+]

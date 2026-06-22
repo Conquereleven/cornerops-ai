@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ctx-pdf-catalog-001",
+    "sourceId": "pdf_documents",
+    "sourceType": "document",
+    "externalId": "catalog-2026-mock.pdf",
+    "title": "Mock Mexican products catalog snippet",
+    "text": "Catalog snippet lists Tajin, Pulparindo, Valentina and dried chiles. Prices are mock placeholders and must not be quoted as real.",
+    "tags": ["pdf", "catalog", "products"],
+    "entities": ["Tajin", "Pulparindo", "Valentina", "dried chiles"],
+    "piiLevel": "medium",
+    "provenance": {
+      "adapter": "clawpdf",
+      "originalSource": "mock_pdf_catalog",
+      "importedAt": "2026-06-18T13:30:00.000Z",
+      "checksum": "mock-pdf-001"
+    },
+    "createdAt": "2026-06-01T08:00:00.000Z",
+    "updatedAt": "2026-06-01T08:00:00.000Z"
+  }
+]

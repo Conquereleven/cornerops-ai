@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-security",
+  "conversationId": "slack-security",
+  "userId": "U4",
+  "channel": "slack",
+  "text": "Revisa logs de acciones rechazadas y riesgos de configuración",
+  "metadata": {
+    "source": "fixture"
+  }
+}

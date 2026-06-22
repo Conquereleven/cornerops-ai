@@ -5,3 +5,4 @@ frontend/.npm-cache
 coverage
 .DS_Store
 npm-debug.log*
+.cornerops/security/

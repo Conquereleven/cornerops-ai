@@ -1,0 +1,5 @@
+[
+  { "id": "gitcrawl", "status": "available", "mode": "mock", "lastCheckedAt": "2026-06-18T14:00:00.000Z" },
+  { "id": "slacrawl", "status": "disabled", "mode": "mock", "lastCheckedAt": "2026-06-18T14:00:00.000Z" },
+  { "id": "wacrawl", "status": "disabled", "mode": "mock", "lastCheckedAt": "2026-06-18T14:00:00.000Z" }
+]

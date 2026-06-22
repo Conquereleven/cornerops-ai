@@ -1,0 +1,7 @@
+{
+  "id": "openclaw-tool-agent-test",
+  "status": "dry_run",
+  "result": {
+    "message": "No tool executed."
+  }
+}

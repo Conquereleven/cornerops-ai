@@ -1,0 +1,8 @@
+{
+  "id": "mock-unknown-001",
+  "provider": "mock",
+  "chatId": "founder-chat",
+  "channelId": "founder-chat",
+  "userId": "unknown-user",
+  "text": "help"
+}

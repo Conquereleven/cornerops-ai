@@ -1,0 +1,11 @@
+{
+  "id": "openclaw-response-agent-test",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Respuesta simulada desde OpenClaw para agente CornerOps."
+      }
+    }
+  ]
+}

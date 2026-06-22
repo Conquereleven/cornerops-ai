@@ -16,6 +16,18 @@ const parseEnum = (value, allowed, fallback) =>
     ? String(value).toLowerCase()
     : fallback;
 
+const parseInteger = (value, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) return fallback;
+  return parsed;
+};
+
+const parseCsv = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
@@ -39,10 +51,610 @@ const baseEnv = {
     ['mock', 'hybrid', 'supabase'],
     'hybrid',
   ),
+  corneropsBetaMode: parseBoolean(process.env.CORNEROPS_BETA_MODE),
+  corneropsInternalBetaEnabled: parseBoolean(
+    process.env.CORNEROPS_INTERNAL_BETA_ENABLED,
+  ),
+  corneropsInteractiveBetaEnabled: parseBoolean(
+    process.env.CORNEROPS_INTERACTIVE_BETA_ENABLED,
+  ),
+  corneropsOperatorInterfaceEnabled:
+    process.env.CORNEROPS_OPERATOR_INTERFACE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_INTERFACE_ENABLED),
+  corneropsOperatorInterfaceMode: parseEnum(
+    process.env.CORNEROPS_OPERATOR_INTERFACE_MODE,
+    ['cli', 'api', 'web'],
+    'cli',
+  ),
+  corneropsOperatorDryRun:
+    process.env.CORNEROPS_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_DRY_RUN),
+  corneropsOperatorReadOnly:
+    process.env.CORNEROPS_OPERATOR_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_READ_ONLY),
+  corneropsOperatorRequireApproval:
+    process.env.CORNEROPS_OPERATOR_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REQUIRE_APPROVAL),
+  corneropsOperatorAllowedChannels: parseCsv(
+    process.env.CORNEROPS_OPERATOR_ALLOWED_CHANNELS || 'cli,api,web',
+  ),
+  corneropsOperatorDefaultAgent:
+    process.env.CORNEROPS_OPERATOR_DEFAULT_AGENT || 'cornerops-router-agent',
+  corneropsOperatorMaxResponseChars: parseInteger(
+    process.env.CORNEROPS_OPERATOR_MAX_RESPONSE_CHARS,
+    12000,
+    { min: 1000, max: 50000 },
+  ),
+  corneropsOperatorShowSourceLabels:
+    process.env.CORNEROPS_OPERATOR_SHOW_SOURCE_LABELS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_SOURCE_LABELS),
+  corneropsOperatorShowApprovalStatus:
+    process.env.CORNEROPS_OPERATOR_SHOW_APPROVAL_STATUS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_APPROVAL_STATUS),
+  corneropsOperatorShowAuditId:
+    process.env.CORNEROPS_OPERATOR_SHOW_AUDIT_ID === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_SHOW_AUDIT_ID),
+  corneropsCliEnabled:
+    process.env.CORNEROPS_CLI_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CLI_ENABLED),
+  corneropsApiEnabled: parseBoolean(process.env.CORNEROPS_API_ENABLED),
+  corneropsWebUiEnabled: parseBoolean(process.env.CORNEROPS_WEB_UI_ENABLED),
+  corneropsRequireAuditForOperatorRequests:
+    process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_AUDIT_FOR_OPERATOR_REQUESTS),
+  corneropsRealOperatorChannelEnabled: parseBoolean(
+    process.env.CORNEROPS_REAL_OPERATOR_CHANNEL_ENABLED,
+  ),
+  corneropsOperatorChannelProvider: parseEnum(
+    process.env.CORNEROPS_OPERATOR_CHANNEL_PROVIDER,
+    ['mock', 'telegram', 'slack', 'openclaw'],
+    'mock',
+  ),
+  corneropsOperatorChannelMode: parseEnum(
+    process.env.CORNEROPS_OPERATOR_CHANNEL_MODE,
+    ['read_only'],
+    'read_only',
+  ),
+  corneropsOperatorChannelDryRun:
+    process.env.CORNEROPS_OPERATOR_CHANNEL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_CHANNEL_DRY_RUN),
+  corneropsOperatorChannelRequireApproval:
+    process.env.CORNEROPS_OPERATOR_CHANNEL_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_CHANNEL_REQUIRE_APPROVAL),
+  corneropsOperatorAllowedUserIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_USER_IDS),
+  corneropsOperatorAllowedChannelIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_CHANNEL_IDS),
+  corneropsOperatorAllowedChatIds: parseCsv(process.env.CORNEROPS_OPERATOR_ALLOWED_CHAT_IDS),
+  corneropsOperatorReplyEnabled:
+    process.env.CORNEROPS_OPERATOR_REPLY_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REPLY_ENABLED),
+  corneropsOperatorReplyDryRun:
+    process.env.CORNEROPS_OPERATOR_REPLY_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REPLY_DRY_RUN),
+  corneropsOperatorRejectUnknownSenders:
+    process.env.CORNEROPS_OPERATOR_REJECT_UNKNOWN_SENDERS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REJECT_UNKNOWN_SENDERS),
+  corneropsOperatorRequireAllowlist:
+    process.env.CORNEROPS_OPERATOR_REQUIRE_ALLOWLIST === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_REQUIRE_ALLOWLIST),
+  corneropsOperatorMaxMessageChars: parseInteger(
+    process.env.CORNEROPS_OPERATOR_MAX_MESSAGE_CHARS,
+    12000,
+    { min: 1000, max: 50000 },
+  ),
+  corneropsOperatorPiiMasking:
+    process.env.CORNEROPS_OPERATOR_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_PII_MASKING),
+  corneropsOperatorLogSanitization:
+    process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_LOG_SANITIZATION),
+  corneropsTelegramActivationEnabled: parseBoolean(
+    process.env.CORNEROPS_TELEGRAM_ACTIVATION_ENABLED,
+  ),
+  corneropsTelegramRealMode: parseBoolean(process.env.CORNEROPS_TELEGRAM_REAL_MODE),
+  corneropsTelegramDryRun:
+    process.env.CORNEROPS_TELEGRAM_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_DRY_RUN),
+  corneropsTelegramReadOnly:
+    process.env.CORNEROPS_TELEGRAM_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_READ_ONLY),
+  corneropsTelegramFailClosed:
+    process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED),
+  telegramOperatorEnabled: parseBoolean(process.env.TELEGRAM_OPERATOR_ENABLED),
+  telegramOperatorBotToken: process.env.TELEGRAM_OPERATOR_BOT_TOKEN || '',
+  telegramOperatorAllowedChatIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS),
+  telegramOperatorAllowedUserIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_USER_IDS),
+  telegramOperatorWebhookSecret: process.env.TELEGRAM_OPERATOR_WEBHOOK_SECRET || '',
+  telegramOperatorDryRun:
+    process.env.TELEGRAM_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_DRY_RUN),
+  telegramOperatorRequireDm:
+    process.env.TELEGRAM_OPERATOR_REQUIRE_DM === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REQUIRE_DM),
+  telegramOperatorRejectGroups:
+    process.env.TELEGRAM_OPERATOR_REJECT_GROUPS === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REJECT_GROUPS),
+  telegramOperatorReplyEnabled:
+    process.env.TELEGRAM_OPERATOR_REPLY_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REPLY_ENABLED),
+  telegramOperatorReplyDryRun:
+    process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN),
+  corneropsReplayProtectionEnabled:
+    process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED),
+  corneropsReplayStoreProvider: parseEnum(
+    process.env.CORNEROPS_REPLAY_STORE_PROVIDER,
+    ['file', 'memory'],
+    'file',
+  ),
+  corneropsReplayStorePath:
+    process.env.CORNEROPS_REPLAY_STORE_PATH || './.cornerops/security/replay-store.json',
+  corneropsReplayTtlSeconds: parseInteger(
+    process.env.CORNEROPS_REPLAY_TTL_SECONDS,
+    86400,
+    { min: 60, max: 2592000 },
+  ),
+  corneropsReplayFailClosed:
+    process.env.CORNEROPS_REPLAY_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REPLAY_FAIL_CLOSED),
+  corneropsRejectionStoreEnabled:
+    process.env.CORNEROPS_REJECTION_STORE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REJECTION_STORE_ENABLED),
+  corneropsRejectionStorePath:
+    process.env.CORNEROPS_REJECTION_STORE_PATH || './.cornerops/security/rejections.json',
+  corneropsRejectionRetentionDays: parseInteger(
+    process.env.CORNEROPS_REJECTION_RETENTION_DAYS,
+    30,
+    { min: 1, max: 365 },
+  ),
+  corneropsRateLimitingEnabled:
+    process.env.CORNEROPS_RATE_LIMITING_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_RATE_LIMITING_ENABLED),
+  corneropsOperatorRateLimitPerMinute: parseInteger(
+    process.env.CORNEROPS_OPERATOR_RATE_LIMIT_PER_MINUTE,
+    12,
+    { min: 1, max: 600 },
+  ),
+  corneropsOperatorRateLimitBurst: parseInteger(
+    process.env.CORNEROPS_OPERATOR_RATE_LIMIT_BURST,
+    20,
+    { min: 1, max: 1000 },
+  ),
+  corneropsRateLimitStorePath:
+    process.env.CORNEROPS_RATE_LIMIT_STORE_PATH || './.cornerops/security/rate-limits.json',
+  slackOperatorEnabled: parseBoolean(process.env.SLACK_OPERATOR_ENABLED),
+  slackOperatorBotToken: process.env.SLACK_OPERATOR_BOT_TOKEN || '',
+  slackOperatorSigningSecret: process.env.SLACK_OPERATOR_SIGNING_SECRET || '',
+  slackOperatorAllowedChannelIds: parseCsv(process.env.SLACK_OPERATOR_ALLOWED_CHANNEL_IDS),
+  slackOperatorAllowedUserIds: parseCsv(process.env.SLACK_OPERATOR_ALLOWED_USER_IDS),
+  slackOperatorDryRun:
+    process.env.SLACK_OPERATOR_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.SLACK_OPERATOR_DRY_RUN),
+  corneropsBusinessDataEnabled: parseBoolean(
+    process.env.CORNEROPS_BUSINESS_DATA_ENABLED,
+  ),
+  corneropsBusinessDataMode: parseEnum(
+    process.env.CORNEROPS_BUSINESS_DATA_MODE,
+    ['read_only'],
+    'read_only',
+  ),
+  corneropsBusinessDataDryRun:
+    process.env.CORNEROPS_BUSINESS_DATA_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_BUSINESS_DATA_DRY_RUN),
+  corneropsBusinessDataRequireApproval:
+    process.env.CORNEROPS_BUSINESS_DATA_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_BUSINESS_DATA_REQUIRE_APPROVAL),
+  corneropsQaMode:
+    process.env.CORNEROPS_QA_MODE === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_QA_MODE),
+  corneropsControlTowerEnabled:
+    process.env.CORNEROPS_CONTROL_TOWER_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTROL_TOWER_ENABLED),
+  corneropsControlTowerMode: parseEnum(
+    process.env.CORNEROPS_CONTROL_TOWER_MODE,
+    ['beta', 'standard'],
+    'beta',
+  ),
+  corneropsControlTowerRequireAuth: parseBoolean(
+    process.env.CORNEROPS_CONTROL_TOWER_REQUIRE_AUTH,
+  ),
+  corneropsStrictSecurityMode:
+    process.env.CORNEROPS_STRICT_SECURITY_MODE === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_STRICT_SECURITY_MODE),
+  corneropsFailClosed:
+    process.env.CORNEROPS_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_FAIL_CLOSED),
+  corneropsRequireAuditForTools:
+    process.env.CORNEROPS_REQUIRE_AUDIT_FOR_TOOLS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_AUDIT_FOR_TOOLS),
+  corneropsRequireApprovalForWrites:
+    process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_WRITES === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_WRITES),
+  corneropsRequireApprovalForExternalActions:
+    process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_EXTERNAL_ACTIONS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL_FOR_EXTERNAL_ACTIONS),
+  corneropsPiiMasking:
+    process.env.CORNEROPS_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_PII_MASKING),
+  corneropsLogSanitization:
+    process.env.CORNEROPS_LOG_SANITIZATION === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_LOG_SANITIZATION),
+  corneropsMaxAuditPayloadBytes: parseInteger(
+    process.env.CORNEROPS_MAX_AUDIT_PAYLOAD_BYTES,
+    12000,
+    { min: 1024, max: 100000 },
+  ),
+  corneropsRealSourceOnboardingEnabled: parseBoolean(
+    process.env.CORNEROPS_REAL_SOURCE_ONBOARDING_ENABLED,
+  ),
+  corneropsFirstRealSourceEnabled: parseBoolean(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_ENABLED,
+  ),
+  corneropsFirstRealSource: parseEnum(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE,
+    ['auto', 'business_db', 'github', 'mock'],
+    'auto',
+  ),
+  corneropsFirstRealSourceMode: parseEnum(
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_MODE,
+    ['read_only'],
+    'read_only',
+  ),
+  corneropsFirstRealSourceDryRun:
+    process.env.CORNEROPS_FIRST_REAL_SOURCE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_FIRST_REAL_SOURCE_DRY_RUN),
+  corneropsPreferredRealSourceOrder: parseCsv(
+    process.env.CORNEROPS_PREFERRED_REAL_SOURCE_ORDER || 'business_db,github',
+  ),
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET || '',
+  corneropsAgentsEnabled:
+    process.env.CORNEROPS_AGENTS_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AGENTS_ENABLED),
+  corneropsAgentPackVersion:
+    process.env.CORNEROPS_AGENT_PACK_VERSION || 'v0.1',
+  corneropsDefaultAgent:
+    process.env.CORNEROPS_DEFAULT_AGENT || 'cornerops-router-agent',
+  corneropsDryRun:
+    process.env.CORNEROPS_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DRY_RUN),
+  corneropsRequireApproval:
+    process.env.CORNEROPS_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_REQUIRE_APPROVAL),
+  corneropsAuditEnabled:
+    process.env.CORNEROPS_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AUDIT_ENABLED),
+  corneropsAgentEnabledIds: parseCsv(process.env.CORNEROPS_AGENT_ENABLED_IDS),
+  corneropsAgentDisabledIds: parseCsv(process.env.CORNEROPS_AGENT_DISABLED_IDS),
+  corneropsAgentAllowedUsers: parseCsv(process.env.CORNEROPS_AGENT_ALLOWED_USERS),
+  corneropsRealDataEnabled: parseBoolean(process.env.CORNEROPS_REAL_DATA_ENABLED),
+  corneropsDataMode: parseEnum(
+    process.env.CORNEROPS_DATA_MODE,
+    ['mock', 'read_only', 'draft_only', 'approval_required', 'write_enabled'],
+    'mock',
+  ),
+  corneropsAllowedDataSources: parseCsv(
+    process.env.CORNEROPS_ALLOWED_DATA_SOURCES
+      || 'leads,quotes,orders,github,audit_logs,approvals,agent_logs,sync_status',
+  ),
+  corneropsSyncEnabled: parseBoolean(process.env.CORNEROPS_SYNC_ENABLED),
+  corneropsSyncIntervalMinutes: parseInteger(
+    process.env.CORNEROPS_SYNC_INTERVAL_MINUTES,
+    15,
+    { min: 1, max: 1440 },
+  ),
+  corneropsDatabaseProvider: process.env.CORNEROPS_DATABASE_PROVIDER || '',
+  databaseUrl: process.env.DATABASE_URL || '',
+  readOnlyDatabaseUrl: process.env.READONLY_DATABASE_URL || '',
+  supabaseReadonlyKey: process.env.SUPABASE_READONLY_KEY || '',
+  supabaseSchema: process.env.SUPABASE_SCHEMA || 'public',
+  corneropsDbReadOnly:
+    process.env.CORNEROPS_DB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_READ_ONLY),
+  corneropsDbAllowWrites: parseBoolean(process.env.CORNEROPS_DB_ALLOW_WRITES),
+  corneropsDbSchemaDiscoveryEnabled: parseBoolean(
+    process.env.CORNEROPS_DB_SCHEMA_DISCOVERY_ENABLED,
+  ),
+  corneropsDbQueryTimeoutMs: parseInteger(
+    process.env.CORNEROPS_DB_QUERY_TIMEOUT_MS,
+    10000,
+    { min: 100, max: 30000 },
+  ),
+  corneropsDbMaxRows: parseInteger(
+    process.env.CORNEROPS_DB_MAX_ROWS,
+    100,
+    { min: 1, max: 1000 },
+  ),
+  corneropsDbAuditReads:
+    process.env.CORNEROPS_DB_AUDIT_READS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_AUDIT_READS),
+  corneropsDbPiiMasking:
+    process.env.CORNEROPS_DB_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_DB_PII_MASKING),
+  openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
+  openclawOperatorChannelEnabled: parseBoolean(
+    process.env.OPENCLAW_OPERATOR_CHANNEL_ENABLED,
+  ),
+  openclawOperatorChannelDryRun:
+    process.env.OPENCLAW_OPERATOR_CHANNEL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_OPERATOR_CHANNEL_DRY_RUN),
+  openclawOperatorChannelProvider: parseEnum(
+    process.env.OPENCLAW_OPERATOR_CHANNEL_PROVIDER,
+    ['mock', 'telegram', 'slack'],
+    'mock',
+  ),
+  openclawOperatorChannelAllowlistOnly:
+    process.env.OPENCLAW_OPERATOR_CHANNEL_ALLOWLIST_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_OPERATOR_CHANNEL_ALLOWLIST_ONLY),
+  openclawBaseUrl:
+    process.env.OPENCLAW_BASE_URL || 'http://127.0.0.1:18789',
+  openclawGatewayToken: process.env.OPENCLAW_GATEWAY_TOKEN || '',
+  openclawGatewayPassword: process.env.OPENCLAW_GATEWAY_PASSWORD || '',
+  openclawDefaultModel:
+    process.env.OPENCLAW_DEFAULT_MODEL || 'openclaw/default',
+  openclawTimeoutMs: parseInteger(process.env.OPENCLAW_TIMEOUT_MS, 30000, {
+    min: 1000,
+    max: 120000,
+  }),
+  openclawMaxRetries: parseInteger(process.env.OPENCLAW_MAX_RETRIES, 2, {
+    min: 0,
+    max: 5,
+  }),
+  openclawDryRun:
+    process.env.OPENCLAW_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_DRY_RUN),
+  openclawRequireApproval:
+    process.env.OPENCLAW_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_REQUIRE_APPROVAL),
+  openclawAuditEnabled:
+    process.env.OPENCLAW_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.OPENCLAW_AUDIT_ENABLED),
+  openclawSandboxMode: process.env.OPENCLAW_SANDBOX_MODE || 'non-main',
+  openclawAllowedChannels: parseCsv(
+    process.env.OPENCLAW_ALLOWED_CHANNELS || 'whatsapp,telegram,slack',
+  ),
+  openclawAllowedUsers: parseCsv(process.env.OPENCLAW_ALLOWED_USERS),
+  openclawAllowedTools: parseCsv(process.env.OPENCLAW_ALLOWED_TOOLS),
+  githubEnabled: parseBoolean(process.env.GITHUB_ENABLED),
+  githubReadOnly:
+    process.env.GITHUB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.GITHUB_READ_ONLY),
+  githubDryRun:
+    process.env.GITHUB_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GITHUB_DRY_RUN),
+  githubToken: process.env.GITHUB_TOKEN || '',
+  githubOwner: process.env.GITHUB_OWNER || '',
+  githubRepo: process.env.GITHUB_REPO || 'cornerops-ai',
+  githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
+  githubApiVersion: parseEnum(
+    process.env.GITHUB_API_VERSION,
+    ['2022-11-28'],
+    '2022-11-28',
+  ),
+  githubAllowIssueCreation: parseBoolean(process.env.GITHUB_ALLOW_ISSUE_CREATION),
+  githubAllowPrWrite: parseBoolean(process.env.GITHUB_ALLOW_PR_WRITE),
+  githubAllowWorkflowTrigger: parseBoolean(process.env.GITHUB_ALLOW_WORKFLOW_TRIGGER),
+  openclawEcosystemEnabled: parseBoolean(process.env.OPENCLAW_ECOSYSTEM_ENABLED),
+  craboxEnabled: parseBoolean(process.env.CRABOX_ENABLED),
+  craboxDryRun:
+    process.env.CRABOX_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CRABOX_DRY_RUN),
+  octopoolEnabled: parseBoolean(process.env.OCTOPOOL_ENABLED),
+  octopoolDryRun:
+    process.env.OCTOPOOL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.OCTOPOOL_DRY_RUN),
+  clawhubEnabled: parseBoolean(process.env.CLAWHUB_ENABLED),
+  clawhubReadOnly:
+    process.env.CLAWHUB_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CLAWHUB_READ_ONLY),
+  clawhubAllowlistOnly:
+    process.env.CLAWHUB_ALLOWLIST_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CLAWHUB_ALLOWLIST_ONLY),
+  lobsterEnabled: parseBoolean(process.env.LOBSTER_ENABLED),
+  lobsterDryRun:
+    process.env.LOBSTER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.LOBSTER_DRY_RUN),
+  clawsweeperEnabled: parseBoolean(process.env.CLAWSWEEPER_ENABLED),
+  clawsweeperDryRun:
+    process.env.CLAWSWEEPER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWSWEEPER_DRY_RUN),
+  crabfleetEnabled: parseBoolean(process.env.CRABFLEET_ENABLED),
+  crabfleetDryRun:
+    process.env.CRABFLEET_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CRABFLEET_DRY_RUN),
+  clickclackEnabled: parseBoolean(process.env.CLICKCLACK_ENABLED),
+  clickclackDryRun:
+    process.env.CLICKCLACK_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLICKCLACK_DRY_RUN),
+  corneropsContextLayerEnabled: parseBoolean(process.env.CORNEROPS_CONTEXT_LAYER_ENABLED),
+  corneropsContextMode: parseEnum(
+    process.env.CORNEROPS_CONTEXT_MODE,
+    ['mock', 'read_only', 'sync_allowed', 'disabled'],
+    'mock',
+  ),
+  corneropsContextDryRun:
+    process.env.CORNEROPS_CONTEXT_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_DRY_RUN),
+  corneropsContextReadOnly:
+    process.env.CORNEROPS_CONTEXT_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_READ_ONLY),
+  corneropsContextRequireApproval:
+    process.env.CORNEROPS_CONTEXT_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_REQUIRE_APPROVAL),
+  corneropsContextAuditEnabled:
+    process.env.CORNEROPS_CONTEXT_AUDIT_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_AUDIT_ENABLED),
+  corneropsLocalArchivesEnabled: parseBoolean(process.env.CORNEROPS_LOCAL_ARCHIVES_ENABLED),
+  corneropsLocalArchivesPath: process.env.CORNEROPS_LOCAL_ARCHIVES_PATH || './.cornerops/archives',
+  corneropsLocalArchivesDb: process.env.CORNEROPS_LOCAL_ARCHIVES_DB || './.cornerops/archives/context.sqlite',
+  corneropsContextRetentionDays: parseInteger(process.env.CORNEROPS_CONTEXT_RETENTION_DAYS, 180, {
+    min: 1,
+    max: 3650,
+  }),
+  corneropsContextPiiMasking:
+    process.env.CORNEROPS_CONTEXT_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTEXT_PII_MASKING),
+  corneropsContextMaxResults: parseInteger(process.env.CORNEROPS_CONTEXT_MAX_RESULTS, 20, {
+    min: 1,
+    max: 100,
+  }),
+  crawlersEnabled: parseBoolean(process.env.CRAWLERS_ENABLED),
+  gitcrawlEnabled: parseBoolean(process.env.GITCRAWL_ENABLED),
+  slacrawlEnabled: parseBoolean(process.env.SLACRAWL_ENABLED),
+  wacrawlEnabled: parseBoolean(process.env.WACRAWL_ENABLED),
+  notcrawlEnabled: parseBoolean(process.env.NOTCRAWL_ENABLED),
+  telecrawlEnabled: parseBoolean(process.env.TELECRAWL_ENABLED),
+  discrawlEnabled: parseBoolean(process.env.DISCRAWL_ENABLED),
+  graincrawlEnabled: parseBoolean(process.env.GRAINCrawl_ENABLED || process.env.GRAINCRAWL_ENABLED),
+  imsgcrawlEnabled: parseBoolean(process.env.IMSGCRAWL_ENABLED),
+  photoscrawlEnabled: parseBoolean(process.env.PHOTOSCRAWL_ENABLED),
+  gitcrawlDryRun:
+    process.env.GITCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GITCRAWL_DRY_RUN),
+  slacrawlDryRun:
+    process.env.SLACRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.SLACRAWL_DRY_RUN),
+  wacrawlDryRun:
+    process.env.WACRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.WACRAWL_DRY_RUN),
+  notcrawlDryRun:
+    process.env.NOTCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.NOTCRAWL_DRY_RUN),
+  telecrawlDryRun:
+    process.env.TELECRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.TELECRAWL_DRY_RUN),
+  discrawlDryRun:
+    process.env.DISCRAWL_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.DISCRAWL_DRY_RUN),
+  githubContextEnabled: parseBoolean(process.env.GITHUB_CONTEXT_ENABLED),
+  slackContextEnabled: parseBoolean(process.env.SLACK_CONTEXT_ENABLED),
+  whatsappContextEnabled: parseBoolean(process.env.WHATSAPP_CONTEXT_ENABLED),
+  telegramContextEnabled: parseBoolean(process.env.TELEGRAM_CONTEXT_ENABLED),
+  notionContextEnabled: parseBoolean(process.env.NOTION_CONTEXT_ENABLED),
+  googleWorkspaceContextEnabled: parseBoolean(process.env.GOOGLE_WORKSPACE_CONTEXT_ENABLED),
+  mcporterEnabled: parseBoolean(process.env.MCPORTER_ENABLED),
+  mcporterDryRun:
+    process.env.MCPORTER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.MCPORTER_DRY_RUN),
+  acpEnabled: parseBoolean(process.env.ACP_ENABLED),
+  acpDryRun:
+    process.env.ACP_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.ACP_DRY_RUN),
+  pluginInspectorEnabled: parseBoolean(process.env.PLUGIN_INSPECTOR_ENABLED),
+  clawbenchEnabled: parseBoolean(process.env.CLAWBENCH_ENABLED),
+  clawbenchDryRun:
+    process.env.CLAWBENCH_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWBENCH_DRY_RUN),
+  clawpatchEnabled: parseBoolean(process.env.CLAWPATCH_ENABLED),
+  clawpatchDryRun:
+    process.env.CLAWPATCH_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CLAWPATCH_DRY_RUN),
+  fsSafeEnabled:
+    process.env.FS_SAFE_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.FS_SAFE_ENABLED),
+  clawsafeRoot: process.env.CLAWSAFE_ROOT || './.cornerops',
+  clawsafeAllowOutsideRoot: parseBoolean(process.env.CLAWSAFE_ALLOW_OUTSIDE_ROOT),
+  gogcliEnabled: parseBoolean(process.env.GOGCLI_ENABLED),
+  gogcliDryRun:
+    process.env.GOGCLI_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GOGCLI_DRY_RUN),
+  wacliEnabled: parseBoolean(process.env.WACLI_ENABLED),
+  wacliDryRun:
+    process.env.WACLI_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.WACLI_DRY_RUN),
+  goplacesEnabled: parseBoolean(process.env.GOPLACES_ENABLED),
+  goplacesDryRun:
+    process.env.GOPLACES_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.GOPLACES_DRY_RUN),
+  clawpdfEnabled: parseBoolean(process.env.CLAWPDF_ENABLED),
+  ffmpegWasmEnabled: parseBoolean(process.env.FFMPEG_WASM_ENABLED),
+  rastermillEnabled: parseBoolean(process.env.RASTERMILL_ENABLED),
 };
 
 const getEnvWarnings = () => {
@@ -63,6 +675,140 @@ const getEnvWarnings = () => {
     !baseEnv.allowInternalNoKey
   ) {
     warnings.push('INTERNAL_API_KEY is missing; internal endpoints will remain locked.');
+  }
+  if (baseEnv.openclawEnabled && baseEnv.openclawDryRun) {
+    warnings.push('OPENCLAW_ENABLED=true while OPENCLAW_DRY_RUN=true; tool execution will remain simulated.');
+  }
+  if (baseEnv.corneropsAgentsEnabled && baseEnv.corneropsDryRun) {
+    warnings.push('CORNEROPS_AGENTS_ENABLED=true while CORNEROPS_DRY_RUN=true; agent execution will remain simulated.');
+  }
+  if (!baseEnv.corneropsRequireApproval) {
+    warnings.push('CORNEROPS_REQUIRE_APPROVAL=false; only use this in isolated tests.');
+  }
+  if (!baseEnv.corneropsFailClosed) {
+    warnings.push('CORNEROPS_FAIL_CLOSED=false; unknown actions may not be safely denied.');
+  }
+  if (!baseEnv.corneropsPiiMasking || !baseEnv.corneropsLogSanitization) {
+    warnings.push('PII masking or log sanitization is disabled.');
+  }
+  if (
+    baseEnv.corneropsRealSourceOnboardingEnabled
+    && (!baseEnv.githubEnabled || !baseEnv.githubReadOnly)
+  ) {
+    warnings.push('Real-source onboarding requires GitHub enabled in read-only mode.');
+  }
+  if (baseEnv.githubEnabled && !baseEnv.githubReadOnly) {
+    warnings.push('GITHUB_READ_ONLY=false; internal beta requires read-only GitHub.');
+  }
+  if (
+    baseEnv.githubReadOnly
+    && (baseEnv.githubAllowIssueCreation || baseEnv.githubAllowPrWrite || baseEnv.githubAllowWorkflowTrigger)
+  ) {
+    warnings.push('GitHub write flags are ignored while GITHUB_READ_ONLY=true.');
+  }
+  if (baseEnv.corneropsDataMode === 'write_enabled' && baseEnv.corneropsDryRun) {
+    warnings.push('CORNEROPS_DATA_MODE=write_enabled while CORNEROPS_DRY_RUN=true; writes will remain blocked.');
+  }
+  if (!baseEnv.corneropsDbReadOnly || baseEnv.corneropsDbAllowWrites) {
+    warnings.push('Business database safety flags are unsafe; v0.4 business reads will fail closed.');
+  }
+  if (
+    !baseEnv.corneropsOperatorDryRun
+    || !baseEnv.corneropsOperatorReadOnly
+    || !baseEnv.corneropsOperatorRequireApproval
+    || !baseEnv.corneropsRequireAuditForOperatorRequests
+  ) {
+    warnings.push('Operator interface safety flags are unsafe; requests will fail closed.');
+  }
+  if (
+    baseEnv.corneropsRealOperatorChannelEnabled
+    && (
+      !baseEnv.corneropsOperatorChannelDryRun
+      || !baseEnv.corneropsOperatorChannelRequireApproval
+      || !baseEnv.corneropsOperatorRequireAllowlist
+      || !baseEnv.corneropsOperatorPiiMasking
+      || !baseEnv.corneropsOperatorLogSanitization
+    )
+  ) {
+    warnings.push('Real operator channel safety flags are unsafe; messages will fail closed.');
+  }
+  if (
+    baseEnv.corneropsRealOperatorChannelEnabled
+    && baseEnv.corneropsOperatorChannelProvider !== 'mock'
+    && !baseEnv.corneropsOperatorAllowedUserIds.length
+    && !baseEnv.telegramOperatorAllowedUserIds.length
+    && !baseEnv.slackOperatorAllowedUserIds.length
+  ) {
+    warnings.push('Real operator channel is enabled without an operator user allowlist.');
+  }
+  if (baseEnv.openclawOperatorChannelEnabled && !baseEnv.openclawOperatorChannelDryRun) {
+    warnings.push('OpenClaw operator channel real replies are enabled; v0.6 requires dry-run.');
+  }
+  if (baseEnv.openclawOperatorChannelEnabled && !baseEnv.openclawOperatorChannelAllowlistOnly) {
+    warnings.push('OpenClaw operator channel allowlist enforcement is disabled.');
+  }
+  if (
+    baseEnv.corneropsTelegramRealMode
+    && (
+      !baseEnv.corneropsTelegramActivationEnabled
+      || !baseEnv.telegramOperatorEnabled
+      || !baseEnv.corneropsTelegramReadOnly
+      || !baseEnv.corneropsTelegramFailClosed
+      || baseEnv.corneropsReplayStoreProvider !== 'file'
+      || !baseEnv.corneropsReplayProtectionEnabled
+      || !baseEnv.corneropsReplayFailClosed
+      || !baseEnv.corneropsRejectionStoreEnabled
+      || !baseEnv.corneropsRateLimitingEnabled
+    )
+  ) {
+    warnings.push('Telegram real mode is missing persistent fail-closed safety controls.');
+  }
+  if (
+    baseEnv.corneropsTelegramActivationEnabled
+    && (
+      !baseEnv.telegramOperatorBotToken
+      || !baseEnv.telegramOperatorWebhookSecret
+      || !baseEnv.telegramOperatorAllowedChatIds.length
+      || !baseEnv.telegramOperatorAllowedUserIds.length
+    )
+  ) {
+    warnings.push('Telegram activation is missing credentials or founder allowlists.');
+  }
+  if (baseEnv.corneropsFirstRealSourceEnabled && baseEnv.corneropsFirstRealSourceMode !== 'read_only') {
+    warnings.push('First real source mode is unsafe; mock fallback will be used.');
+  }
+  if (baseEnv.corneropsBusinessDataEnabled) {
+    const readOnlyCredentialAvailable = baseEnv.corneropsDatabaseProvider === 'supabase'
+      ? Boolean(baseEnv.supabaseUrl && baseEnv.supabaseReadonlyKey)
+      : Boolean(baseEnv.readOnlyDatabaseUrl);
+    if (!readOnlyCredentialAvailable) {
+      warnings.push('Business data is enabled without a dedicated read-only credential; mock fallback will be used.');
+    }
+  }
+  if (baseEnv.githubEnabled && !baseEnv.githubToken) {
+    warnings.push('GITHUB_ENABLED=true but GITHUB_TOKEN is missing; GitHub integration will use mock/dry-run data.');
+  }
+  if (baseEnv.githubEnabled && baseEnv.githubDryRun) {
+    warnings.push('GITHUB_ENABLED=true while GITHUB_DRY_RUN=true; issue creation will remain simulated.');
+  }
+  if (baseEnv.openclawEcosystemEnabled && baseEnv.openclawDryRun) {
+    warnings.push('OPENCLAW_ECOSYSTEM_ENABLED=true while OpenClaw dry run flags are active; ecosystem calls are simulated.');
+  }
+  if (baseEnv.corneropsContextLayerEnabled && baseEnv.corneropsContextDryRun) {
+    warnings.push('CORNEROPS_CONTEXT_LAYER_ENABLED=true while CORNEROPS_CONTEXT_DRY_RUN=true; context sync remains simulated.');
+  }
+  if (baseEnv.crawlersEnabled && !baseEnv.corneropsContextLayerEnabled) {
+    warnings.push('CRAWLERS_ENABLED=true but CORNEROPS_CONTEXT_LAYER_ENABLED=false; crawler adapters remain disabled.');
+  }
+  if (!baseEnv.clawsafeAllowOutsideRoot && !baseEnv.clawsafeRoot) {
+    warnings.push('CLAWSAFE_ROOT is missing; filesystem access will remain blocked.');
+  }
+  if (
+    baseEnv.openclawEnabled &&
+    !baseEnv.openclawGatewayToken &&
+    !baseEnv.openclawGatewayPassword
+  ) {
+    warnings.push('OPENCLAW_ENABLED=true without gateway auth; only use this on trusted localhost.');
   }
   return warnings;
 };

@@ -1,0 +1,9 @@
+[
+  { "id": "crabox", "name": "Crabox", "enabled": false, "mode": "dry_run", "riskLevel": "high" },
+  { "id": "octopool", "name": "Octopool", "enabled": false, "mode": "read_only", "riskLevel": "medium" },
+  { "id": "clawhub", "name": "ClawHub", "enabled": false, "mode": "read_only", "riskLevel": "high" },
+  { "id": "lobster", "name": "Lobster", "enabled": false, "mode": "dry_run", "riskLevel": "medium" },
+  { "id": "clawsweeper", "name": "ClawSweeper", "enabled": false, "mode": "document_only", "riskLevel": "medium" },
+  { "id": "crabfleet", "name": "Crabfleet", "enabled": false, "mode": "document_only", "riskLevel": "critical" },
+  { "id": "clickclack", "name": "ClickClack", "enabled": false, "mode": "document_only", "riskLevel": "medium" }
+]

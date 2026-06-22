@@ -1,0 +1,5 @@
+{
+  "status": "pending",
+  "actionType": "send_email",
+  "reason": "External send requires confirmation."
+}

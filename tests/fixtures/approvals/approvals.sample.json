@@ -1,0 +1,4 @@
+[
+  { "id": "approval-001", "actionType": "mark_manual_payment_paid", "status": "pending", "createdBy": "operator", "channel": "slack", "createdAt": "2026-06-18T08:20:00.000Z", "updatedAt": "2026-06-18T08:20:00.000Z" },
+  { "id": "approval-002", "actionType": "create_github_issue", "status": "approved", "createdBy": "operator", "resolvedBy": "admin", "channel": "internal", "createdAt": "2026-06-17T12:20:00.000Z", "updatedAt": "2026-06-17T12:25:00.000Z" }
+]

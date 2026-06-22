@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ctx-gplaces-restaurant-001",
+    "sourceId": "google_places",
+    "sourceType": "place",
+    "externalId": "mock-place-001",
+    "title": "Mock Mexican Restaurant Dubai",
+    "text": "Public Google Places mock record for a Mexican restaurant in Dubai. Candidate for B2B outreach; verify public data before contact.",
+    "tags": ["google-places", "restaurant", "dubai", "lead-discovery"],
+    "entities": ["Dubai", "Mexican restaurant"],
+    "piiLevel": "low",
+    "provenance": {
+      "adapter": "goplaces",
+      "originalSource": "mock_google_places",
+      "importedAt": "2026-06-18T14:00:00.000Z",
+      "checksum": "mock-gplaces-001"
+    },
+    "createdAt": "2026-06-18T14:00:00.000Z",
+    "updatedAt": "2026-06-18T14:00:00.000Z"
+  }
+]

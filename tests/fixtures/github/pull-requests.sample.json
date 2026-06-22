@@ -1,0 +1,4 @@
+[
+  { "id": "gh-pr-12", "number": 12, "title": "feat: add CornerOps Core Agent Pack v0.1", "state": "open", "status": "ready_for_review", "ciStatus": "success", "url": "https://github.com/Conquereleven/cornerops-ai/pull/12", "createdAt": "2026-06-18T08:00:00.000Z", "updatedAt": "2026-06-18T09:00:00.000Z" },
+  { "id": "gh-pr-13", "number": 13, "title": "fix: stabilize manual payment flow", "state": "open", "status": "review_required", "ciStatus": "failure", "url": "https://github.com/Conquereleven/cornerops-ai/pull/13", "createdAt": "2026-06-18T10:00:00.000Z", "updatedAt": "2026-06-18T10:20:00.000Z" }
+]

@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-unauthorized",
+  "conversationId": "slack-outsider",
+  "userId": "OUTSIDER",
+  "channel": "slack",
+  "text": "Dame mi briefing de hoy",
+  "metadata": {
+    "source": "fixture"
+  }
+}

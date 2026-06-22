@@ -1,0 +1,9 @@
+{
+  "channel": "slack",
+  "slackUserId": "U123",
+  "text": "Crea un issue para corregir el flujo de pagos manuales.",
+  "threadTs": "1710000000.0001",
+  "requestId": "slack.fixture.1",
+  "actionType": "create_issue",
+  "toolName": "github.openIssue"
+}

@@ -1,0 +1,6 @@
+[
+  { "id": "audit-001", "requestId": "req-001", "eventType": "agent_request", "agentId": "daily-briefing-agent", "userId": "operator", "channel": "internal", "policyDecision": "dry_run", "status": "success", "createdAt": "2026-06-18T08:00:00.000Z" },
+  { "id": "audit-002", "requestId": "req-002", "eventType": "approval_requested", "agentId": "quotes-orders-agent", "userId": "operator", "channel": "slack", "operation": "mark_manual_payment_paid", "policyDecision": "approval_required", "status": "pending", "createdAt": "2026-06-18T08:20:00.000Z" },
+  { "id": "audit-003", "requestId": "req-003", "eventType": "security_denied", "agentId": "dev-codex-github-agent", "userId": "unknown", "channel": "telegram", "operation": "merge_pr", "policyDecision": "denied", "status": "denied", "createdAt": "2026-06-18T08:40:00.000Z" },
+  { "id": "audit-004", "requestId": "req-004", "eventType": "openclaw_ecosystem_service_invoked", "agentId": "dev-codex-github-agent", "userId": "operator", "channel": "internal", "dataSource": "openclaw_ecosystem", "operation": "crabox.runSuite", "policyDecision": "dry_run", "status": "success", "createdAt": "2026-06-18T09:00:00.000Z" }
+]

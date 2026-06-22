@@ -1,0 +1,10 @@
+{
+  "messageId": "msg-agent-github",
+  "conversationId": "slack-dev",
+  "userId": "U3",
+  "channel": "slack",
+  "text": "Crea un issue para corregir pagos manuales",
+  "metadata": {
+    "source": "fixture"
+  }
+}

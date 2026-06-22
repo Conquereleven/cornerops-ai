@@ -1,0 +1,4 @@
+[
+  { "id": "run-1001", "name": "CI", "status": "completed", "conclusion": "success", "branch": "feature/core-agent-pack-v0.1", "url": "https://github.com/Conquereleven/cornerops-ai/actions/runs/1001", "createdAt": "2026-06-18T09:00:00.000Z" },
+  { "id": "run-1002", "name": "CI", "status": "completed", "conclusion": "failure", "branch": "fix/manual-payments", "url": "https://github.com/Conquereleven/cornerops-ai/actions/runs/1002", "createdAt": "2026-06-18T10:15:00.000Z" }
+]

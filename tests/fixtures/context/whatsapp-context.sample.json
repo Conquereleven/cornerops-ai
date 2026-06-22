@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ctx-whatsapp-quote-followup-001",
+    "sourceId": "whatsapp_archive",
+    "sourceType": "thread",
+    "externalId": "wa-thread-001",
+    "title": "Restaurant quote follow-up",
+    "text": "Mock WhatsApp thread: restaurant asked for Tajin and Pulparindo quote follow-up. Operator should confirm price, stock and delivery before replying.",
+    "author": "masked-contact",
+    "participants": ["masked-contact", "cornerops-operator"],
+    "threadId": "wa-thread-001",
+    "tags": ["whatsapp", "quote-follow-up", "tajin", "pulparindo"],
+    "entities": ["Tajin", "Pulparindo", "quote"],
+    "relatedLeadId": "lead-restaurante-tajin-001",
+    "relatedQuoteId": "quote-followup-001",
+    "piiLevel": "high",
+    "provenance": {
+      "adapter": "wacrawl",
+      "originalSource": "mock_whatsapp_archive",
+      "importedAt": "2026-06-18T12:00:00.000Z",
+      "checksum": "mock-wa-001"
+    },
+    "createdAt": "2026-06-17T12:00:00.000Z",
+    "updatedAt": "2026-06-17T12:10:00.000Z"
+  }
+]
