@@ -52,7 +52,11 @@ class OperatorCommandRouter {
     if (hasAny(text, ['send ', 'envia ', 'enviar ', 'email real', 'whatsapp real', 'message real'])) {
       return { intent: OPERATOR_INTENTS.FORBIDDEN_EXTERNAL_ACTION };
     }
-    if (hasAny(text, ['mark paid', 'marca como pagad', 'update status', 'cambia el estado', 'delete ', 'borra '])) {
+    if (
+      hasAny(text, ['mark paid', 'marca como pagad', 'update status', 'cambia el estado', 'delete ', 'borra '])
+      || /\bmark\b.*\bpaid\b/.test(text)
+      || /\bmarca\b.*\bpagad/.test(text)
+    ) {
       return { intent: OPERATOR_INTENTS.FORBIDDEN_WRITE };
     }
     if (hasAny(text, ['pending approvals', 'aprobaciones pendientes', 'show approvals', 'muestra aprobaciones'])) {

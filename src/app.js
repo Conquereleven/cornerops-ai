@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, x-internal-api-key, x-request-id, x-correlation-id, x-operator-id',
+    'Content-Type, Authorization, x-cornerops-console-token, x-internal-api-key, x-request-id, x-correlation-id, x-operator-id',
   );
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);

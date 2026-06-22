@@ -3,8 +3,11 @@ const env = require('../config/env');
 const controller = require('../controllers/operatorController');
 const data = require('../core/data');
 const internalAuth = require('../middleware/internalAuth');
+const { createWebConsoleGuard } = require('../middleware/webConsoleGuard');
 
 const router = express.Router();
+
+router.post('/v0.8/ask', createWebConsoleGuard(), controller.askV08);
 
 router.use(async (req, res, next) => {
   if (env.corneropsApiEnabled) return next();

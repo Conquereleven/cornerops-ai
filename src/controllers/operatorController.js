@@ -4,6 +4,9 @@ const {
   operatorCommandRouter,
   operatorSessionService,
 } = require('../core/operator');
+const env = require('../config/env');
+const { OPERATOR_INTENTS } = require('../core/operator/operatorTypes');
+const { sanitizeValue } = require('../core/security/SecuritySanitizer');
 
 const requestId = (req) => req.body?.requestId
   || req.get('x-request-id')
@@ -28,6 +31,60 @@ const run = (textFactory) => async (req, res, next) => {
 };
 
 const ask = run((req) => req.body?.text || '');
+const askV08 = async (req, res, next) => {
+  const id = requestId(req);
+  const text = String(req.body?.text || '').trim();
+  const auditDenied = async (message, code, statusCode = 403) => {
+    const audit = await data.auditLogService.record({
+      requestId: id,
+      eventType: 'operator_web_request_denied',
+      operation: 'ask',
+      userId: operatorId(req),
+      channel: 'web',
+      policyDecision: 'denied',
+      status: 'denied',
+      input: { textLength: text.length },
+      errorCode: code,
+    });
+    return res.status(statusCode).json({
+      status: 'denied',
+      responseText: message,
+      sourceMode: 'disabled',
+      approvals: { required: false },
+      auditId: audit?.id,
+      warnings: [code],
+    });
+  };
+  try {
+    if (!env.corneropsOperatorWebAskEnabled) {
+      return auditDenied('Operator web ask is disabled.', 'WEB_ASK_DISABLED', 404);
+    }
+    if (!env.corneropsOperatorWebAskDryRun || !env.corneropsWebConsoleReadOnly) {
+      return auditDenied('Operator web ask safety configuration is invalid.', 'WEB_ASK_UNSAFE', 503);
+    }
+    if (!text) return auditDenied('Enter a supported operator request.', 'WEB_ASK_EMPTY', 400);
+    if (text.length > env.corneropsOperatorWebAskMaxChars) {
+      return auditDenied('Operator request exceeds the configured limit.', 'WEB_ASK_TOO_LARGE', 413);
+    }
+    if (operatorCommandRouter.classify(text).intent === OPERATOR_INTENTS.APPROVAL_ACTION) {
+      return auditDenied(
+        'Approval decisions must use the Approval Center dry-run controls.',
+        'WEB_ASK_APPROVAL_ACTION_BLOCKED',
+      );
+    }
+    const output = await operatorCommandRouter.handle({
+      requestId: id,
+      operatorId: operatorId(req),
+      channel: 'web',
+      text,
+      sessionId: req.body?.sessionId,
+      metadata: { surface: 'control-tower-v0.8', dryRun: true },
+    });
+    return res.status(output.status === 'denied' ? 403 : 200).json(sanitizeValue(output));
+  } catch (error) {
+    return next(error);
+  }
+};
 const help = run(() => 'help');
 const status = run(() => 'Show system health');
 const approvals = run(() => 'Show pending approvals');
@@ -57,4 +114,4 @@ const session = async (req, res, next) => {
   }
 };
 
-module.exports = { approvals, ask, auditSummary, help, session, status };
+module.exports = { approvals, ask, askV08, auditSummary, help, session, status };

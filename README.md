@@ -33,6 +33,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Internal Beta & Business Data v0.4 con frontera DB SELECT-only, schema
   discovery auditado, contratos Lead/Quote/Order, repositorios read-only,
   metadata de fuente, PII masking y Control Tower beta.
+- Control Tower Web Console v0.8 con reporte unificado, cockpit React local,
+  Approval Center dry-run, Audit Viewer sanitizado, Security Dashboard,
+  Operator Ask auditado y reporte HTML local.
 
 ## Inicio rápido
 
@@ -256,6 +259,24 @@ Every accepted message still flows through CornerOps policy,
 [`channel guide`](docs/operator/real-operator-channel-v0.6.md),
 [`setup runbook`](docs/runbooks/operator-channel-setup.md) and
 [`security model`](docs/security/operator-channel-security-v0.6.md).
+
+## Control Tower Web Console v0.8
+
+The founder cockpit reuses the existing React/Vite application and a guarded,
+versioned Express API. It is disabled by default and requires localhost, a
+private token, read-only, dry-run and fail-closed controls when enabled.
+
+```bash
+npm run demo:v0.8
+npm run control:tower:web-report
+npm run build
+npm start
+```
+
+After private local configuration, open `http://127.0.0.1:3000/control-tower`.
+See [`console guide`](docs/operator/control-tower-web-console-v0.8.md),
+[`security model`](docs/security/web-console-security-v0.8.md) and
+[`runbook`](docs/runbooks/control-tower-web-v0.8.md).
 
 ## Chat
 

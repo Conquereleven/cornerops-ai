@@ -12,6 +12,7 @@ const demos = [
   'scripts/demo-telegram-activation.js',
   'scripts/demo-first-real-source.js',
   'scripts/demo-v0.7.js',
+  'scripts/demo-v0.8.js',
   'scripts/demo-ecosystem.js',
   'scripts/demo-context.js',
   'scripts/demo-context-health.js',

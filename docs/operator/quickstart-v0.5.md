@@ -80,3 +80,14 @@ npm run demo:v0.7
 
 These commands do not require credentials and do not send real messages. Use
 `docs/runbooks/telegram-operator-runbook-v0.7.md` for one-founder activation.
+
+## v0.8 Control Tower
+
+```bash
+npm run demo:control-tower-web
+npm run demo:approval-center
+npm run demo:audit-viewer
+npm run demo:v0.8
+```
+
+For the authenticated UI, follow `docs/operator/control-tower-web-console-v0.8.md` and open `http://127.0.0.1:3000/control-tower`. Keep the console local-only; never put its token in a `VITE_*` variable.
