@@ -293,6 +293,83 @@ const baseEnv = {
   corneropsControlTowerRequireAuth: parseBoolean(
     process.env.CORNEROPS_CONTROL_TOWER_REQUIRE_AUTH,
   ),
+  corneropsWebConsoleEnabled: parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_ENABLED),
+  corneropsWebConsoleMode: parseEnum(
+    process.env.CORNEROPS_WEB_CONSOLE_MODE,
+    ['local'],
+    'local',
+  ),
+  corneropsWebConsoleRequireAuth:
+    process.env.CORNEROPS_WEB_CONSOLE_REQUIRE_AUTH === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_REQUIRE_AUTH),
+  corneropsWebConsoleAuthToken: process.env.CORNEROPS_WEB_CONSOLE_AUTH_TOKEN || '',
+  corneropsWebConsoleAllowedOrigins: parseCsv(
+    process.env.CORNEROPS_WEB_CONSOLE_ALLOWED_ORIGINS
+      || 'http://localhost:3000,http://127.0.0.1:3000',
+  ),
+  corneropsWebConsoleLocalOnly:
+    process.env.CORNEROPS_WEB_CONSOLE_LOCAL_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_LOCAL_ONLY),
+  corneropsWebConsoleReadOnly:
+    process.env.CORNEROPS_WEB_CONSOLE_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_READ_ONLY),
+  corneropsWebConsoleDryRun:
+    process.env.CORNEROPS_WEB_CONSOLE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_DRY_RUN),
+  corneropsApprovalCenterEnabled:
+    process.env.CORNEROPS_APPROVAL_CENTER_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_APPROVAL_CENTER_ENABLED),
+  corneropsApprovalCenterDryRun:
+    process.env.CORNEROPS_APPROVAL_CENTER_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_APPROVAL_CENTER_DRY_RUN),
+  corneropsApprovalCenterAllowRealExecution: parseBoolean(
+    process.env.CORNEROPS_APPROVAL_CENTER_ALLOW_REAL_EXECUTION,
+  ),
+  corneropsOperatorWebAskEnabled:
+    process.env.CORNEROPS_OPERATOR_WEB_ASK_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_WEB_ASK_ENABLED),
+  corneropsOperatorWebAskDryRun:
+    process.env.CORNEROPS_OPERATOR_WEB_ASK_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_OPERATOR_WEB_ASK_DRY_RUN),
+  corneropsOperatorWebAskMaxChars: parseInteger(
+    process.env.CORNEROPS_OPERATOR_WEB_ASK_MAX_CHARS,
+    12000,
+    { min: 1000, max: 50000 },
+  ),
+  corneropsAuditViewerEnabled:
+    process.env.CORNEROPS_AUDIT_VIEWER_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AUDIT_VIEWER_ENABLED),
+  corneropsAuditViewerMaxEvents: parseInteger(
+    process.env.CORNEROPS_AUDIT_VIEWER_MAX_EVENTS,
+    100,
+    { min: 1, max: 500 },
+  ),
+  corneropsAuditViewerMaskPii:
+    process.env.CORNEROPS_AUDIT_VIEWER_MASK_PII === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_AUDIT_VIEWER_MASK_PII),
+  corneropsSecurityDashboardEnabled:
+    process.env.CORNEROPS_SECURITY_DASHBOARD_ENABLED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_SECURITY_DASHBOARD_ENABLED),
+  corneropsSecurityDashboardMaskPii:
+    process.env.CORNEROPS_SECURITY_DASHBOARD_MASK_PII === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_SECURITY_DASHBOARD_MASK_PII),
+  corneropsControlTowerWebRefreshSeconds: parseInteger(
+    process.env.CORNEROPS_CONTROL_TOWER_WEB_REFRESH_SECONDS,
+    30,
+    { min: 5, max: 3600 },
+  ),
   corneropsStrictSecurityMode:
     process.env.CORNEROPS_STRICT_SECURITY_MODE === undefined
       ? true
@@ -690,6 +767,31 @@ const getEnvWarnings = () => {
   }
   if (!baseEnv.corneropsPiiMasking || !baseEnv.corneropsLogSanitization) {
     warnings.push('PII masking or log sanitization is disabled.');
+  }
+  if (
+    baseEnv.corneropsWebConsoleEnabled
+    && (
+      !baseEnv.corneropsWebConsoleLocalOnly
+      || !baseEnv.corneropsWebConsoleReadOnly
+      || !baseEnv.corneropsWebConsoleDryRun
+      || !baseEnv.corneropsWebConsoleRequireAuth
+      || !baseEnv.corneropsWebConsoleAuthToken
+      || !baseEnv.corneropsPiiMasking
+      || !baseEnv.corneropsLogSanitization
+      || !baseEnv.corneropsAuditViewerMaskPii
+      || !baseEnv.corneropsSecurityDashboardMaskPii
+    )
+  ) {
+    warnings.push('Web console is enabled without all local-only, auth, read-only and dry-run controls.');
+  }
+  if (
+    baseEnv.corneropsApprovalCenterEnabled
+    && (
+      !baseEnv.corneropsApprovalCenterDryRun
+      || baseEnv.corneropsApprovalCenterAllowRealExecution
+    )
+  ) {
+    warnings.push('Approval Center real execution is unsafe for v0.8 and will fail closed.');
   }
   if (
     baseEnv.corneropsRealSourceOnboardingEnabled

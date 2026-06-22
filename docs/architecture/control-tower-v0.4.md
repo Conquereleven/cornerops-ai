@@ -31,3 +31,9 @@ API:
 `CORNEROPS_CONTROL_TOWER_REQUIRE_AUTH=true` enables the existing internal API-key middleware. The default beta report contains sanitized operational metadata only; production deployment must enable authentication before network exposure.
 
 Mock mode is healthy when read-only, write blocking, PII masking and audit controls are intact. Requesting a real DB without a valid read-only connection is degraded. Any critical safety flag produces unhealthy status.
+
+## v0.8 web console
+
+v0.8 adds `ControlTowerV08ReportService` as the single sanitized contract for the React `/control-tower` page, versioned local API and static HTML report. Approval Center and Audit Viewer consume existing approval/audit sources; neither becomes a source of truth. The web guard requires explicit enablement, loopback, token auth, read-only, dry-run and fail-closed safety.
+
+See `docs/operator/control-tower-web-console-v0.8.md` and `docs/security/web-console-security-v0.8.md`.

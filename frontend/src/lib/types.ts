@@ -190,3 +190,135 @@ export interface WorkspaceSettings {
   developmentMode: boolean;
   operatorName: string;
 }
+
+export interface ControlTowerAuditEvent {
+  timestamp?: string;
+  eventType: string;
+  agentId?: string;
+  source: string;
+  channel: string;
+  policyDecision: string;
+  status: string;
+  auditId: string;
+  riskLevel?: string;
+  preview: string;
+}
+
+export interface ControlTowerApproval {
+  id: string;
+  status: string;
+  requestedAction: string;
+  requestedByAgent: string;
+  riskLevel: string;
+  dataTouched: string[];
+  sourceMode: string;
+  createdAt: string;
+  approvalRequiredReason: string;
+  dryRun: boolean;
+  realExecutionAllowed: boolean;
+}
+
+export interface ControlTowerV08Report {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  mode: string;
+  generatedAt: string;
+  environment: string;
+  safety: {
+    failClosed: boolean;
+    dryRun: boolean;
+    readOnly: boolean;
+    writesBlocked: boolean;
+    externalSendsBlocked: boolean;
+    piiMasking: boolean;
+    logSanitization: boolean;
+    whatsappDisabled: boolean;
+    customerChannelsDisabled: boolean;
+    nativeToolsDisabled: boolean;
+    clawhubExecutionDisabled: boolean;
+    approvalRealExecutionBlocked: boolean;
+    warnings: string[];
+  };
+  webConsole: {
+    enabled: boolean;
+    localOnly: boolean;
+    authRequired: boolean;
+    authConfigured: boolean;
+    readOnly: boolean;
+    dryRun: boolean;
+    refreshSeconds: number;
+  };
+  operatorChannel: {
+    provider: string;
+    enabled: boolean;
+    realMode: boolean;
+    dryRun: boolean;
+    replyEnabled: boolean;
+    allowedUsersCount: number;
+    allowedChatsCount: number;
+    replayProtectionHealthy: boolean;
+    rejectionTrackingHealthy: boolean;
+    rateLimitingHealthy: boolean;
+    rejectedLast24h: number;
+    lastInboundAt?: string;
+    lastOutboundAt?: string;
+    warnings: string[];
+  };
+  firstRealSource: {
+    selectedSource: string;
+    mode: string;
+    ready: boolean;
+    readOnlyVerified: boolean;
+    credentialsPresent: boolean;
+    warnings: string[];
+  };
+  agents: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    status: string;
+    permissionLevel: string;
+    allowedTools: string[];
+    warnings: string[];
+  }>;
+  agentSummary: { total: number; enabled: number; disabled: number };
+  approvals: {
+    pending: number;
+    approved: number;
+    rejected: number;
+    highRiskPending: number;
+    dryRun: boolean;
+    realExecutionAllowed: boolean;
+  };
+  audit: {
+    eventsLast24h: number;
+    deniedLast24h: number;
+    errorsLast24h: number;
+    latest: ControlTowerAuditEvent[];
+  };
+  dataSources: Array<Record<string, unknown>>;
+  contextSources: Array<Record<string, unknown>>;
+  ecosystemServices: Array<Record<string, unknown>>;
+  businessData: Record<string, unknown>;
+  github: Record<string, unknown>;
+  openclaw: Record<string, unknown>;
+  security: Record<string, unknown> & { warnings: string[] };
+  demoMode: boolean;
+  betaMode: boolean;
+}
+
+export interface ApprovalCenterResponse {
+  enabled: boolean;
+  dryRun: boolean;
+  realExecutionAllowed: boolean;
+  summary: Record<string, number>;
+  items: ControlTowerApproval[];
+}
+
+export interface OperatorAskResponse {
+  status: string;
+  responseText: string;
+  sourceMode: string;
+  approvals: { required: boolean };
+  auditId?: string;
+  warnings: string[];
+}

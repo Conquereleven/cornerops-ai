@@ -4,6 +4,9 @@ const agents = require('../agents');
 const context = require('../context');
 const data = require('../data');
 const { ControlTowerService } = require('./ControlTowerService');
+const { ApprovalCenterService } = require('./ApprovalCenterService');
+const { AuditViewerService } = require('./AuditViewerService');
+const { ControlTowerV08ReportService } = require('./ControlTowerV08ReportService');
 const { operatorChannelStatusStore } = require('../operator-channel/OperatorChannelStatusStore');
 
 const controlTowerService = new ControlTowerService({
@@ -96,7 +99,35 @@ const controlTowerService = new ControlTowerService({
   },
 });
 
+const approvalCenterService = new ApprovalCenterService({
+  approvalService: data.approvalService,
+  auditLogService: data.auditLogService,
+  config: env,
+});
+const auditViewerService = new AuditViewerService({
+  agentAuditService: agents.agentAuditService,
+  auditLogService: data.auditLogService,
+  config: env,
+  openclawAuditService: openclaw.auditLogService,
+  rejectionProvider: (options) => {
+    const channel = require('../operator-channel');
+    return channel.rejectionTrackingService.list(options);
+  },
+});
+const controlTowerV08ReportService = new ControlTowerV08ReportService({
+  approvalCenterService,
+  auditViewerService,
+  baseService: controlTowerService,
+  config: env,
+});
+
 module.exports = {
+  ApprovalCenterService,
+  AuditViewerService,
   ControlTowerService,
+  ControlTowerV08ReportService,
+  approvalCenterService,
+  auditViewerService,
   controlTowerService,
+  controlTowerV08ReportService,
 };

@@ -11,6 +11,9 @@ import type {
   WorkspaceSettings,
   WorkerRun,
   ChatMessage,
+  ApprovalCenterResponse,
+  ControlTowerV08Report,
+  OperatorAskResponse,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -103,4 +106,29 @@ export const getHealth = async () => {
   const response = await request<{ status: string; service: string; dataSource: { mode: 'mock' | 'supabase' } }>('/health');
   return { ...response, latencyMs: Math.round(performance.now() - startedAt) };
 };
+
+const consoleRequest = <T>(path: string, token = '', options?: RequestInit) => request<T>(path, {
+  ...options,
+  headers: {
+    ...(token ? { 'x-cornerops-console-token': token } : {}),
+    'x-operator-id': 'founder-web-console',
+    ...options?.headers,
+  },
+});
+
+export const getControlTowerV08 = (token = '') =>
+  consoleRequest<ControlTowerV08Report>('/api/control-tower/v0.8/status', token);
+export const getControlTowerApprovals = (token = '') =>
+  consoleRequest<ApprovalCenterResponse>('/api/control-tower/v0.8/approvals', token);
+export const decideApprovalDryRun = (id: string, decision: 'approve' | 'reject', token = '') =>
+  consoleRequest<{ executed: false; auditId?: string }>(
+    `/api/control-tower/v0.8/approvals/${encodeURIComponent(id)}/${decision}-dry-run`,
+    token,
+    { method: 'POST', body: '{}' },
+  );
+export const askControlTower = (text: string, token = '') =>
+  consoleRequest<OperatorAskResponse>('/api/operator/v0.8/ask', token, {
+    method: 'POST',
+    body: JSON.stringify({ text, operatorId: 'founder-web-console' }),
+  });
 export { API_BASE_URL };

@@ -1,9 +1,10 @@
-import { Bot, Boxes, Building2, LayoutDashboard, MessageSquareText, PackageSearch, PlugZap, Settings, SlidersHorizontal, Tags, X } from 'lucide-react';
+import { Bot, Boxes, Building2, LayoutDashboard, MessageSquareText, PackageSearch, PlugZap, Settings, ShieldCheck, SlidersHorizontal, Tags, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useLeads } from '../../hooks/useLeads';
 
 const navItems = [
   { to: '/', label: 'Overview', icon: LayoutDashboard },
+  { to: '/control-tower', label: 'Control Tower', icon: ShieldCheck },
   { to: '/chat', label: 'AI Chat Center', icon: MessageSquareText },
   { to: '/conversations', label: 'Conversations', icon: Bot },
   { to: '/orders', label: 'Orders', icon: PackageSearch },

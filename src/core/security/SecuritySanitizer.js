@@ -52,7 +52,9 @@ const maskPiiInString = (value) => String(value || '')
 
 const sanitizeMessage = (value) => maskPiiInString(value)
   .replace(/Bearer\s+[^\s]+/gi, 'Bearer [REDACTED]')
-  .replace(/\b(?:ghp_|github_pat_|sbp_)[A-Za-z0-9_-]+\b/g, '[REDACTED]');
+  .replace(/\b(?:ghp_|github_pat_|sbp_|sk-)[A-Za-z0-9_-]+\b/g, '[REDACTED]')
+  .replace(/\b\d{6,12}:[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_TELEGRAM_TOKEN]')
+  .replace(/\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, '[REDACTED_JWT]');
 
 const sanitizeValue = (value, {
   depth = 0,
@@ -64,7 +66,7 @@ const sanitizeValue = (value, {
   if (redactPrivateContent && PRIVATE_CONTENT_KEYS.has(String(key).toLowerCase())) {
     return '[REDACTED_PRIVATE_CONTENT]';
   }
-  if (typeof value === 'string') return maskPiiInString(value);
+  if (typeof value === 'string') return sanitizeMessage(value);
   if (Array.isArray(value)) {
     return value.map((item) => sanitizeValue(item, {
       depth: depth + 1,

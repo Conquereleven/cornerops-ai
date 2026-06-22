@@ -62,8 +62,10 @@ describe('OperatorCommandRouter v0.5', () => {
     const spy = jest.spyOn(agents.agentOrchestrator, 'handleMessage');
     const send = await run('Send a real WhatsApp message now');
     const write = await run('Mark paid this order');
+    const writeWithIdentifier = await run('Mark order 123 as paid');
     expect(send).toMatchObject({ status: 'denied', sourceMode: 'disabled' });
     expect(write).toMatchObject({ status: 'denied', sourceMode: 'disabled' });
+    expect(writeWithIdentifier).toMatchObject({ status: 'denied', sourceMode: 'disabled' });
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
