@@ -36,6 +36,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Control Tower Web Console v0.8 con reporte unificado, cockpit React local,
   Approval Center dry-run, Audit Viewer sanitizado, Security Dashboard,
   Operator Ask auditado y reporte HTML local.
+- Release hardening v0.8.1 con persistencia local `file_json` root-bounded para
+  approvals, auditoria y sesiones; escrituras atomicas, sanitizacion, limites y
+  fail-closed para stores criticos. Solo soporta un proceso.
 
 ## Inicio rápido
 
@@ -159,6 +162,11 @@ OpenAI; `hybrid` usa los proveedores configurados con fallback local.
 OpenClaw inicia apagado y en dry run para evitar ejecuciones reales.
 Los agentes de CornerOps inician en dry run y requieren aprobación humana para
 acciones sensibles.
+
+La beta local usa `CORNEROPS_PERSISTENCE_PROVIDER=file_json` y guarda estado
+sanitizado bajo `./.cornerops/state`. En tests se usa memoria. Consulta
+[`persistence v0.8.1`](docs/architecture/persistence-v0.8.1.md) y el
+[`founder runbook`](docs/operator/founder-local-runbook-v0.8.1.md).
 
 ## Supabase
 

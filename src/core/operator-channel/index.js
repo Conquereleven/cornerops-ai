@@ -82,7 +82,9 @@ const telegramOperatorChannelAdapter = new TelegramOperatorChannelAdapter({
     webhookSecret: env.telegramOperatorWebhookSecret,
     dryRun: env.telegramOperatorDryRun || env.corneropsTelegramDryRun,
     failClosed: env.corneropsTelegramFailClosed,
-    persistentSecurity: env.corneropsReplayStoreProvider === 'file'
+    persistentSecurity: ['file', 'file_json'].includes(env.corneropsReplayStoreProvider)
+      && ['file', 'file_json'].includes(env.corneropsRejectionStoreProvider)
+      && ['file', 'file_json'].includes(env.corneropsRateLimitStoreProvider)
       && env.corneropsReplayProtectionEnabled
       && env.corneropsRejectionStoreEnabled
       && env.corneropsRateLimitingEnabled,

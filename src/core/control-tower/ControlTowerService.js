@@ -297,7 +297,9 @@ class ControlTowerService {
         || !this.config.corneropsReplayFailClosed
         || !this.config.corneropsRejectionStoreEnabled
         || !this.config.corneropsRateLimitingEnabled
-        || this.config.corneropsReplayStoreProvider !== 'file'
+        || !['file', 'file_json'].includes(this.config.corneropsReplayStoreProvider)
+        || !['file', 'file_json'].includes(this.config.corneropsRejectionStoreProvider)
+        || !['file', 'file_json'].includes(this.config.corneropsRateLimitStoreProvider)
       )
     ) warnings.push('CRITICAL: Telegram real mode lacks persistent fail-closed security controls.');
     const forbiddenRealSources = [

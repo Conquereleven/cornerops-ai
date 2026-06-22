@@ -14,6 +14,20 @@ const SENSITIVE_KEY_PARTS = [
   'session',
 ];
 
+const PERSISTENCE_SENSITIVE_KEY_PARTS = [
+  'authorization',
+  'cookie',
+  'password',
+  'secret',
+  'service_role',
+  'token',
+  'api_key',
+  'apikey',
+  'access_key',
+  'private_key',
+  'credential',
+];
+
 const PRIVATE_CONTENT_KEYS = new Set([
   'body',
   'content',
@@ -30,6 +44,12 @@ const PRIVATE_CONTENT_KEYS = new Set([
 const isSensitiveKey = (key) => {
   const normalized = String(key || '').toLowerCase();
   return SENSITIVE_KEY_PARTS.some((part) => normalized.includes(part));
+};
+
+const isPersistenceSensitiveKey = (key) => {
+  const normalized = String(key || '').toLowerCase();
+  if (normalized === 'tokens') return false;
+  return PERSISTENCE_SENSITIVE_KEY_PARTS.some((part) => normalized.includes(part));
 };
 
 const maskEmail = (value) => {
@@ -84,6 +104,20 @@ const sanitizeValue = (value, {
   ]));
 };
 
+const sanitizePersistenceValue = (value, { depth = 0, key = '' } = {}) => {
+  if (depth > MAX_DEPTH) return '[TRUNCATED_DEPTH]';
+  if (isPersistenceSensitiveKey(key)) return '[REDACTED]';
+  if (typeof value === 'string') return sanitizeMessage(value);
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizePersistenceValue(item, { depth: depth + 1 }));
+  }
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([entryKey, entry]) => [
+    entryKey,
+    sanitizePersistenceValue(entry, { depth: depth + 1, key: entryKey }),
+  ]));
+};
+
 const truncatePayload = (value, maxBytes = DEFAULT_MAX_BYTES) => {
   const serialized = JSON.stringify(value);
   const bytes = Buffer.byteLength(serialized, 'utf8');
@@ -101,10 +135,14 @@ const sanitizeAuditPayload = (value, { maxBytes = DEFAULT_MAX_BYTES } = {}) =>
 const sanitizeLogMetadata = (value, { maxBytes = DEFAULT_MAX_BYTES } = {}) =>
   truncatePayload(sanitizeValue(value, { redactPrivateContent: true }), maxBytes);
 
+const sanitizePersistencePayload = (value) => sanitizePersistenceValue(value);
+
 module.exports = {
   DEFAULT_MAX_BYTES,
   PRIVATE_CONTENT_KEYS,
+  PERSISTENCE_SENSITIVE_KEY_PARTS,
   SENSITIVE_KEY_PARTS,
+  isPersistenceSensitiveKey,
   isSensitiveKey,
   maskEmail,
   maskPhone,
@@ -112,6 +150,8 @@ module.exports = {
   sanitizeAuditPayload,
   sanitizeLogMetadata,
   sanitizeMessage,
+  sanitizePersistencePayload,
+  sanitizePersistenceValue,
   sanitizeValue,
   truncatePayload,
 };

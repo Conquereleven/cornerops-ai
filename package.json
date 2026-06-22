@@ -31,6 +31,7 @@
     "demo:approval-center": "node scripts/demo-approval-center.js",
     "demo:audit-viewer": "node scripts/demo-audit-viewer.js",
     "demo:v0.8": "node scripts/demo-v0.8.js",
+    "demo:persistence": "node scripts/demo-persistence-v0.8.1.js",
     "demo:agents": "node scripts/demo-agents.js",
     "demo:real-data": "node scripts/demo-real-data.js",
     "demo:ecosystem": "node scripts/demo-ecosystem.js",

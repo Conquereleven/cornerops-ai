@@ -1,10 +1,15 @@
 const { randomUUID } = require('crypto');
 const { APPROVAL_STATUS } = require('./types');
 const { sanitizeAuditPayload } = require('../../core/security/SecuritySanitizer');
+const { InMemoryStore } = require('../../core/persistence/InMemoryStore');
 
-const approvals = [];
+const initialData = { version: 1, records: [] };
 
 class HumanApprovalService {
+  constructor({ store = new InMemoryStore({ initialData }) } = {}) {
+    this.store = store;
+  }
+
   createApproval({
     actionType,
     channel,
@@ -31,19 +36,24 @@ class HumanApprovalService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    approvals.unshift(approval);
-    approvals.splice(500);
+    this.store.transact((current) => ({
+      data: {
+        version: 1,
+        records: [approval, ...(Array.isArray(current.records) ? current.records : [])].slice(0, 500),
+      },
+      result: approval,
+    }));
     return { ...approval };
   }
 
   getApproval(id) {
-    const approval = approvals.find((item) => item.id === id);
+    const approval = this.store.initialize().records.find((item) => item.id === id);
     return approval ? { ...approval } : null;
   }
 
   list({ status, limit = 100 } = {}) {
     const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
-    return approvals
+    return this.store.initialize().records
       .filter((approval) => !status || approval.status === status)
       .slice(0, safeLimit)
       .map((approval) => ({ ...approval }));
@@ -61,19 +71,23 @@ class HumanApprovalService {
     if (![APPROVAL_STATUS.APPROVED, APPROVAL_STATUS.REJECTED].includes(status)) {
       return null;
     }
-    const approval = approvals.find((item) => item.id === id);
-    if (!approval) return null;
-    if (approval.status !== APPROVAL_STATUS.PENDING) {
-      const error = new Error('Approval is already resolved.');
-      error.statusCode = 409;
-      throw error;
-    }
-    Object.assign(approval, {
-      status,
-      resolvedBy: actor,
-      updatedAt: new Date().toISOString(),
+    return this.store.transact((current) => {
+      const records = Array.isArray(current.records) ? current.records : [];
+      const index = records.findIndex((item) => item.id === id);
+      if (index === -1) return { data: current, result: null };
+      if (records[index].status !== APPROVAL_STATUS.PENDING) {
+        const error = new Error('Approval is already resolved.');
+        error.statusCode = 409;
+        throw error;
+      }
+      records[index] = {
+        ...records[index],
+        status,
+        resolvedBy: actor,
+        updatedAt: new Date().toISOString(),
+      };
+      return { data: { version: 1, records }, result: records[index] };
     });
-    return { ...approval };
   }
 
   isApproved(id) {
@@ -82,7 +96,7 @@ class HumanApprovalService {
   }
 
   clearForTests() {
-    approvals.splice(0);
+    this.store.clear();
   }
 }
 

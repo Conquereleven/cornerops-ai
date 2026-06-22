@@ -1,10 +1,13 @@
 const { randomUUID } = require('crypto');
 const { sanitizeAuditPayload, sanitizeMessage } = require('../security/SecuritySanitizer');
+const { InMemoryStore } = require('../persistence/InMemoryStore');
+
+const initialData = { version: 1, records: [] };
 
 class OperatorSessionService {
-  constructor({ maxSessions = 100 } = {}) {
+  constructor({ maxSessions = 100, store = new InMemoryStore({ initialData }) } = {}) {
     this.maxSessions = Math.max(1, Math.min(Number(maxSessions) || 100, 500));
-    this.sessions = new Map();
+    this.store = store;
   }
 
   create({ operatorId, channel, metadata = {} } = {}) {
@@ -17,15 +20,20 @@ class OperatorSessionService {
       updatedAt: now,
       metadata: sanitizeAuditPayload(metadata),
     };
-    this.sessions.set(session.id, session);
-    while (this.sessions.size > this.maxSessions) {
-      this.sessions.delete(this.sessions.keys().next().value);
-    }
+    this.store.transact((current) => ({
+      data: {
+        version: 1,
+        records: [session, ...(Array.isArray(current.records) ? current.records : [])]
+          .slice(0, this.maxSessions),
+      },
+      result: session,
+    }));
     return this.clone(session);
   }
 
   get(id) {
-    return this.sessions.has(id) ? this.clone(this.sessions.get(id)) : null;
+    const session = this.store.initialize().records.find((item) => item.id === id);
+    return session ? this.clone(session) : null;
   }
 
   getOrCreate({ sessionId, operatorId, channel, metadata } = {}) {
@@ -35,15 +43,21 @@ class OperatorSessionService {
   }
 
   touch(id, { lastIntent, metadata = {} } = {}) {
-    const session = this.sessions.get(id);
-    if (!session) return null;
-    session.lastIntent = lastIntent || session.lastIntent;
-    session.updatedAt = new Date().toISOString();
-    session.metadata = sanitizeAuditPayload({
-      ...session.metadata,
-      ...metadata,
+    return this.store.transact((current) => {
+      const records = Array.isArray(current.records) ? current.records : [];
+      const index = records.findIndex((item) => item.id === id);
+      if (index === -1) return { data: current, result: null };
+      records[index] = {
+        ...records[index],
+        lastIntent: lastIntent || records[index].lastIntent,
+        updatedAt: new Date().toISOString(),
+        metadata: sanitizeAuditPayload({
+          ...records[index].metadata,
+          ...metadata,
+        }),
+      };
+      return { data: { version: 1, records }, result: records[index] };
     });
-    return this.clone(session);
   }
 
   clone(value) {
@@ -51,7 +65,7 @@ class OperatorSessionService {
   }
 
   clearForTests() {
-    this.sessions.clear();
+    this.store.clear();
   }
 }
 

@@ -9,14 +9,16 @@ const { ReplayProtectionService } = require('./ReplayProtectionService');
 const { ReplayStore } = require('./ReplayStore');
 
 const createOperatorSecurityServices = ({ auditLogService, config } = {}) => {
-  const fileMode = config.corneropsReplayStoreProvider === 'file';
-  const replayStore = fileMode
+  const replayFileMode = ['file', 'file_json'].includes(config.corneropsReplayStoreProvider);
+  const rejectionFileMode = ['file', 'file_json'].includes(config.corneropsRejectionStoreProvider);
+  const rateLimitFileMode = ['file', 'file_json'].includes(config.corneropsRateLimitStoreProvider);
+  const replayStore = replayFileMode
     ? new FileReplayStore({ filePath: config.corneropsReplayStorePath })
     : new ReplayStore();
-  const rejectionStore = fileMode
+  const rejectionStore = rejectionFileMode
     ? new FileRejectionStore({ filePath: config.corneropsRejectionStorePath })
     : new RejectionStore();
-  const rateLimitStore = fileMode
+  const rateLimitStore = rateLimitFileMode
     ? new FileRateLimitStore({ filePath: config.corneropsRateLimitStorePath })
     : new RateLimitStore();
   const replayProtectionService = new ReplayProtectionService({
