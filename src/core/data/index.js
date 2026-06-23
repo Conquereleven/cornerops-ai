@@ -40,6 +40,7 @@ const { ClawSweeperTriageAdapter } = require('../openclaw-ecosystem/adapters/Cla
 const { CrabfleetMissionControlAdapter } = require('../openclaw-ecosystem/adapters/CrabfleetMissionControlAdapter');
 const { ClickClackChatAdapter } = require('../openclaw-ecosystem/adapters/ClickClackChatAdapter');
 const { FirstRealSourceReadinessService, FirstRealSourceSelector } = require('../real-source');
+const { persistenceProviderRegistry } = require('../persistence');
 
 const businessDbConfigured = Boolean(
   env.corneropsBusinessDataEnabled
@@ -104,6 +105,11 @@ const dataAccessPolicy = new DataAccessPolicy({
 const auditLogRepository = new AuditLogRepository({
   adapter: mockDataAdapter,
   enabled: env.corneropsAuditEnabled,
+  store: persistenceProviderRegistry.createStore('domain-audit', {
+    critical: true,
+    initialData: { version: 1, records: [] },
+    provider: env.corneropsAuditStoreProvider,
+  }),
 });
 const auditLogService = new AuditLogService({
   repository: auditLogRepository,

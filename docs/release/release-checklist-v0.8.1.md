@@ -1,0 +1,23 @@
+# Release Checklist v0.8.1
+
+- [x] PR #19 merged first
+- [x] PR #20 merged second
+- [x] `main` updated and post-merge CI passed
+- [x] Clean-runner backend/frontend install passed in CI
+- [x] Syntax and typecheck passed
+- [x] 78 backend suites / 333 tests passed
+- [x] 4 frontend files / 7 tests passed
+- [x] Production build passed
+- [x] v0.8 and persistence demos passed
+- [x] Secret scan and diff check clean
+- [x] Server starts and health endpoint responds
+- [x] Control Tower route responds locally
+- [x] Protected APIs reject missing/invalid auth
+- [x] Writes and external sends blocked
+- [x] WhatsApp and customer channels disabled
+- [x] Approval execution remains dry-run only
+- [x] Audit is persisted, sanitized and PII-masked
+- [x] Persistence providers and single-process limit documented
+- [x] Rollback plan and founder runbook exist
+- [ ] Founder visual acceptance completed on the target local machine
+- [ ] Multi-user authentication and shared transactional persistence implemented

@@ -3,16 +3,18 @@ const logger = require('../../utils/logger');
 const { AUDIT_STATUS } = require('./types');
 const env = require('../../config/env');
 const { sanitizeAuditPayload } = require('../../core/security/SecuritySanitizer');
+const { InMemoryStore } = require('../../core/persistence/InMemoryStore');
 
-const auditLogs = [];
+const initialData = { version: 1, records: [] };
 
 const sanitize = (value) => sanitizeAuditPayload(value, {
   maxBytes: env.corneropsMaxAuditPayloadBytes,
 });
 
 class AuditLogService {
-  constructor({ enabled = true } = {}) {
+  constructor({ enabled = true, store = new InMemoryStore({ initialData }) } = {}) {
     this.enabled = enabled;
+    this.store = store;
   }
 
   record(event) {
@@ -38,8 +40,13 @@ class AuditLogService {
       approvalId: event.approvalId,
       createdAt: new Date().toISOString(),
     };
-    auditLogs.unshift(auditLog);
-    auditLogs.splice(500);
+    this.store.transact((current) => ({
+      data: {
+        version: 1,
+        records: [auditLog, ...(Array.isArray(current.records) ? current.records : [])].slice(0, 500),
+      },
+      result: auditLog,
+    }));
     logger.info('openclaw_audit', {
       requestId: auditLog.requestId,
       channel: auditLog.channel,
@@ -52,11 +59,11 @@ class AuditLogService {
 
   list({ limit = 100 } = {}) {
     const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
-    return auditLogs.slice(0, safeLimit).map((item) => ({ ...item }));
+    return this.store.initialize().records.slice(0, safeLimit).map((item) => ({ ...item }));
   }
 
   clearForTests() {
-    auditLogs.splice(0);
+    this.store.clear();
   }
 }
 

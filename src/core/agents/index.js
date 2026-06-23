@@ -11,6 +11,7 @@ const contextCore = require('../context');
 const { createAgentTools } = require('./tools');
 const { createContextAgentTools } = require('./tools/context');
 const openclaw = require('../../integrations/openclaw');
+const { persistenceProviderRegistry } = require('../persistence');
 
 const agentRegistry = new AgentRegistry({
   agents: coreAgentDefinitions,
@@ -21,6 +22,11 @@ const agentRegistry = new AgentRegistry({
 
 const agentAuditService = new AgentAuditService({
   enabled: env.corneropsAuditEnabled,
+  store: persistenceProviderRegistry.createStore('agent-audit', {
+    critical: true,
+    initialData: { version: 1, records: [] },
+    provider: env.corneropsAuditStoreProvider,
+  }),
 });
 
 const agentMemoryService = new AgentMemoryService();

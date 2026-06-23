@@ -1,12 +1,15 @@
 const { randomUUID } = require('crypto');
 const env = require('../../../config/env');
 const { sanitizeAuditPayload } = require('../../security/SecuritySanitizer');
+const { InMemoryStore } = require('../../persistence/InMemoryStore');
+
+const initialData = { version: 1, records: [] };
 
 class AuditLogRepository {
-  constructor({ adapter, enabled = true } = {}) {
+  constructor({ adapter, enabled = true, store = new InMemoryStore({ initialData }) } = {}) {
     this.adapter = adapter;
     this.enabled = enabled;
-    this.logs = [];
+    this.store = store;
   }
 
   async createAuditLog(input = {}) {
@@ -38,18 +41,24 @@ class AuditLogRepository {
       latencyMs: input.latencyMs,
       createdAt: new Date().toISOString(),
     };
-    this.logs.unshift(log);
-    this.logs.splice(500);
+    this.store.transact((current) => ({
+      data: {
+        version: 1,
+        records: [log, ...(Array.isArray(current.records) ? current.records : [])].slice(0, 500),
+      },
+      result: log,
+    }));
     return { ...log };
   }
 
   async listAuditLogs({ limit = 100 } = {}) {
     const fixtureLogs = this.adapter?.listAuditLogs ? this.adapter.listAuditLogs() : [];
-    return [...this.logs, ...fixtureLogs].slice(0, Math.max(1, Math.min(Number(limit) || 100, 500)));
+    const logs = this.store.initialize().records;
+    return [...logs, ...fixtureLogs].slice(0, Math.max(1, Math.min(Number(limit) || 100, 500)));
   }
 
   clearForTests() {
-    this.logs.splice(0);
+    this.store.clear();
   }
 }
 

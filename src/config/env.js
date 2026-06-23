@@ -31,6 +31,7 @@ const parseCsv = (value) =>
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
+  bindHost: process.env.CORNEROPS_BIND_HOST || '127.0.0.1',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   frontendOrigin:
@@ -205,14 +206,49 @@ const baseEnv = {
     process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN === undefined
       ? true
       : parseBoolean(process.env.TELEGRAM_OPERATOR_REPLY_DRY_RUN),
+  corneropsPersistenceProvider: parseEnum(
+    process.env.CORNEROPS_PERSISTENCE_PROVIDER,
+    ['file_json', 'memory'],
+    'file_json',
+  ),
+  corneropsPersistenceRoot:
+    process.env.CORNEROPS_PERSISTENCE_ROOT || './.cornerops/state',
+  corneropsPersistenceFailClosed:
+    process.env.CORNEROPS_PERSISTENCE_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_PERSISTENCE_FAIL_CLOSED),
+  corneropsApprovalStoreProvider: parseEnum(
+    process.env.CORNEROPS_APPROVAL_STORE_PROVIDER,
+    ['file_json', 'memory'],
+    'file_json',
+  ),
+  corneropsAuditStoreProvider: parseEnum(
+    process.env.CORNEROPS_AUDIT_STORE_PROVIDER,
+    ['file_json', 'memory'],
+    'file_json',
+  ),
+  corneropsSessionStoreProvider: parseEnum(
+    process.env.CORNEROPS_SESSION_STORE_PROVIDER,
+    ['file_json', 'memory'],
+    'file_json',
+  ),
+  corneropsFileStoreAtomicWrites:
+    process.env.CORNEROPS_FILE_STORE_ATOMIC_WRITES === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_FILE_STORE_ATOMIC_WRITES),
+  corneropsFileStoreMaxBytes: parseInteger(
+    process.env.CORNEROPS_FILE_STORE_MAX_BYTES,
+    5 * 1024 * 1024,
+    { min: 1024, max: 100 * 1024 * 1024 },
+  ),
   corneropsReplayProtectionEnabled:
     process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED),
   corneropsReplayStoreProvider: parseEnum(
     process.env.CORNEROPS_REPLAY_STORE_PROVIDER,
-    ['file', 'memory'],
-    'file',
+    ['file', 'file_json', 'memory'],
+    'file_json',
   ),
   corneropsReplayStorePath:
     process.env.CORNEROPS_REPLAY_STORE_PATH || './.cornerops/security/replay-store.json',
@@ -229,6 +265,11 @@ const baseEnv = {
     process.env.CORNEROPS_REJECTION_STORE_ENABLED === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_REJECTION_STORE_ENABLED),
+  corneropsRejectionStoreProvider: parseEnum(
+    process.env.CORNEROPS_REJECTION_STORE_PROVIDER,
+    ['file', 'file_json', 'memory'],
+    'file_json',
+  ),
   corneropsRejectionStorePath:
     process.env.CORNEROPS_REJECTION_STORE_PATH || './.cornerops/security/rejections.json',
   corneropsRejectionRetentionDays: parseInteger(
@@ -240,6 +281,11 @@ const baseEnv = {
     process.env.CORNEROPS_RATE_LIMITING_ENABLED === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_RATE_LIMITING_ENABLED),
+  corneropsRateLimitStoreProvider: parseEnum(
+    process.env.CORNEROPS_RATE_LIMIT_STORE_PROVIDER,
+    ['file', 'file_json', 'memory'],
+    'file_json',
+  ),
   corneropsOperatorRateLimitPerMinute: parseInteger(
     process.env.CORNEROPS_OPERATOR_RATE_LIMIT_PER_MINUTE,
     12,
@@ -736,6 +782,13 @@ const baseEnv = {
 
 const getEnvWarnings = () => {
   const warnings = [];
+  if (
+    baseEnv.corneropsWebConsoleEnabled
+    && baseEnv.corneropsWebConsoleLocalOnly
+    && !['127.0.0.1', 'localhost', '::1'].includes(baseEnv.bindHost)
+  ) {
+    warnings.push('Local-only Control Tower is configured on a non-loopback bind host.');
+  }
   if (baseEnv.useSupabase && !baseEnv.supabaseUrl) {
     warnings.push('USE_SUPABASE=true but SUPABASE_URL is missing; mock fallback will be used.');
   }
@@ -856,7 +909,9 @@ const getEnvWarnings = () => {
       || !baseEnv.telegramOperatorEnabled
       || !baseEnv.corneropsTelegramReadOnly
       || !baseEnv.corneropsTelegramFailClosed
-      || baseEnv.corneropsReplayStoreProvider !== 'file'
+      || !['file', 'file_json'].includes(baseEnv.corneropsReplayStoreProvider)
+      || !['file', 'file_json'].includes(baseEnv.corneropsRejectionStoreProvider)
+      || !['file', 'file_json'].includes(baseEnv.corneropsRateLimitStoreProvider)
       || !baseEnv.corneropsReplayProtectionEnabled
       || !baseEnv.corneropsReplayFailClosed
       || !baseEnv.corneropsRejectionStoreEnabled

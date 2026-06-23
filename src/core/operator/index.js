@@ -7,8 +7,14 @@ const openclaw = require('../../integrations/openclaw');
 const { OperatorCommandRouter } = require('./OperatorCommandRouter');
 const { OperatorResponseFormatter } = require('./OperatorResponseFormatter');
 const { OperatorSessionService } = require('./OperatorSessionService');
+const { persistenceProviderRegistry } = require('../persistence');
 
-const operatorSessionService = new OperatorSessionService();
+const operatorSessionService = new OperatorSessionService({
+  store: persistenceProviderRegistry.createStore('operator-sessions', {
+    initialData: { version: 1, records: [] },
+    provider: env.corneropsSessionStoreProvider,
+  }),
+});
 const operatorResponseFormatter = new OperatorResponseFormatter({
   maxResponseChars: env.corneropsOperatorMaxResponseChars,
   showApprovalStatus: env.corneropsOperatorShowApprovalStatus,

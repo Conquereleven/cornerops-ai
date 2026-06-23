@@ -22,7 +22,7 @@ const run = async () => {
     approved: approved.approval.status,
     rejected: rejected.approval.status,
     realActionsExecuted: approved.executed || rejected.executed,
-    safety: 'Approval decisions changed status in memory only.',
+    safety: 'Approval decisions changed persisted status only; no underlying action executed.',
   }, null, 2));
   return { approved, before, rejected };
 };

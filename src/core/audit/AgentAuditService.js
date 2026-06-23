@@ -1,12 +1,14 @@
 const { randomUUID } = require('crypto');
 const logger = require('../../utils/logger');
 const { sanitize } = require('../../integrations/openclaw/AuditLogService');
+const { InMemoryStore } = require('../persistence/InMemoryStore');
 
-const auditEvents = [];
+const initialData = { version: 1, records: [] };
 
 class AgentAuditService {
-  constructor({ enabled = true } = {}) {
+  constructor({ enabled = true, store = new InMemoryStore({ initialData }) } = {}) {
     this.enabled = enabled;
+    this.store = store;
   }
 
   record(event = {}) {
@@ -32,8 +34,13 @@ class AgentAuditService {
       errorMessage: event.errorMessage ? sanitize({ message: event.errorMessage }).message : undefined,
       createdAt: new Date().toISOString(),
     };
-    auditEvents.unshift(auditEvent);
-    auditEvents.splice(500);
+    this.store.transact((current) => ({
+      data: {
+        version: 1,
+        records: [auditEvent, ...(Array.isArray(current.records) ? current.records : [])].slice(0, 500),
+      },
+      result: auditEvent,
+    }));
     logger.info('agent_audit', {
       requestId: auditEvent.requestId,
       agentId: auditEvent.agentId,
@@ -46,11 +53,11 @@ class AgentAuditService {
 
   list({ limit = 100 } = {}) {
     const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
-    return auditEvents.slice(0, safeLimit).map((event) => ({ ...event }));
+    return this.store.initialize().records.slice(0, safeLimit).map((event) => ({ ...event }));
   }
 
   clearForTests() {
-    auditEvents.splice(0);
+    this.store.clear();
   }
 }
 

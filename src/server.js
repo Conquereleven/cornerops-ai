@@ -7,9 +7,9 @@ for (const warning of env.getEnvWarnings()) {
   logger.warn('environment_warning', { warning });
 }
 logSupabaseConfiguration();
-const server = app.listen(env.port, () => {
+const server = app.listen(env.port, env.bindHost, () => {
   console.log(
-    `CornerOps AI Workers listening on http://localhost:${env.port}`,
+    `CornerOps AI Workers listening on http://${env.bindHost}:${env.port}`,
   );
 });
 
