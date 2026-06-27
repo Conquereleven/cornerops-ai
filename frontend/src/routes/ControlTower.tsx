@@ -85,17 +85,24 @@ export function ControlTower() {
       ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div></section>}
       {report.cornerMexLovableConnector && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">CornerMex Lovable Connector · v1.1.1</span><h2>Lovable project and data contracts</h2></div><StatusBadge tone={toneFor(report.cornerMexLovableConnector.sourceMode)}>{report.cornerMexLovableConnector.sourceMode}</StatusBadge></div><div className="ct-safety-grid">{[
         ['Enabled', booleanLabel(report.cornerMexLovableConnector.enabled)],
+        ['Config intake', report.cornerMexLovableConnector.configIntakeStatus || 'unknown'],
         ['Discovery mode', report.cornerMexLovableConnector.discoveryMode],
         ['Lovable project', report.cornerMexLovableConnector.projectConfigured ? 'configured' : 'missing'],
         ['GitHub repo', report.cornerMexLovableConnector.githubRepoConfigured ? 'configured' : 'missing'],
         ['Supabase', report.cornerMexLovableConnector.supabaseConfigured ? 'configured' : 'missing'],
+        ['Deployment URL', report.cornerMexLovableConnector.configCompleteness?.deployment ? 'configured' : 'missing'],
         ['Entities', report.cornerMexLovableConnector.discoveredEntities.join(', ') || 'mock/template'],
         ['Contracts', report.cornerMexLovableConnector.mappedContracts.map((contract) => `${contract.entity}:${contract.confidence}`).join(', ')],
         ['PII masking', booleanLabel(report.cornerMexLovableConnector.piiMasking)],
         ['Writes blocked', booleanLabel(report.cornerMexLovableConnector.writesBlocked)],
+        ['Write-risk paths', String(report.cornerMexLovableConnector.discoveredWriteRiskPaths?.length || 0)],
         ['Audit reads', report.cornerMexLovableConnector.lastReadAuditStatus],
         ['Warnings', String(report.cornerMexLovableConnector.warnings.length)],
-      ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div><div className="ct-security-body"><div>{report.cornerMexLovableConnector.mappedContracts.map((contract) => <p key={contract.entity}><Database size={14} /><span>{contract.entity}</span><StatusBadge tone={contract.confidence === 'high' ? 'green' : contract.confidence === 'medium' ? 'amber' : 'neutral'}>{contract.confidence}</StatusBadge></p>)}</div><ul>{report.cornerMexLovableConnector.founderNextSteps.map((step) => <li key={step}>{step}</li>)}</ul></div></section>}
+      ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div><div className="ct-security-body"><div>{report.cornerMexLovableConnector.mappedContracts.map((contract) => <p key={contract.entity}><Database size={14} /><span>{contract.entity}</span><StatusBadge tone={contract.confidence === 'high' ? 'green' : contract.confidence === 'medium' ? 'amber' : 'neutral'}>{contract.confidence}</StatusBadge></p>)}</div><ul>{[
+        report.cornerMexLovableConnector.exactNextRecommendedAction,
+        ...(report.cornerMexLovableConnector.missingFounderConfig || []).map((item) => `Missing: ${item}`),
+        ...report.cornerMexLovableConnector.founderNextSteps,
+      ].filter(Boolean).map((step) => <li key={step}>{step}</li>)}</ul></div></section>}
       {report.founderBetaReadiness && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">Founder Beta Readiness</span><h2>Local operating posture</h2></div><StatusBadge tone={report.founderBetaReadiness.ready ? 'green' : report.founderBetaReadiness.setupStatus === 'blocked' ? 'red' : 'amber'}>{report.founderBetaReadiness.ready ? 'READY' : report.founderBetaReadiness.setupStatus.toUpperCase()}</StatusBadge></div><div className="ct-safety-grid">{[
         ['Setup', `${report.founderBetaReadiness.setupStatus} · ${report.founderBetaReadiness.setupCounts.ok} ok / ${report.founderBetaReadiness.setupCounts.warning} warn / ${report.founderBetaReadiness.setupCounts.blocked} blocked`],
         ['Local env', report.founderBetaReadiness.localEnvStatus],

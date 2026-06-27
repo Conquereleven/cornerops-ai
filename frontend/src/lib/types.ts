@@ -393,6 +393,13 @@ export interface ControlTowerV08Report {
     lastReadAuditStatus: string;
     warnings: string[];
     founderNextSteps: string[];
+    version?: string;
+    configIntakeStatus?: string;
+    configCompleteness?: Record<string, boolean>;
+    missingFounderConfig?: string[];
+    discoveredWriteRiskPaths?: Array<{ pattern: string; risk: string }>;
+    exactNextRecommendedAction?: string;
+    configIntake?: Record<string, unknown>;
   };
   audit: {
     eventsLast24h: number;

@@ -101,3 +101,17 @@ console shows:
 
 The console never scrapes Lovable, mutates the Lovable project, exposes
 Supabase keys or enables CornerMex writes.
+
+## v1.1.2 real config readiness
+
+The `cornerMexLovableConnector` section now also shows:
+
+- config intake status
+- project/repo/deployment/Supabase completeness
+- current mode and candidate progression
+- missing founder config
+- write-risk paths found/documented by repo discovery
+- exact next recommended action
+
+Modes remain explicit: `missing_config`, `mock`, `repo_discovered` and
+`real_read_only`. The console does not print Supabase keys.

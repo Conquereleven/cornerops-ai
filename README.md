@@ -53,6 +53,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
   CornerMex en Lovable, repo conectado/Supabase como fuentes read-only,
   contratos Product/Lead/Quote/Order/Customer/Payment, fixtures mock y seccion
   dedicada en Control Tower.
+- CornerMex Lovable Real Config v1.1.2 con validator/intake de configuracion,
+  progresion `mock` -> `repo_discovered` -> `real_read_only`, confidence de
+  contratos por nivel de discovery y checks seguros sin credenciales.
 
 ## Inicio rápido
 
@@ -66,6 +69,7 @@ npm run founder:setup-check
 npm run founder:daily
 npm run demo:v1.1
 npm run demo:v1.1.1
+npm run demo:v1.1.2
 npm run dev
 ```
 
@@ -162,6 +166,7 @@ CORNERMEX_SUPABASE_ANON_KEY=
 CORNERMEX_SUPABASE_SCHEMA=public
 CORNERMEX_SUPABASE_READ_ONLY=true
 CORNERMEX_SUPABASE_ALLOW_WRITES=false
+CORNERMEX_SUPABASE_SCHEMA_DISCOVERY_ENABLED=false
 CORNERMEX_SUPABASE_MAX_ROWS=100
 CORNERMEX_SUPABASE_QUERY_TIMEOUT_MS=10000
 CORNEROPS_CORNERMEX_CONNECTOR_ENABLED=false

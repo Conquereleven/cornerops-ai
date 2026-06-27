@@ -144,6 +144,7 @@ const controlTowerV10ReportService = new ControlTowerV10ReportService({
 const controlTowerV11ReportService = new ControlTowerV11ReportService({
   baseService: controlTowerV10ReportService,
   businessDataReadinessService: data.businessDataReadinessService,
+  cornerMexConfigIntakeService: data.cornerMexLovableConfigIntakeService,
   cornerMexConnector: data.lovableCornerMexConnector,
   githubReadinessService: data.githubReadinessService,
   config: env,

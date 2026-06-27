@@ -4,24 +4,29 @@ class ControlTowerV11ReportService {
   constructor({
     baseService,
     businessDataReadinessService,
+    cornerMexConfigIntakeService,
     cornerMexConnector,
     githubReadinessService,
     config = {},
   } = {}) {
     this.baseService = baseService;
     this.businessDataReadinessService = businessDataReadinessService;
+    this.cornerMexConfigIntakeService = cornerMexConfigIntakeService;
     this.cornerMexConnector = cornerMexConnector;
     this.githubReadinessService = githubReadinessService;
     this.config = config;
   }
 
   async getReport() {
-    const [base, github, businessData, cornerMexLovableConnector] = await Promise.all([
+    const [base, github, businessData, cornerMexLovableConnector, cornerMexConfigIntake] = await Promise.all([
       this.baseService.getReport(),
       this.githubReadinessService.check({ testReads: false }),
       this.businessDataReadinessService.check({ testReads: false }),
       this.cornerMexConnector?.getConnectorStatus
         ? this.cornerMexConnector.getConnectorStatus({ agentId: 'control-tower-v1.1.1' })
+        : Promise.resolve(null),
+      this.cornerMexConfigIntakeService?.check
+        ? this.cornerMexConfigIntakeService.check({ agentId: 'control-tower-v1.1.2' })
         : Promise.resolve(null),
     ]);
     const sourceMode = combineSourceModes([
@@ -48,6 +53,7 @@ class ControlTowerV11ReportService {
       ...github.warnings,
       ...businessData.warnings,
       ...(cornerMexLovableConnector?.warnings || []),
+      ...(cornerMexConfigIntake?.warnings || []),
     ];
     return {
       ...base,
@@ -71,7 +77,16 @@ class ControlTowerV11ReportService {
         blockedWriteFlags,
         warnings: [...new Set(warnings)],
       },
-      cornerMexLovableConnector,
+      cornerMexLovableConnector: cornerMexLovableConnector ? {
+        ...cornerMexLovableConnector,
+        version: 'v1.1.2',
+        configIntake: cornerMexConfigIntake,
+        configIntakeStatus: cornerMexConfigIntake?.status || 'unknown',
+        configCompleteness: cornerMexConfigIntake?.configCompleteness || {},
+        discoveredWriteRiskPaths: cornerMexConfigIntake?.repoDiscovery?.writeRiskPaths || [],
+        missingFounderConfig: cornerMexConfigIntake?.missing || [],
+        exactNextRecommendedAction: cornerMexConfigIntake?.founderNextSteps?.[0] || cornerMexLovableConnector.founderNextSteps?.[0],
+      } : null,
       github: {
         ...base.github,
         ...github,

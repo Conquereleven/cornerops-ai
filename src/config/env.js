@@ -618,6 +618,7 @@ const baseEnv = {
       ? true
       : parseBoolean(process.env.CORNERMEX_SUPABASE_READ_ONLY),
   cornermexSupabaseAllowWrites: parseBoolean(process.env.CORNERMEX_SUPABASE_ALLOW_WRITES),
+  cornermexSupabaseSchemaDiscoveryEnabled: parseBoolean(process.env.CORNERMEX_SUPABASE_SCHEMA_DISCOVERY_ENABLED),
   cornermexSupabaseMaxRows: parseInteger(
     process.env.CORNERMEX_SUPABASE_MAX_ROWS,
     100,

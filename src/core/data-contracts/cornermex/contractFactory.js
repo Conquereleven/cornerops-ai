@@ -10,6 +10,9 @@ const makeContract = ({
   warnings = [],
 }) => {
   const missingFields = sourceMode === 'missing_config' ? [...requiredFields] : [];
+  const inferredConfidence = sourceMode === 'real_read_only'
+    ? 'high'
+    : sourceMode === 'repo_discovered' ? 'medium' : 'low';
   return {
     entity,
     source: 'cornermex_lovable',
@@ -18,7 +21,7 @@ const makeContract = ({
     requiredFields,
     optionalFields,
     piiClassification,
-    confidence: confidence || (sourceMode === 'mock' ? 'medium' : 'low'),
+    confidence: confidence || inferredConfidence,
     missingFields,
     warnings: [...new Set([
       ...warnings,

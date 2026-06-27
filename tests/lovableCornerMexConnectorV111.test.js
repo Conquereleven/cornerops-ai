@@ -132,7 +132,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
     expect(missing.entities).toEqual(expect.arrayContaining(['product', 'lead', 'quote', 'order', 'customer', 'payment']));
     expect(missing.contracts.every((contract) => contract.confidence === 'low')).toBe(true);
     expect(missing.contracts.every((contract) => contract.missingFields.length > 0)).toBe(true);
-    expect(mock.contracts.every((contract) => contract.confidence === 'medium')).toBe(true);
+    expect(mock.contracts.every((contract) => contract.confidence === 'low')).toBe(true);
   });
 
   test('Control Tower exposes CornerMex Lovable connector section and write blocking', async () => {
