@@ -63,12 +63,26 @@ export function ControlTower() {
   };
 
   return <div className="control-tower-page">
-    <header className="ct-title"><div><span className="eyebrow">Internal operator surface · v1.0 founder beta</span><h1>Control Tower</h1><p>Controlled actions, approvals and audit. CornerOps remains the source of truth.</p></div><div className="ct-title-status">{report && <><StatusBadge tone={toneFor(report.status)}>{report.status}</StatusBadge><StatusBadge tone="amber">{report.mode}</StatusBadge><StatusBadge tone="blue">{report.controlledActions?.dryRun === false ? 'CONTROLLED REAL' : 'DRY-RUN'}</StatusBadge></>}<button onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={14} />Refresh</button></div></header>
+    <header className="ct-title"><div><span className="eyebrow">Internal operator surface · v1.1 real source expansion</span><h1>Control Tower</h1><p>Controlled actions, approvals and audit. CornerOps remains the source of truth.</p></div><div className="ct-title-status">{report && <><StatusBadge tone={toneFor(report.status)}>{report.status}</StatusBadge><StatusBadge tone="amber">{report.mode}</StatusBadge><StatusBadge tone="blue">{report.controlledActions?.dryRun === false ? 'CONTROLLED REAL' : 'DRY-RUN'}</StatusBadge></>}<button onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={14} />Refresh</button></div></header>
     <section className="ct-auth panel"><KeyRound size={16} /><div><strong>Local console authentication</strong><small>The token stays in this browser session and is never returned by the API.</small></div><input aria-label="Control Tower token" type="password" value={tokenInput} onChange={(event) => setTokenInput(event.target.value)} placeholder="Enter local auth token" /><button onClick={connect}>Connect</button></section>
     {error && <div className="ct-locked"><ShieldCheck size={20} /><div><strong>Console locked safely</strong><p>{error}</p><small>Enable the local console and configure its auth token in your private environment.</small></div></div>}
     {report && <>
       <div className="ct-meta"><span>Environment <strong>{report.environment}</strong></span><span>Updated <strong>{new Date(report.generatedAt).toLocaleString()}</strong></span><span>Beta <strong>{booleanLabel(report.betaMode)}</strong></span><span>Demo <strong>{booleanLabel(report.demoMode)}</strong></span></div>
       <SafetyGrid safety={report.safety} />
+      {report.realSourceExpansion && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">Real Source Expansion v1.1</span><h2>Read-only source posture</h2></div><StatusBadge tone={toneFor(report.realSourceExpansion.sourceModeSummary)}>{report.realSourceExpansion.sourceModeSummary}</StatusBadge></div><div className="ct-safety-grid">{[
+        ['Selected source', report.realSourceExpansion.selectedSource],
+        ['Selected mode', report.realSourceExpansion.selectedSourceMode],
+        ['GitHub mode', textValue(report.realSourceExpansion.github.mode || 'mock')],
+        ['GitHub token present', booleanLabel(report.realSourceExpansion.github.credentialsPresent)],
+        ['GitHub writes blocked', booleanLabel(report.realSourceExpansion.github.writesBlocked)],
+        ['GitHub audit reads', booleanLabel(report.realSourceExpansion.github.auditReads)],
+        ['Business DB mode', textValue(report.realSourceExpansion.businessData.mode || 'mock')],
+        ['Business DB provider', textValue(report.realSourceExpansion.businessData.provider || 'mock')],
+        ['Business DB writes blocked', booleanLabel(report.realSourceExpansion.businessData.writesBlocked)],
+        ['PII masking', booleanLabel(report.realSourceExpansion.businessData.piiMasking)],
+        ['Schema discovery', booleanLabel(report.realSourceExpansion.businessData.schemaDiscoveryEnabled)],
+        ['Warnings', String(report.realSourceExpansion.warnings.length)],
+      ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div></section>}
       {report.founderBetaReadiness && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">Founder Beta Readiness</span><h2>Local operating posture</h2></div><StatusBadge tone={report.founderBetaReadiness.ready ? 'green' : report.founderBetaReadiness.setupStatus === 'blocked' ? 'red' : 'amber'}>{report.founderBetaReadiness.ready ? 'READY' : report.founderBetaReadiness.setupStatus.toUpperCase()}</StatusBadge></div><div className="ct-safety-grid">{[
         ['Setup', `${report.founderBetaReadiness.setupStatus} · ${report.founderBetaReadiness.setupCounts.ok} ok / ${report.founderBetaReadiness.setupCounts.warning} warn / ${report.founderBetaReadiness.setupCounts.blocked} blocked`],
         ['Local env', report.founderBetaReadiness.localEnvStatus],

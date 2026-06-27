@@ -343,6 +343,34 @@ export interface ControlTowerV08Report {
     lastBackup: string | null;
     warnings: string[];
   };
+  realSourceExpansion?: {
+    version: string;
+    selectedSource: string;
+    selectedSourceMode: string;
+    sourceModeSummary: string;
+    github: Record<string, unknown> & {
+      mode?: string;
+      enabled?: boolean;
+      credentialsPresent?: boolean;
+      writesBlocked?: boolean;
+      readOnlyVerified?: boolean;
+      auditReads?: boolean;
+      warnings?: string[];
+    };
+    businessData: Record<string, unknown> & {
+      mode?: string;
+      provider?: string;
+      credentialsPresent?: boolean;
+      writesBlocked?: boolean;
+      readOnlyVerified?: boolean;
+      piiMasking?: boolean;
+      schemaDiscoveryEnabled?: boolean;
+      warnings?: string[];
+    };
+    agentUsage: Record<string, string>;
+    blockedWriteFlags: Record<string, boolean>;
+    warnings: string[];
+  };
   audit: {
     eventsLast24h: number;
     deniedLast24h: number;

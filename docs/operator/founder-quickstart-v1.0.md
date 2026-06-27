@@ -12,6 +12,7 @@ npm run qa
 npm run founder:daily
 npm run demo:v0.9
 npm run demo:v1.0
+npm run demo:v1.1
 npm run build
 npm start
 ```
@@ -19,6 +20,7 @@ npm start
 Open `http://127.0.0.1:3000/control-tower`, enter the local console token from `.env`, then verify:
 
 - Founder Beta Readiness is ready or only has understood warnings.
+- Real Source Expansion v1.1 shows GitHub and Business DB source modes clearly.
 - Controlled actions are dry-run.
 - GitHub real issue creation is disabled.
 - External sends and writes are blocked.
@@ -51,6 +53,16 @@ npm run cornerops -- approvals execute-dry-run <approval-id>
 ```
 
 Real GitHub issue creation remains off by default.
+
+## Real source checks
+
+```bash
+npm run github:read-only-check
+npm run business-data:read-only-check
+npm run demo:real-sources
+```
+
+These commands run without credentials and fall back to labeled mock mode. They never mutate GitHub or business data.
 
 ## Shutdown
 

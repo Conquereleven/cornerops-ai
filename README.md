@@ -45,6 +45,10 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Founder Operational Beta v1.0 con setup-check, daily operating loop, backup
   local sanitizado, export summary, template `.env.founder.local.example`,
   Control Tower Founder Beta Readiness y docs de onboarding.
+- Real Source Expansion v1.1 con GitHub read-only readiness como primera fuente
+  real candidata, Business DB/Supabase read-only readiness como segunda,
+  etiquetas `mock`/`real_read_only`/`mixed`, Control Tower v1.1 y demos sin
+  credenciales.
 
 ## Inicio rápido
 
@@ -56,6 +60,7 @@ npm --prefix frontend install
 cp .env.founder.local.example .env
 npm run founder:setup-check
 npm run founder:daily
+npm run demo:v1.1
 npm run dev
 ```
 
@@ -133,6 +138,10 @@ GITHUB_REPO=cornerops-ai
 GITHUB_WEBHOOK_SECRET=
 GITHUB_ALLOW_ISSUE_CREATION=false
 GITHUB_READ_ONLY=true
+GITHUB_ALLOW_PR_WRITE=false
+GITHUB_ALLOW_WORKFLOW_TRIGGER=false
+CORNEROPS_GITHUB_REAL_READ_ONLY_ENABLED=false
+CORNEROPS_GITHUB_AUDIT_READS=true
 
 CORNEROPS_CONTROLLED_ACTIONS_ENABLED=false
 CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN=true

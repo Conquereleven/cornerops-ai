@@ -39,7 +39,12 @@ const { LobsterWorkflowShellAdapter } = require('../openclaw-ecosystem/adapters/
 const { ClawSweeperTriageAdapter } = require('../openclaw-ecosystem/adapters/ClawSweeperTriageAdapter');
 const { CrabfleetMissionControlAdapter } = require('../openclaw-ecosystem/adapters/CrabfleetMissionControlAdapter');
 const { ClickClackChatAdapter } = require('../openclaw-ecosystem/adapters/ClickClackChatAdapter');
-const { FirstRealSourceReadinessService, FirstRealSourceSelector } = require('../real-source');
+const {
+  BusinessDataReadOnlyReadinessService,
+  FirstRealSourceReadinessService,
+  FirstRealSourceSelector,
+  GitHubReadOnlyReadinessService,
+} = require('../real-source');
 const { persistenceProviderRegistry } = require('../persistence');
 
 const businessDbConfigured = Boolean(
@@ -58,10 +63,14 @@ const githubConfigured = Boolean(
   && env.githubOwner
   && env.githubRepo,
 );
-const selectedConfiguredFirstSource = !env.corneropsFirstRealSourceEnabled
+const realSourceSelectionEnabled = env.corneropsFirstRealSourceEnabled
+  || env.corneropsGithubRealReadOnlyEnabled;
+const selectedConfiguredFirstSource = !realSourceSelectionEnabled
   ? 'mock'
-  : env.corneropsFirstRealSource === 'auto'
-    ? businessDbConfigured ? 'business_db' : githubConfigured ? 'github' : 'mock'
+  : env.corneropsGithubRealReadOnlyEnabled
+    ? 'github'
+    : env.corneropsFirstRealSource === 'auto'
+    ? githubConfigured ? 'github' : businessDbConfigured ? 'business_db' : 'mock'
     : env.corneropsFirstRealSource;
 
 const mockDataAdapter = new MockDataAdapter();
@@ -84,6 +93,7 @@ const dataSourceRegistry = new DataSourceRegistry({
     firstRealSourceMode: env.corneropsFirstRealSourceMode,
     githubEnabled: env.githubEnabled,
     githubReadOnly: env.githubReadOnly,
+    githubRealReadOnlyEnabled: env.corneropsGithubRealReadOnlyEnabled,
     githubCredentialsPresent: Boolean(env.githubToken && env.githubOwner && env.githubRepo),
     dbReadOnly: env.corneropsDbReadOnly,
     dbAllowWrites: env.corneropsDbAllowWrites,
@@ -92,7 +102,9 @@ const dataSourceRegistry = new DataSourceRegistry({
       : Boolean(env.readOnlyDatabaseUrl),
     realDataEnabled: env.corneropsRealDataEnabled,
     realSourceOnboardingEnabled:
-      env.corneropsRealSourceOnboardingEnabled || env.corneropsFirstRealSourceEnabled,
+      env.corneropsRealSourceOnboardingEnabled
+      || env.corneropsFirstRealSourceEnabled
+      || env.corneropsGithubRealReadOnlyEnabled,
   },
 });
 const dataAccessPolicy = new DataAccessPolicy({
@@ -212,13 +224,16 @@ const githubClient = new GitHubClient({
     apiVersion: env.githubApiVersion,
     enabled: env.githubEnabled,
     dryRun: env.githubDryRun,
+    auditReads: env.corneropsGithubAuditReads,
     firstRealSource: selectedConfiguredFirstSource,
     firstRealSourceEnabled: env.corneropsFirstRealSourceEnabled,
     firstRealSourceMode: env.corneropsFirstRealSourceMode,
     owner: env.githubOwner,
     readOnly: env.githubReadOnly,
     realSourceOnboardingEnabled:
-      env.corneropsRealSourceOnboardingEnabled || env.corneropsFirstRealSourceEnabled,
+      env.corneropsRealSourceOnboardingEnabled
+      || env.corneropsFirstRealSourceEnabled
+      || env.corneropsGithubRealReadOnlyEnabled,
     repo: env.githubRepo,
     token: env.githubToken,
     webhookSecret: env.githubWebhookSecret,
@@ -226,21 +241,33 @@ const githubClient = new GitHubClient({
   },
   octopoolRelay,
 });
+const githubReadinessService = new GitHubReadOnlyReadinessService({
+  client: githubClient,
+  config: env,
+});
 const githubIssueService = new GitHubIssueService({ client: githubClient });
 const githubPullRequestService = new GitHubPullRequestService({ client: githubClient });
 const githubActionsService = new GitHubActionsService({ client: githubClient });
 const firstRealSourceSelector = new FirstRealSourceSelector({
   config: {
-    enabled: env.corneropsFirstRealSourceEnabled,
+    enabled: env.corneropsFirstRealSourceEnabled || env.corneropsGithubRealReadOnlyEnabled,
     mode: env.corneropsFirstRealSourceMode,
     preferredOrder: env.corneropsPreferredRealSourceOrder,
-    source: env.corneropsFirstRealSource,
+    source: env.corneropsGithubRealReadOnlyEnabled && env.corneropsFirstRealSource === 'auto'
+      ? 'github'
+      : env.corneropsFirstRealSource,
   },
 });
 const firstRealSourceReadinessService = new FirstRealSourceReadinessService({
   databaseAdapter: readOnlyDatabaseAdapter,
   githubClient,
   selector: firstRealSourceSelector,
+});
+const businessDataReadinessService = new BusinessDataReadOnlyReadinessService({
+  adapter: readOnlyDatabaseAdapter,
+  contractRegistry: businessDataContractRegistry,
+  schemaDiscoveryService,
+  config: env,
 });
 const githubWebhookHandler = new GitHubWebhookHandler({ auditLogService, client: githubClient });
 const leadService = new LeadService({
@@ -295,6 +322,7 @@ module.exports = {
   crabfleetMissionControlAdapter,
   craboxRunnerAdapter,
   businessDataContractRegistry,
+  businessDataReadinessService,
   businessDataService,
   databaseSafetyPolicy,
   dataAccessPolicy,
@@ -310,6 +338,7 @@ module.exports = {
   githubClient,
   githubIssueService,
   githubPullRequestService,
+  githubReadinessService,
   githubWebhookHandler,
   leadService,
   leadReadOnlyRepository,

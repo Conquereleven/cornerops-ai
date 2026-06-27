@@ -22,6 +22,7 @@ class GitHubClient {
       allowIssueCreation: false,
       allowPrWrite: false,
       allowWorkflowTrigger: false,
+      auditReads: true,
       dryRun: true,
       enabled: false,
       firstRealSource: 'github',
@@ -223,7 +224,7 @@ class GitHubClient {
     return {
       status: 'denied',
       dryRun: true,
-      message: `${operation} are disabled for the v0.3 read-only beta.`,
+      message: `${operation} are disabled for the v1.1 read-only beta.`,
     };
   }
 
@@ -285,6 +286,7 @@ class GitHubClient {
   }
 
   async auditRead(operation, context, count, source = 'github') {
+    if (this.config.auditReads === false) return null;
     await this.auditLogService?.record({
       ...context,
       eventType: 'data_read',
@@ -311,6 +313,12 @@ class GitHubClient {
 
   getStatus() {
     const configured = Boolean(this.config.token && this.config.owner && this.config.repo);
+    const writeFlags = {
+      issueCreation: Boolean(this.config.allowIssueCreation),
+      prWrite: Boolean(this.config.allowPrWrite),
+      workflowTrigger: Boolean(this.config.allowWorkflowTrigger),
+    };
+    const writesBlocked = !writeFlags.issueCreation && !writeFlags.prWrite && !writeFlags.workflowTrigger;
     const warnings = [];
     if (!this.config.enabled) warnings.push('GitHub integration is disabled.');
     if (this.config.enabled && !configured) warnings.push('GitHub credentials or repository configuration are missing; mock data is used.');
@@ -318,11 +326,20 @@ class GitHubClient {
       warnings.push('Real-source onboarding is disabled.');
     }
     if (!this.config.readOnly) warnings.push('GitHub is not in read-only mode.');
+    if (!writesBlocked) warnings.push('CRITICAL: one or more GitHub write flags are enabled.');
+    if (this.config.auditReads === false) warnings.push('CRITICAL: GitHub read auditing is disabled.');
     return {
       enabled: Boolean(this.config.enabled),
       readOnly: Boolean(this.config.readOnly),
+      dryRun: Boolean(this.config.dryRun),
+      credentialsPresent: configured,
+      tokenPresent: configured,
+      tokenExposed: false,
+      auditReads: this.config.auditReads !== false,
+      writesBlocked,
+      writeFlags,
       connected: this.canUseRealReads(),
-      mode: this.canUseRealReads() ? 'read_only' : 'mock',
+      mode: this.canUseRealReads() ? 'real_read_only' : 'mock',
       repo: this.config.owner && this.config.repo
         ? `${this.config.owner}/${this.config.repo}`
         : undefined,

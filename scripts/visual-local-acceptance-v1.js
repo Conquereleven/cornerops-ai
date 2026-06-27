@@ -38,7 +38,8 @@ const run = () => {
     status: missing.length || secretHits.length ? 'blocked' : 'ok',
     checks: {
       sourceSectionsPresent: missing.length === 0,
-      v10EndpointUsed: api.includes('/api/control-tower/v1.0/status'),
+      v10EndpointUsed: api.includes('/api/control-tower/v1.0/status')
+        || api.includes('/api/control-tower/v1.1/status'),
       distIndexExists: distExists,
       secretsFound: secretHits.length,
       missing,

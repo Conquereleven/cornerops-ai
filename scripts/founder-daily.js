@@ -7,7 +7,7 @@ const { FounderFirstRunService } = require('../src/core/setup/FounderFirstRunSer
 const createService = () => new FounderFirstRunService({
   actions,
   backupService: controlTower.localStateBackupService,
-  controlTowerReportService: controlTower.controlTowerV10ReportService,
+  controlTowerReportService: controlTower.controlTowerV11ReportService || controlTower.controlTowerV10ReportService,
   operatorCommandRouter: operator.operatorCommandRouter,
   setupValidator: controlTower.founderSetupValidator,
 });

@@ -9,6 +9,7 @@ const { AuditViewerService } = require('./AuditViewerService');
 const { ControlTowerV08ReportService } = require('./ControlTowerV08ReportService');
 const { ControlTowerV09ReportService } = require('./ControlTowerV09ReportService');
 const { ControlTowerV10ReportService } = require('./ControlTowerV10ReportService');
+const { ControlTowerV11ReportService } = require('./ControlTowerV11ReportService');
 const actions = require('../actions');
 const { LocalStateBackupService } = require('../persistence/LocalStateBackupService');
 const { FounderSetupValidator } = require('../setup/FounderSetupValidator');
@@ -140,6 +141,12 @@ const controlTowerV10ReportService = new ControlTowerV10ReportService({
   baseService: controlTowerV09ReportService,
   setupValidator: founderSetupValidator,
 });
+const controlTowerV11ReportService = new ControlTowerV11ReportService({
+  baseService: controlTowerV10ReportService,
+  businessDataReadinessService: data.businessDataReadinessService,
+  githubReadinessService: data.githubReadinessService,
+  config: env,
+});
 
 module.exports = {
   ApprovalCenterService,
@@ -148,12 +155,14 @@ module.exports = {
   ControlTowerV08ReportService,
   ControlTowerV09ReportService,
   ControlTowerV10ReportService,
+  ControlTowerV11ReportService,
   approvalCenterService,
   auditViewerService,
   controlTowerService,
   controlTowerV08ReportService,
   controlTowerV09ReportService,
   controlTowerV10ReportService,
+  controlTowerV11ReportService,
   founderSetupValidator,
   localStateBackupService,
 };
