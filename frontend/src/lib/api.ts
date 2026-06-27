@@ -117,7 +117,7 @@ const consoleRequest = <T>(path: string, token = '', options?: RequestInit) => r
 });
 
 export const getControlTowerV08 = (token = '') =>
-  consoleRequest<ControlTowerV08Report>('/api/control-tower/v0.9/status', token);
+  consoleRequest<ControlTowerV08Report>('/api/control-tower/v1.0/status', token);
 export const getControlTowerApprovals = (token = '') =>
   consoleRequest<ApprovalCenterResponse>('/api/control-tower/v0.8/approvals', token);
 export const decideApprovalDryRun = (id: string, decision: 'approve' | 'reject', token = '') =>

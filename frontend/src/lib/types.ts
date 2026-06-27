@@ -325,6 +325,24 @@ export interface ControlTowerV08Report {
     idempotency: { healthy: boolean; provider: string };
     executions: { dryRun: number; real: number; blocked: number; last: Record<string, unknown> | null };
   };
+  founderBetaReadiness?: {
+    version: string;
+    ready: boolean;
+    setupStatus: string;
+    setupCounts: { ok: number; warning: number; blocked: number };
+    localEnvStatus: string;
+    persistenceStatus: string;
+    backupStatus: string;
+    authLocalOnlyStatus: string;
+    controlledActionsStatus: string;
+    githubIssueRealCreationStatus: string;
+    telegramRealModeStatus: string;
+    externalSendsStatus: string;
+    writesStatus: string;
+    lastDailyRun: string | null;
+    lastBackup: string | null;
+    warnings: string[];
+  };
   audit: {
     eventsLast24h: number;
     deniedLast24h: number;

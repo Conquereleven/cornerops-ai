@@ -4,6 +4,7 @@ const {
   controlTowerService,
   controlTowerV08ReportService,
   controlTowerV09ReportService,
+  controlTowerV10ReportService,
 } = require('../core/control-tower');
 const operatorChannel = require('../core/operator-channel');
 
@@ -70,6 +71,14 @@ const v08 = async (req, res, next) => {
 const v09 = async (_req, res, next) => {
   try {
     return res.json(await controlTowerV09ReportService.getReport());
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const v10 = async (_req, res, next) => {
+  try {
+    return res.json(await controlTowerV10ReportService.getReport());
   } catch (error) {
     return next(error);
   }
@@ -179,4 +188,5 @@ module.exports = {
   telegramV08: section('operatorChannel'),
   v08,
   v09,
+  v10,
 };

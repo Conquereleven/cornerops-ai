@@ -8,7 +8,10 @@ const { ApprovalCenterService } = require('./ApprovalCenterService');
 const { AuditViewerService } = require('./AuditViewerService');
 const { ControlTowerV08ReportService } = require('./ControlTowerV08ReportService');
 const { ControlTowerV09ReportService } = require('./ControlTowerV09ReportService');
+const { ControlTowerV10ReportService } = require('./ControlTowerV10ReportService');
 const actions = require('../actions');
+const { LocalStateBackupService } = require('../persistence/LocalStateBackupService');
+const { FounderSetupValidator } = require('../setup/FounderSetupValidator');
 const { operatorChannelStatusStore } = require('../operator-channel/OperatorChannelStatusStore');
 
 const controlTowerService = new ControlTowerService({
@@ -128,6 +131,15 @@ const controlTowerV09ReportService = new ControlTowerV09ReportService({
   controlledActionExecutor: actions.controlledActionExecutor,
   config: env,
 });
+const localStateBackupService = new LocalStateBackupService({
+  backupRoot: env.corneropsBackupRoot || './.cornerops/backups',
+});
+const founderSetupValidator = new FounderSetupValidator({ config: env });
+const controlTowerV10ReportService = new ControlTowerV10ReportService({
+  backupService: localStateBackupService,
+  baseService: controlTowerV09ReportService,
+  setupValidator: founderSetupValidator,
+});
 
 module.exports = {
   ApprovalCenterService,
@@ -135,9 +147,13 @@ module.exports = {
   ControlTowerService,
   ControlTowerV08ReportService,
   ControlTowerV09ReportService,
+  ControlTowerV10ReportService,
   approvalCenterService,
   auditViewerService,
   controlTowerService,
   controlTowerV08ReportService,
   controlTowerV09ReportService,
+  controlTowerV10ReportService,
+  founderSetupValidator,
+  localStateBackupService,
 };

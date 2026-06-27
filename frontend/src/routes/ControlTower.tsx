@@ -63,12 +63,26 @@ export function ControlTower() {
   };
 
   return <div className="control-tower-page">
-    <header className="ct-title"><div><span className="eyebrow">Internal operator surface · v0.9</span><h1>Control Tower</h1><p>Controlled actions, approvals and audit. CornerOps remains the source of truth.</p></div><div className="ct-title-status">{report && <><StatusBadge tone={toneFor(report.status)}>{report.status}</StatusBadge><StatusBadge tone="amber">{report.mode}</StatusBadge><StatusBadge tone="blue">{report.controlledActions?.dryRun === false ? 'CONTROLLED REAL' : 'DRY-RUN'}</StatusBadge></>}<button onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={14} />Refresh</button></div></header>
+    <header className="ct-title"><div><span className="eyebrow">Internal operator surface · v1.0 founder beta</span><h1>Control Tower</h1><p>Controlled actions, approvals and audit. CornerOps remains the source of truth.</p></div><div className="ct-title-status">{report && <><StatusBadge tone={toneFor(report.status)}>{report.status}</StatusBadge><StatusBadge tone="amber">{report.mode}</StatusBadge><StatusBadge tone="blue">{report.controlledActions?.dryRun === false ? 'CONTROLLED REAL' : 'DRY-RUN'}</StatusBadge></>}<button onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={14} />Refresh</button></div></header>
     <section className="ct-auth panel"><KeyRound size={16} /><div><strong>Local console authentication</strong><small>The token stays in this browser session and is never returned by the API.</small></div><input aria-label="Control Tower token" type="password" value={tokenInput} onChange={(event) => setTokenInput(event.target.value)} placeholder="Enter local auth token" /><button onClick={connect}>Connect</button></section>
     {error && <div className="ct-locked"><ShieldCheck size={20} /><div><strong>Console locked safely</strong><p>{error}</p><small>Enable the local console and configure its auth token in your private environment.</small></div></div>}
     {report && <>
       <div className="ct-meta"><span>Environment <strong>{report.environment}</strong></span><span>Updated <strong>{new Date(report.generatedAt).toLocaleString()}</strong></span><span>Beta <strong>{booleanLabel(report.betaMode)}</strong></span><span>Demo <strong>{booleanLabel(report.demoMode)}</strong></span></div>
       <SafetyGrid safety={report.safety} />
+      {report.founderBetaReadiness && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">Founder Beta Readiness</span><h2>Local operating posture</h2></div><StatusBadge tone={report.founderBetaReadiness.ready ? 'green' : report.founderBetaReadiness.setupStatus === 'blocked' ? 'red' : 'amber'}>{report.founderBetaReadiness.ready ? 'READY' : report.founderBetaReadiness.setupStatus.toUpperCase()}</StatusBadge></div><div className="ct-safety-grid">{[
+        ['Setup', `${report.founderBetaReadiness.setupStatus} · ${report.founderBetaReadiness.setupCounts.ok} ok / ${report.founderBetaReadiness.setupCounts.warning} warn / ${report.founderBetaReadiness.setupCounts.blocked} blocked`],
+        ['Local env', report.founderBetaReadiness.localEnvStatus],
+        ['Persistence', report.founderBetaReadiness.persistenceStatus],
+        ['Backup', report.founderBetaReadiness.backupStatus],
+        ['Auth/local-only', report.founderBetaReadiness.authLocalOnlyStatus],
+        ['Controlled actions', report.founderBetaReadiness.controlledActionsStatus],
+        ['GitHub real issues', report.founderBetaReadiness.githubIssueRealCreationStatus],
+        ['Telegram real mode', report.founderBetaReadiness.telegramRealModeStatus],
+        ['External sends', report.founderBetaReadiness.externalSendsStatus],
+        ['Writes', report.founderBetaReadiness.writesStatus],
+        ['Last daily', report.founderBetaReadiness.lastDailyRun || 'not recorded'],
+        ['Last backup', report.founderBetaReadiness.lastBackup || 'none'],
+      ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div></section>}
       <section className="ct-card-grid">
         <TowerCard icon={Activity} label="System health" value={report.status} details={[`Fail closed: ${booleanLabel(report.safety.failClosed)}`, `Writes blocked: ${booleanLabel(report.safety.writesBlocked)}`, `Audit events 24h: ${report.audit.eventsLast24h || 0}`]} />
         <TowerCard icon={Radio} label="Telegram operator" value={report.operatorChannel.enabled ? 'ready' : 'disabled'} details={[`Real mode: ${booleanLabel(report.operatorChannel.realMode)}`, `Replay / rejection / rate: ${booleanLabel(report.operatorChannel.replayProtectionHealthy)} / ${booleanLabel(report.operatorChannel.rejectionTrackingHealthy)} / ${booleanLabel(report.operatorChannel.rateLimitingHealthy)}`, `Rejected 24h: ${report.operatorChannel.rejectedLast24h} · Last in/out: ${report.operatorChannel.lastInboundAt || 'none'} / ${report.operatorChannel.lastOutboundAt || 'none'}`]} />
