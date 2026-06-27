@@ -515,7 +515,7 @@ const baseEnv = {
       ? true
       : parseBoolean(process.env.CORNEROPS_FIRST_REAL_SOURCE_DRY_RUN),
   corneropsPreferredRealSourceOrder: parseCsv(
-    process.env.CORNEROPS_PREFERRED_REAL_SOURCE_ORDER || 'business_db,github',
+    process.env.CORNEROPS_PREFERRED_REAL_SOURCE_ORDER || 'github,business_db',
   ),
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
@@ -662,6 +662,13 @@ const baseEnv = {
   githubAllowIssueCreation: parseBoolean(process.env.GITHUB_ALLOW_ISSUE_CREATION),
   githubAllowPrWrite: parseBoolean(process.env.GITHUB_ALLOW_PR_WRITE),
   githubAllowWorkflowTrigger: parseBoolean(process.env.GITHUB_ALLOW_WORKFLOW_TRIGGER),
+  corneropsGithubRealReadOnlyEnabled: parseBoolean(
+    process.env.CORNEROPS_GITHUB_REAL_READ_ONLY_ENABLED,
+  ),
+  corneropsGithubAuditReads:
+    process.env.CORNEROPS_GITHUB_AUDIT_READS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_GITHUB_AUDIT_READS),
   openclawEcosystemEnabled: parseBoolean(process.env.OPENCLAW_ECOSYSTEM_ENABLED),
   craboxEnabled: parseBoolean(process.env.CRABOX_ENABLED),
   craboxDryRun:

@@ -36,9 +36,9 @@ class FounderFirstRunService {
     const controlledActions = this.actions.controlledActionExecutor.status();
     const backup = this.backupService.getLatestBackupSummary();
     return {
-      version: 'v1.0',
+      version: 'v1.1',
       generatedAt: new Date().toISOString(),
-      labels: ['mock', 'read-only', 'dry-run', 'disabled', 'local_internal'],
+      labels: ['mock', 'read-only', 'real_read_only', 'mixed', 'disabled', 'local_internal', 'dry-run', 'dry_run'],
       setup: {
         status: setup.status,
         counts: setup.counts,
@@ -56,7 +56,9 @@ class FounderFirstRunService {
       },
       sources: {
         businessDataMode: report.businessData?.mode || 'mock',
+        githubMode: report.github?.mode || 'mock',
         firstRealSourceMode: report.firstRealSource?.mode || 'mock',
+        realSourceExpansionMode: report.realSourceExpansion?.sourceModeSummary || 'not_available',
         openclawMode: report.openclaw?.mode || 'disabled',
       },
       approvals: report.approvals,

@@ -13,7 +13,7 @@ const defaultSources = (config = {}) => {
   const allowed = new Set(config.allowedDataSources || DATA_SOURCE_IDS);
   const enabled = config.realDataEnabled || config.dataMode === 'mock';
   const githubRealReadOnly = Boolean(
-    (config.realSourceOnboardingEnabled || config.firstRealSourceEnabled)
+    (config.realSourceOnboardingEnabled || config.firstRealSourceEnabled || config.githubRealReadOnlyEnabled)
     && ['github', 'auto'].includes(config.firstRealSource)
     && config.firstRealSourceMode === 'read_only'
     && config.githubEnabled

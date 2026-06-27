@@ -68,3 +68,19 @@ Approval Center may execute only checksum-protected controlled approvals in dry-
 
 The visual release gate for v1.0 is documented in
 `docs/acceptance/visual-acceptance-v1.0.md`.
+
+## v1.1 real source expansion
+
+`GET /api/control-tower/v1.1/status` wraps the v1.0 report with
+`realSourceExpansion`. The React console uses this report and shows:
+
+- selected source and source mode summary
+- GitHub read-only status, credential presence and write blocking
+- Business DB/Supabase read-only readiness, PII masking and schema discovery
+- agent real-data usage status
+- blocked write flags
+- source warnings
+
+The console never returns GitHub tokens, database URLs or Supabase keys. Real
+source labels must remain explicit: `mock`, `real_read_only`, `mixed`,
+`disabled`, `local_internal` or `dry_run`.
