@@ -49,6 +49,10 @@ CornerOps AI is the brain. OpenClaw is the gateway.
   real candidata, Business DB/Supabase read-only readiness como segunda,
   etiquetas `mock`/`real_read_only`/`mixed`, Control Tower v1.1 y demos sin
   credenciales.
+- Lovable CornerMex Connector v1.1.1 con discovery seguro del proyecto
+  CornerMex en Lovable, repo conectado/Supabase como fuentes read-only,
+  contratos Product/Lead/Quote/Order/Customer/Payment, fixtures mock y seccion
+  dedicada en Control Tower.
 
 ## Inicio rápido
 
@@ -61,6 +65,7 @@ cp .env.founder.local.example .env
 npm run founder:setup-check
 npm run founder:daily
 npm run demo:v1.1
+npm run demo:v1.1.1
 npm run dev
 ```
 
@@ -142,6 +147,27 @@ GITHUB_ALLOW_PR_WRITE=false
 GITHUB_ALLOW_WORKFLOW_TRIGGER=false
 CORNEROPS_GITHUB_REAL_READ_ONLY_ENABLED=false
 CORNEROPS_GITHUB_AUDIT_READS=true
+
+CORNERMEX_LOVABLE_ENABLED=false
+CORNERMEX_LOVABLE_DISCOVERY_MODE=mock
+CORNERMEX_LOVABLE_READ_ONLY=true
+CORNERMEX_LOVABLE_DRY_RUN=true
+CORNERMEX_LOVABLE_PROJECT_URL=
+CORNERMEX_LOVABLE_PROJECT_NAME=
+CORNERMEX_LOVABLE_GITHUB_REPO=
+CORNERMEX_LOVABLE_DEPLOYMENT_URL=
+CORNERMEX_SUPABASE_ENABLED=false
+CORNERMEX_SUPABASE_URL=
+CORNERMEX_SUPABASE_ANON_KEY=
+CORNERMEX_SUPABASE_SCHEMA=public
+CORNERMEX_SUPABASE_READ_ONLY=true
+CORNERMEX_SUPABASE_ALLOW_WRITES=false
+CORNERMEX_SUPABASE_MAX_ROWS=100
+CORNERMEX_SUPABASE_QUERY_TIMEOUT_MS=10000
+CORNEROPS_CORNERMEX_CONNECTOR_ENABLED=false
+CORNEROPS_CORNERMEX_CONNECTOR_MODE=mock
+CORNEROPS_CORNERMEX_CONNECTOR_AUDIT_READS=true
+CORNEROPS_CORNERMEX_CONNECTOR_PII_MASKING=true
 
 CORNEROPS_CONTROLLED_ACTIONS_ENABLED=false
 CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN=true

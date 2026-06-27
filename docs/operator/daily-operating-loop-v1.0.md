@@ -4,7 +4,7 @@
 
 1. Run `npm run founder:setup-check`.
 2. Run `npm run founder:daily`.
-3. Open Control Tower and review Founder Beta Readiness plus Real Source Expansion v1.1.
+3. Open Control Tower and review Founder Beta Readiness, Real Source Expansion v1.1 and CornerMex Lovable Connector v1.1.1.
 4. Confirm dry-run, read-only, external sends blocked and writes blocked.
 
 ## B2B follow-up review
@@ -26,6 +26,10 @@ Ask: “Dame resumen GitHub y Codex de tareas técnicas”.
 GitHub issue drafts are allowed. Real issue creation remains disabled unless a later supervised pilot enables it.
 
 In v1.1, GitHub issues, PRs and workflow runs may come from real read-only GitHub only when the read-only token and feature flags are configured. Otherwise the answer must say `mock`.
+
+In v1.1.1, CornerMex product, lead, quote, order and customer context may come
+from the Lovable connector. If Lovable repo/Supabase config is missing, the
+answer must say `mock` or `missing_config`; it must not imply production data.
 
 ## Security review
 
@@ -56,9 +60,12 @@ Backups are local, sanitized and stored under `.cornerops/backups`.
 
 ```bash
 npm run demo:v1.1
+npm run demo:v1.1.1
 ```
 
 Review the `sourceModeSummary`, GitHub readiness, Business DB readiness and final safety summary before trusting any real-data readout.
+For v1.1.1, also review the Lovable project/repo/Supabase status and mapped
+contract confidence.
 
 ## Shutdown
 

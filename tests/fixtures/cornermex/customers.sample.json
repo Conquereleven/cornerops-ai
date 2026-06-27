@@ -1,0 +1,4 @@
+[
+  { "id": "customer-001", "name": "A***", "email": "buyer1@example.test", "phone": "+971***111", "city": "Dubai" },
+  { "id": "customer-002", "name": "S***", "email": "buyer2@example.test", "phone": "+971***222", "city": "Abu Dhabi" }
+]

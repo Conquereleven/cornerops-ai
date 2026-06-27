@@ -371,6 +371,29 @@ export interface ControlTowerV08Report {
     blockedWriteFlags: Record<string, boolean>;
     warnings: string[];
   };
+  cornerMexLovableConnector?: {
+    enabled: boolean;
+    discoveryMode: string;
+    sourceMode: string;
+    projectConfigured: boolean;
+    githubRepoConfigured: boolean;
+    supabaseConfigured: boolean;
+    discoveredEntities: string[];
+    discoveredFlows: string[];
+    mappedContracts: Array<{
+      entity: string;
+      confidence: string;
+      sourceMode: string;
+      missingFields: string[];
+      warnings: string[];
+    }>;
+    contractConfidence: Record<string, string>;
+    piiMasking: boolean;
+    writesBlocked: boolean;
+    lastReadAuditStatus: string;
+    warnings: string[];
+    founderNextSteps: string[];
+  };
   audit: {
     eventsLast24h: number;
     deniedLast24h: number;

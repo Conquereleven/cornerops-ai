@@ -339,6 +339,11 @@ class AgentOrchestrator {
           businessHealth,
           schema,
           contracts,
+          cornerMexStatus,
+          cornerMexProducts,
+          cornerMexLeads,
+          cornerMexQuotes,
+          cornerMexOrders,
         ] = await Promise.all([
           run('readLeadsTool'),
           run('readLeadsNeedingFollowUpTool'),
@@ -354,6 +359,11 @@ class AgentOrchestrator {
           run('readBusinessDataHealthTool'),
           run('readSchemaDiscoveryTool'),
           run('readDataContractsTool'),
+          run('readCornerMexConnectorStatusTool'),
+          run('readCornerMexProductsTool'),
+          run('readCornerMexLeadsTool'),
+          run('readCornerMexQuotesTool'),
+          run('readCornerMexOrdersTool'),
         ]);
         return this.snapshot('Briefing enriquecido con datos mock/read-only.', {
           leads: leads?.count || 0,
@@ -370,10 +380,14 @@ class AgentOrchestrator {
           businessDataWarnings: businessHealth?.data?.warnings?.length || 0,
           mappedEntities: contracts?.count || 0,
           discoveredTables: schema?.data?.tables?.length || 0,
-        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health, context, contextHealth, businessHealth, schema, contracts });
+          cornerMexProducts: cornerMexProducts?.count || 0,
+          cornerMexLeads: cornerMexLeads?.count || 0,
+          cornerMexQuotes: cornerMexQuotes?.count || 0,
+          cornerMexOrders: cornerMexOrders?.count || 0,
+        }, { leads, followUpLeads, quoteFollowUps, orders, manualPayments, issues, prs, audit, health, context, contextHealth, businessHealth, schema, contracts, cornerMexStatus, cornerMexProducts, cornerMexLeads, cornerMexQuotes, cornerMexOrders });
       }
       case AGENT_IDS.B2B_SALES: {
-        const [leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft] = await Promise.all([
+        const [leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft, cornerMexStatus, cornerMexLeads, cornerMexQuotes] = await Promise.all([
           run('readLeadsTool'),
           run('readLeadByIdTool'),
           run('readQuotesByLeadTool'),
@@ -382,6 +396,9 @@ class AgentOrchestrator {
           run('findProductMentionsTool'),
           run('findSupplierContextTool'),
           run('draftB2BMessageTool'),
+          run('readCornerMexConnectorStatusTool'),
+          run('readCornerMexLeadsTool'),
+          run('readCornerMexQuotesTool'),
         ]);
         return this.snapshot('Sales draft generado con leads mock/read-only.', {
           leads: leads?.count || 0,
@@ -390,10 +407,12 @@ class AgentOrchestrator {
           communicationHistory: history?.count || 0,
           productMentions: products?.count || 0,
           supplierContext: suppliers?.count || 0,
-        }, { leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft });
+          cornerMexLeads: cornerMexLeads?.count || 0,
+          cornerMexQuotes: cornerMexQuotes?.count || 0,
+        }, { leads, leadDetail, relatedQuotes, followUpLeads, history, products, suppliers, draft, cornerMexStatus, cornerMexLeads, cornerMexQuotes });
       }
       case AGENT_IDS.QUOTES_ORDERS: {
-        const [quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal] = await Promise.all([
+        const [quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal, cornerMexStatus, cornerMexQuotes, cornerMexOrders] = await Promise.all([
           run('readQuotesNeedingFollowUpTool'),
           run('readOrdersRequiringActionTool'),
           run('readManualPaymentOrdersTool'),
@@ -401,6 +420,9 @@ class AgentOrchestrator {
           run('searchContextTool'),
           run('proposeOrderStatusChangeTool'),
           run('proposeManualPaymentMarkPaidTool'),
+          run('readCornerMexConnectorStatusTool'),
+          run('readCornerMexQuotesTool'),
+          run('readCornerMexOrdersTool'),
         ]);
         return this.snapshot('Quotes/orders revisados; cambios quedan como proposal.', {
           quotesFollowUp: quotes?.count || 0,
@@ -408,10 +430,12 @@ class AgentOrchestrator {
           manualPayments: manualPayments?.count || 0,
           relatedContext: relatedContext?.count || 0,
           mappedEntities: contracts?.count || 0,
-        }, { quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal });
+          cornerMexQuotes: cornerMexQuotes?.count || 0,
+          cornerMexOrders: cornerMexOrders?.count || 0,
+        }, { quotes, orders, manualPayments, contracts, relatedContext, statusProposal, markPaidProposal, cornerMexStatus, cornerMexQuotes, cornerMexOrders });
       }
       case AGENT_IDS.DEV_CODEX_GITHUB: {
-        const [issues, prs, ci, issueDraft, ecosystem, githubContext, docs] = await Promise.all([
+        const [issues, prs, ci, issueDraft, ecosystem, githubContext, docs, cornerMexStatus] = await Promise.all([
           run('readGitHubIssuesTool'),
           run('readGitHubPullRequestsTool'),
           run('readGitHubActionsStatusTool'),
@@ -419,6 +443,7 @@ class AgentOrchestrator {
           run('readOpenClawEcosystemServicesTool'),
           run('findRelatedGitHubContextTool'),
           run('readOperationalDocsTool'),
+          run('readCornerMexConnectorStatusTool'),
         ]);
         return this.snapshot('GitHub/Codex revisado en dry-run.', {
           githubIssues: issues?.count || 0,
@@ -427,10 +452,11 @@ class AgentOrchestrator {
           ecosystemServices: ecosystem?.count || 0,
           githubContext: githubContext?.count || 0,
           operationalDocs: docs?.count || 0,
-        }, { issues, prs, ci, issueDraft, ecosystem, githubContext, docs });
+          lovableRepoConfigured: cornerMexStatus?.data?.githubRepoConfigured ? 1 : 0,
+        }, { issues, prs, ci, issueDraft, ecosystem, githubContext, docs, cornerMexStatus });
       }
       case AGENT_IDS.SECURITY_AUDIT: {
-        const [audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii] = await Promise.all([
+        const [audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii, cornerMexStatus] = await Promise.all([
           run('readAuditLogsTool'),
           run('readApprovalLogsTool'),
           run('readDataHealthTool'),
@@ -441,6 +467,7 @@ class AgentOrchestrator {
           run('createSecurityAuditReportTool'),
           run('runContextHealthCheckTool'),
           run('searchContextTool'),
+          run('readCornerMexConnectorStatusTool'),
         ]);
         return this.snapshot('Security audit read-only preparado.', {
           auditLogs: audit?.count || 0,
@@ -452,7 +479,8 @@ class AgentOrchestrator {
           approvedSkills: skills?.count || 0,
           contextHealthWarnings: contextHealth?.data?.warnings?.length || 0,
           contextAccessResults: highPii?.count || 0,
-        }, { audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii });
+          cornerMexWarnings: cornerMexStatus?.data?.warnings?.length || 0,
+        }, { audit, approvals, health, businessHealth, schema, contracts, skills, report, contextHealth, highPii, cornerMexStatus });
       }
       default:
         return null;

@@ -84,3 +84,20 @@ The visual release gate for v1.0 is documented in
 The console never returns GitHub tokens, database URLs or Supabase keys. Real
 source labels must remain explicit: `mock`, `real_read_only`, `mixed`,
 `disabled`, `local_internal` or `dry_run`.
+
+## v1.1.1 Lovable CornerMex connector
+
+The same v1.1 endpoint now includes `cornerMexLovableConnector`. The React
+console shows:
+
+- enabled/disabled and discovery mode
+- source mode: `mock`, `repo_discovered`, `real_read_only` or missing config
+- Lovable project, connected GitHub repo and Supabase configuration status
+- discovered entities and flows
+- mapped CornerMex contracts and confidence
+- PII masking and write-blocking status
+- last read/audit status
+- warnings and founder next steps
+
+The console never scrapes Lovable, mutates the Lovable project, exposes
+Supabase keys or enables CornerMex writes.

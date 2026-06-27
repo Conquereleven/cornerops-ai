@@ -591,6 +591,57 @@ const baseEnv = {
     process.env.CORNEROPS_DB_PII_MASKING === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_DB_PII_MASKING),
+  cornermexLovableEnabled: parseBoolean(process.env.CORNERMEX_LOVABLE_ENABLED),
+  cornermexLovableDiscoveryMode: parseEnum(
+    process.env.CORNERMEX_LOVABLE_DISCOVERY_MODE,
+    ['mock', 'repo', 'supabase', 'auto'],
+    'mock',
+  ),
+  cornermexLovableReadOnly:
+    process.env.CORNERMEX_LOVABLE_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_LOVABLE_READ_ONLY),
+  cornermexLovableDryRun:
+    process.env.CORNERMEX_LOVABLE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_LOVABLE_DRY_RUN),
+  cornermexLovableProjectUrl: process.env.CORNERMEX_LOVABLE_PROJECT_URL || '',
+  cornermexLovableProjectName: process.env.CORNERMEX_LOVABLE_PROJECT_NAME || '',
+  cornermexLovableGithubRepo: process.env.CORNERMEX_LOVABLE_GITHUB_REPO || '',
+  cornermexLovableDeploymentUrl: process.env.CORNERMEX_LOVABLE_DEPLOYMENT_URL || '',
+  cornermexSupabaseEnabled: parseBoolean(process.env.CORNERMEX_SUPABASE_ENABLED),
+  cornermexSupabaseUrl: process.env.CORNERMEX_SUPABASE_URL || '',
+  cornermexSupabaseAnonKey: process.env.CORNERMEX_SUPABASE_ANON_KEY || '',
+  cornermexSupabaseSchema: process.env.CORNERMEX_SUPABASE_SCHEMA || 'public',
+  cornermexSupabaseReadOnly:
+    process.env.CORNERMEX_SUPABASE_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_READ_ONLY),
+  cornermexSupabaseAllowWrites: parseBoolean(process.env.CORNERMEX_SUPABASE_ALLOW_WRITES),
+  cornermexSupabaseMaxRows: parseInteger(
+    process.env.CORNERMEX_SUPABASE_MAX_ROWS,
+    100,
+    { min: 1, max: 1000 },
+  ),
+  cornermexSupabaseQueryTimeoutMs: parseInteger(
+    process.env.CORNERMEX_SUPABASE_QUERY_TIMEOUT_MS,
+    10000,
+    { min: 100, max: 30000 },
+  ),
+  corneropsCornermexConnectorEnabled: parseBoolean(process.env.CORNEROPS_CORNERMEX_CONNECTOR_ENABLED),
+  corneropsCornermexConnectorMode: parseEnum(
+    process.env.CORNEROPS_CORNERMEX_CONNECTOR_MODE,
+    ['mock', 'repo_discovered', 'real_read_only'],
+    'mock',
+  ),
+  corneropsCornermexConnectorAuditReads:
+    process.env.CORNEROPS_CORNERMEX_CONNECTOR_AUDIT_READS === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CORNERMEX_CONNECTOR_AUDIT_READS),
+  corneropsCornermexConnectorPiiMasking:
+    process.env.CORNEROPS_CORNERMEX_CONNECTOR_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CORNERMEX_CONNECTOR_PII_MASKING),
   openclawEnabled: parseBoolean(process.env.OPENCLAW_ENABLED),
   openclawOperatorChannelEnabled: parseBoolean(
     process.env.OPENCLAW_OPERATOR_CHANNEL_ENABLED,

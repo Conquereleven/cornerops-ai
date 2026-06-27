@@ -11,6 +11,12 @@ const { GitHubIssueService } = require('../../integrations/github/GitHubIssueSer
 const { GitHubPullRequestService } = require('../../integrations/github/GitHubPullRequestService');
 const { GitHubActionsService } = require('../../integrations/github/GitHubActionsService');
 const { GitHubWebhookHandler } = require('../../integrations/github/GitHubWebhookHandler');
+const {
+  LovableCornerMexConnector,
+  LovableProjectDiscoveryService,
+  LovableRepoDiscoveryService,
+  LovableSupabaseDiscoveryService,
+} = require('../../integrations/lovable');
 const { DataNormalizer } = require('./DataNormalizer');
 const { DataSourceRegistry } = require('./DataSourceRegistry');
 const { DataAccessPolicy } = require('./DataAccessPolicy');
@@ -30,6 +36,7 @@ const { QuoteReadOnlyRepository } = require('../domain/quotes/QuoteReadOnlyRepos
 const { OrderReadOnlyRepository } = require('../domain/orders/OrderReadOnlyRepository');
 const { BusinessDataService } = require('../domain/business/BusinessDataService');
 const { BusinessDataContractRegistry } = require('../data-contracts');
+const { CornerMexDataContractRegistry } = require('../data-contracts/cornermex');
 const { OpenClawEcosystemRegistry } = require('../openclaw-ecosystem/OpenClawEcosystemRegistry');
 const { OpenClawEcosystemPolicy } = require('../openclaw-ecosystem/OpenClawEcosystemPolicy');
 const { CraboxRunnerAdapter } = require('../openclaw-ecosystem/adapters/CraboxRunnerAdapter');
@@ -171,6 +178,7 @@ const schemaDiscoveryService = new SchemaDiscoveryService({
   enabled: env.corneropsDbSchemaDiscoveryEnabled,
 });
 const businessDataContractRegistry = new BusinessDataContractRegistry();
+const cornerMexDataContractRegistry = new CornerMexDataContractRegistry();
 const leadReadOnlyRepository = new LeadReadOnlyRepository({
   adapter: readOnlyDatabaseAdapter,
   contractRegistry: businessDataContractRegistry,
@@ -243,6 +251,22 @@ const githubClient = new GitHubClient({
 });
 const githubReadinessService = new GitHubReadOnlyReadinessService({
   client: githubClient,
+  config: env,
+});
+const lovableRepoDiscoveryService = new LovableRepoDiscoveryService({
+  config: env,
+  githubClient,
+});
+const lovableSupabaseDiscoveryService = new LovableSupabaseDiscoveryService({ config: env });
+const lovableProjectDiscoveryService = new LovableProjectDiscoveryService({
+  config: env,
+  repoDiscoveryService: lovableRepoDiscoveryService,
+  supabaseDiscoveryService: lovableSupabaseDiscoveryService,
+});
+const lovableCornerMexConnector = new LovableCornerMexConnector({
+  auditLogService,
+  contractRegistry: cornerMexDataContractRegistry,
+  discoveryService: lovableProjectDiscoveryService,
   config: env,
 });
 const githubIssueService = new GitHubIssueService({ client: githubClient });
@@ -324,6 +348,7 @@ module.exports = {
   businessDataContractRegistry,
   businessDataReadinessService,
   businessDataService,
+  cornerMexDataContractRegistry,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,
@@ -339,6 +364,10 @@ module.exports = {
   githubIssueService,
   githubPullRequestService,
   githubReadinessService,
+  lovableCornerMexConnector,
+  lovableProjectDiscoveryService,
+  lovableRepoDiscoveryService,
+  lovableSupabaseDiscoveryService,
   githubWebhookHandler,
   leadService,
   leadReadOnlyRepository,
