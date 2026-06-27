@@ -1,0 +1,6 @@
+[
+  { "id": "prod-tajin-142g", "sku": "TAJIN-142G", "name": "Tajin Clasico 142g", "category": "seasoning", "priceAED": 14, "stock": 120, "b2bAvailable": true },
+  { "id": "prod-pulparindo-20", "sku": "PULPARINDO-20", "name": "Pulparindo Original Box", "category": "candy", "priceAED": 32, "stock": 80, "b2bAvailable": true },
+  { "id": "prod-valentina-370", "sku": "VALENTINA-370", "name": "Salsa Valentina 370ml", "category": "sauce", "priceAED": 12, "stock": 95, "b2bAvailable": true },
+  { "id": "prod-chiles-secos", "sku": "CHILES-SECOS-MIX", "name": "Dried Chiles Mix", "category": "dry_goods", "priceAED": 45, "stock": 30, "b2bAvailable": true }
+]

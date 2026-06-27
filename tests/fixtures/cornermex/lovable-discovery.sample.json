@@ -1,0 +1,8 @@
+{
+  "sourceMode": "mock",
+  "appRoutes": ["/products", "/quote", "/cart", "/checkout"],
+  "adminRoutes": ["/admin", "/admin/orders", "/admin/quotes", "/admin/products"],
+  "entities": ["product", "lead", "quote", "order", "customer", "payment"],
+  "flows": ["product_flow", "request_quote_flow", "quote_flow", "order_flow", "bank_transfer_flow", "cod_flow", "admin_dashboard_flow"],
+  "warnings": ["Mock discovery only. Provide Lovable project URL, connected GitHub repo and Supabase read-only config for real discovery."]
+}

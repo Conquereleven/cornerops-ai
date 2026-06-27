@@ -1,0 +1,4 @@
+[
+  { "id": "order-bank-transfer-001", "customerId": "customer-001", "status": "pending_payment", "paymentMethod": "Bank Transfer", "paymentStatus": "pending", "items": [{ "sku": "VALENTINA-370", "quantity": 24 }], "totalAED": 288 },
+  { "id": "order-cod-001", "customerId": "customer-002", "status": "pending_delivery", "paymentMethod": "COD", "paymentStatus": "pending", "items": [{ "sku": "CHILES-SECOS-MIX", "quantity": 4 }], "totalAED": 180 }
+]

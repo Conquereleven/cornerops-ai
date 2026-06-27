@@ -4,24 +4,30 @@ class ControlTowerV11ReportService {
   constructor({
     baseService,
     businessDataReadinessService,
+    cornerMexConnector,
     githubReadinessService,
     config = {},
   } = {}) {
     this.baseService = baseService;
     this.businessDataReadinessService = businessDataReadinessService;
+    this.cornerMexConnector = cornerMexConnector;
     this.githubReadinessService = githubReadinessService;
     this.config = config;
   }
 
   async getReport() {
-    const [base, github, businessData] = await Promise.all([
+    const [base, github, businessData, cornerMexLovableConnector] = await Promise.all([
       this.baseService.getReport(),
       this.githubReadinessService.check({ testReads: false }),
       this.businessDataReadinessService.check({ testReads: false }),
+      this.cornerMexConnector?.getConnectorStatus
+        ? this.cornerMexConnector.getConnectorStatus({ agentId: 'control-tower-v1.1.1' })
+        : Promise.resolve(null),
     ]);
     const sourceMode = combineSourceModes([
       github.mode,
       businessData.mode,
+      cornerMexLovableConnector?.sourceMode,
       base.openclaw?.enabled ? base.openclaw?.mode : SOURCE_MODES.DISABLED,
       SOURCE_MODES.LOCAL_INTERNAL,
       this.config.corneropsDryRun ? SOURCE_MODES.DRY_RUN : null,
@@ -41,6 +47,7 @@ class ControlTowerV11ReportService {
       ...(base.safety?.warnings || []),
       ...github.warnings,
       ...businessData.warnings,
+      ...(cornerMexLovableConnector?.warnings || []),
     ];
     return {
       ...base,
@@ -57,12 +64,14 @@ class ControlTowerV11ReportService {
           'dev-codex-github-agent': github.connected ? SOURCE_MODES.REAL_READ_ONLY : SOURCE_MODES.MOCK,
           'daily-briefing-agent': combineSourceModes([github.mode, businessData.mode]),
           'security-audit-agent': combineSourceModes([github.mode, businessData.mode, SOURCE_MODES.LOCAL_INTERNAL]),
-          'b2b-sales-agent': businessData.mode,
-          'quotes-orders-agent': businessData.mode,
+          'b2b-sales-agent': combineSourceModes([businessData.mode, cornerMexLovableConnector?.sourceMode]),
+          'quotes-orders-agent': combineSourceModes([businessData.mode, cornerMexLovableConnector?.sourceMode]),
+          'daily-briefing-agent-cornermex': cornerMexLovableConnector?.sourceMode || SOURCE_MODES.MOCK,
         },
         blockedWriteFlags,
         warnings: [...new Set(warnings)],
       },
+      cornerMexLovableConnector,
       github: {
         ...base.github,
         ...github,

@@ -1,0 +1,3 @@
+[
+  { "id": "quote-001", "leadId": "lead-uae-restaurant-001", "status": "sent_needs_follow_up", "items": [{ "sku": "TAJIN-142G", "quantity": 48 }, { "sku": "PULPARINDO-20", "quantity": 12 }], "totalAED": 1056, "createdAt": "2026-06-20T10:00:00.000Z" }
+]

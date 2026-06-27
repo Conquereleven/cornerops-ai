@@ -137,6 +137,27 @@ const createAgentTools = (deps) => {
       await deps.businessDataService.ensureReady(contextFromInput(input, agentId));
       return readResult('readDataContractsTool', deps.businessDataService.getDataContracts(), 'internal');
     },
+    readCornerMexConnectorStatusTool: async (input, agentId) => readResult(
+      'readCornerMexConnectorStatusTool',
+      await deps.lovableCornerMexConnector.getConnectorStatus(contextFromInput(input, agentId)),
+      'internal',
+    ),
+    readCornerMexProductsTool: async (input, agentId) => {
+      const result = await deps.lovableCornerMexConnector.listProducts({ limit: 10 }, contextFromInput(input, agentId));
+      return readResult('readCornerMexProductsTool', result, result.meta?.source || 'mock');
+    },
+    readCornerMexLeadsTool: async (input, agentId) => {
+      const result = await deps.lovableCornerMexConnector.listLeads({ limit: 10 }, contextFromInput(input, agentId));
+      return readResult('readCornerMexLeadsTool', result, result.meta?.source || 'mock');
+    },
+    readCornerMexQuotesTool: async (input, agentId) => {
+      const result = await deps.lovableCornerMexConnector.listQuotes({ limit: 10 }, contextFromInput(input, agentId));
+      return readResult('readCornerMexQuotesTool', result, result.meta?.source || 'mock');
+    },
+    readCornerMexOrdersTool: async (input, agentId) => {
+      const result = await deps.lovableCornerMexConnector.listOrders({ limit: 10 }, contextFromInput(input, agentId));
+      return readResult('readCornerMexOrdersTool', result, result.meta?.source || 'mock');
+    },
     readOperationalDocsTool: async () => {
       const docs = [
         'docs/audits/qa-status-v0.3.md',

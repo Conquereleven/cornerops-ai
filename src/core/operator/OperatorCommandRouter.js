@@ -274,7 +274,7 @@ class OperatorCommandRouter {
     const metrics = result.dataSnapshot?.metrics || {};
     switch (intent) {
       case OPERATOR_INTENTS.BRIEFING:
-        return 'Prepared from the currently available business, GitHub, context-health and audit sources. No unavailable metric was inferred.';
+        return 'Prepared from the currently available business, GitHub, CornerMex Lovable connector, context-health and audit sources. No unavailable metric was inferred.';
       case OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP:
         return `${metrics.leadsFollowUp || 0} B2B leads need follow-up. Review source confidence and account details before using any draft.`;
       case OPERATOR_INTENTS.B2B_MESSAGE_DRAFT:
@@ -287,9 +287,9 @@ class OperatorCommandRouter {
       case OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW:
         return `${metrics.manualPayments || 0} manual payment orders require operator review. No payment status was changed.`;
       case OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY:
-        return `${metrics.githubIssues || 0} issues, ${metrics.githubPRs || 0} pull requests and ${metrics.workflowRuns || 0} workflow runs are visible. Codex work remains draft-only.`;
+        return `${metrics.githubIssues || 0} issues, ${metrics.githubPRs || 0} pull requests and ${metrics.workflowRuns || 0} workflow runs are visible. Lovable repo configured: ${metrics.lovableRepoConfigured ? 'yes' : 'no'}. Codex work remains draft-only.`;
       case OPERATOR_INTENTS.SECURITY_AUDIT_SUMMARY:
-        return `Security review found ${metrics.businessDataWarnings || 0} business-data warnings, ${metrics.schemaWarnings || 0} schema warnings and ${metrics.contractWarnings || 0} contract warnings. No configuration was changed.`;
+        return `Security review found ${metrics.businessDataWarnings || 0} business-data warnings, ${metrics.schemaWarnings || 0} schema warnings, ${metrics.contractWarnings || 0} contract warnings and ${metrics.cornerMexWarnings || 0} CornerMex Lovable warnings. No configuration was changed.`;
       default:
         return result.responseText;
     }

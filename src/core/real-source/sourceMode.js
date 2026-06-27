@@ -2,8 +2,10 @@ const SOURCE_MODES = Object.freeze({
   DISABLED: 'disabled',
   DRY_RUN: 'dry_run',
   LOCAL_INTERNAL: 'local_internal',
+  MISSING_CONFIG: 'missing_config',
   MIXED: 'mixed',
   MOCK: 'mock',
+  REPO_DISCOVERED: 'repo_discovered',
   REAL_READ_ONLY: 'real_read_only',
 });
 
@@ -21,6 +23,7 @@ const combineSourceModes = (modes = []) => {
     return SOURCE_MODES.MIXED;
   }
   if (normalized.includes(SOURCE_MODES.REAL_READ_ONLY)) return SOURCE_MODES.MIXED;
+  if (normalized.includes(SOURCE_MODES.REPO_DISCOVERED) && normalized.length > 1) return SOURCE_MODES.MIXED;
   return normalized[0];
 };
 
