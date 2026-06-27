@@ -3,6 +3,7 @@ const {
   auditViewerService,
   controlTowerService,
   controlTowerV08ReportService,
+  controlTowerV09ReportService,
 } = require('../core/control-tower');
 const operatorChannel = require('../core/operator-channel');
 
@@ -61,6 +62,14 @@ const auditSummary = async (req, res, next) => {
 const v08 = async (req, res, next) => {
   try {
     return res.json(await controlTowerV08ReportService.getReport());
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const v09 = async (_req, res, next) => {
+  try {
+    return res.json(await controlTowerV09ReportService.getReport());
   } catch (error) {
     return next(error);
   }
@@ -169,4 +178,5 @@ module.exports = {
   status,
   telegramV08: section('operatorChannel'),
   v08,
+  v09,
 };

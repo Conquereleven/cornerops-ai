@@ -29,5 +29,9 @@ router.post('/v0.8/approvals/:id/reject-dry-run', controller.rejectDryRun);
 router.get('/v0.8/rejections', controller.rejections);
 router.get('/v0.8/replay', controller.replay);
 router.get('/v0.8/rate-limits', controller.rateLimits);
+router.use('/v0.9', createWebConsoleGuard());
+router.get('/v0.9/status', controller.v09);
+router.get('/v0.9/approvals', controller.approvalList);
+router.get('/v0.9/audit-summary', controller.auditEvents);
 
 module.exports = router;

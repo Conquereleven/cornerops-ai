@@ -15,3 +15,9 @@ CORNEROPS_APPROVAL_CENTER_ALLOW_REAL_EXECUTION=false
 ```
 
 If dry-run is disabled or real execution is enabled, v0.8 fails closed instead of resolving approvals.
+
+## v0.9 controlled approvals
+
+Controlled approvals add `executionStatus`, requested dry-run mode, risk, immutable sanitized payload and checksum. The lifecycle continues from `approved` to `executing` and one of `dry_run_executed`, `executed` or `execution_failed`.
+
+Only approvals created by the controlled-action executor contain the payload/checksum required for the `Execute dry-run` button. Agent proposal approvals without a structured payload remain non-executable. Repeated execution is blocked and audited.

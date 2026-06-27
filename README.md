@@ -39,6 +39,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Release hardening v0.8.1 con persistencia local `file_json` root-bounded para
   approvals, auditoria y sesiones; escrituras atomicas, sanitizacion, limites y
   fail-closed para stores criticos. Solo soporta un proceso.
+- Controlled Actions v0.9 con tres acciones allowlisted, approval lifecycle,
+  checksum de payload, idempotencia persistente, notas/tareas locales aisladas,
+  GitHub issue draft/dry-run y estado visible en Control Tower.
 
 ## Inicio rápido
 
@@ -123,6 +126,18 @@ GITHUB_TOKEN=
 GITHUB_OWNER=Conquereleven
 GITHUB_REPO=cornerops-ai
 GITHUB_WEBHOOK_SECRET=
+GITHUB_ALLOW_ISSUE_CREATION=false
+GITHUB_READ_ONLY=true
+
+CORNEROPS_CONTROLLED_ACTIONS_ENABLED=false
+CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN=true
+CORNEROPS_CONTROLLED_ACTIONS_REQUIRE_APPROVAL=true
+CORNEROPS_CONTROLLED_ACTIONS_FAIL_CLOSED=true
+CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_ENABLED=false
+CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_DRY_RUN=true
+CORNEROPS_ACTION_INTERNAL_NOTE_CREATE_ENABLED=false
+CORNEROPS_ACTION_INTERNAL_TASK_CREATE_ENABLED=false
+CORNEROPS_ALLOW_LOCAL_INTERNAL_WRITES=false
 
 OPENCLAW_ECOSYSTEM_ENABLED=false
 CRABOX_ENABLED=false
@@ -167,6 +182,13 @@ La beta local usa `CORNEROPS_PERSISTENCE_PROVIDER=file_json` y guarda estado
 sanitizado bajo `./.cornerops/state`. En tests se usa memoria. Consulta
 [`persistence v0.8.1`](docs/architecture/persistence-v0.8.1.md) y el
 [`founder runbook`](docs/operator/founder-local-runbook-v0.8.1.md).
+
+Controlled Actions v0.9 permanece apagado por defecto. Solo reconoce
+`github.issue.create`, `cornerops.note.create` y `cornerops.task.create`; toda
+ejecucion requiere policy, approval explicita, checksum, audit e idempotencia.
+Consulta la [arquitectura](docs/architecture/controlled-actions-v0.9.md), el
+[security review](docs/security/controlled-actions-security-v0.9.md) y el
+[runbook](docs/operator/controlled-actions-runbook-v0.9.md).
 
 ## Supabase
 

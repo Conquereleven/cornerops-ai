@@ -241,6 +241,49 @@ const baseEnv = {
     5 * 1024 * 1024,
     { min: 1024, max: 100 * 1024 * 1024 },
   ),
+  corneropsControlledActionsEnabled: parseBoolean(
+    process.env.CORNEROPS_CONTROLLED_ACTIONS_ENABLED,
+  ),
+  corneropsControlledActionsDryRun:
+    process.env.CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN),
+  corneropsControlledActionsRequireApproval:
+    process.env.CORNEROPS_CONTROLLED_ACTIONS_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTROLLED_ACTIONS_REQUIRE_APPROVAL),
+  corneropsControlledActionsFailClosed:
+    process.env.CORNEROPS_CONTROLLED_ACTIONS_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_CONTROLLED_ACTIONS_FAIL_CLOSED),
+  corneropsActionGithubIssueCreateEnabled: parseBoolean(
+    process.env.CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_ENABLED,
+  ),
+  corneropsActionGithubIssueCreateDryRun:
+    process.env.CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_DRY_RUN),
+  corneropsActionGithubIssueCreateRequireApproval:
+    process.env.CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_REQUIRE_APPROVAL === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_ACTION_GITHUB_ISSUE_CREATE_REQUIRE_APPROVAL),
+  corneropsActionInternalNoteCreateEnabled: parseBoolean(
+    process.env.CORNEROPS_ACTION_INTERNAL_NOTE_CREATE_ENABLED,
+  ),
+  corneropsActionInternalNoteCreateDryRun:
+    process.env.CORNEROPS_ACTION_INTERNAL_NOTE_CREATE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_ACTION_INTERNAL_NOTE_CREATE_DRY_RUN),
+  corneropsActionInternalTaskCreateEnabled: parseBoolean(
+    process.env.CORNEROPS_ACTION_INTERNAL_TASK_CREATE_ENABLED,
+  ),
+  corneropsActionInternalTaskCreateDryRun:
+    process.env.CORNEROPS_ACTION_INTERNAL_TASK_CREATE_DRY_RUN === undefined
+      ? true
+      : parseBoolean(process.env.CORNEROPS_ACTION_INTERNAL_TASK_CREATE_DRY_RUN),
+  corneropsAllowLocalInternalWrites: parseBoolean(
+    process.env.CORNEROPS_ALLOW_LOCAL_INTERNAL_WRITES,
+  ),
   corneropsReplayProtectionEnabled:
     process.env.CORNEROPS_REPLAY_PROTECTION_ENABLED === undefined
       ? true
@@ -607,6 +650,7 @@ const baseEnv = {
   githubToken: process.env.GITHUB_TOKEN || '',
   githubOwner: process.env.GITHUB_OWNER || '',
   githubRepo: process.env.GITHUB_REPO || 'cornerops-ai',
+  githubAllowedIssueLabels: parseCsv(process.env.GITHUB_ALLOWED_ISSUE_LABELS),
   githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
   githubApiVersion: parseEnum(
     process.env.GITHUB_API_VERSION,
@@ -817,6 +861,28 @@ const getEnvWarnings = () => {
   }
   if (!baseEnv.corneropsFailClosed) {
     warnings.push('CORNEROPS_FAIL_CLOSED=false; unknown actions may not be safely denied.');
+  }
+  if (
+    baseEnv.corneropsControlledActionsEnabled
+    && (
+      !baseEnv.corneropsControlledActionsRequireApproval
+      || !baseEnv.corneropsControlledActionsFailClosed
+      || !baseEnv.corneropsAuditEnabled
+    )
+  ) {
+    warnings.push('Controlled actions require approval, audit and fail-closed mode.');
+  }
+  if (
+    baseEnv.githubAllowIssueCreation
+    && (
+      !baseEnv.corneropsControlledActionsEnabled
+      || !baseEnv.corneropsActionGithubIssueCreateEnabled
+      || baseEnv.githubReadOnly
+      || baseEnv.githubDryRun
+      || baseEnv.corneropsControlledActionsDryRun
+    )
+  ) {
+    warnings.push('GitHub issue creation is not fully enabled; real execution remains blocked.');
   }
   if (!baseEnv.corneropsPiiMasking || !baseEnv.corneropsLogSanitization) {
     warnings.push('PII masking or log sanitization is disabled.');

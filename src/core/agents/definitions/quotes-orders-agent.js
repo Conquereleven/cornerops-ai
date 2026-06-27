@@ -19,6 +19,8 @@ module.exports = {
     'draft_message',
     'propose_order_status_change',
     'propose_payment_mark_paid',
+    'cornerops.note.create',
+    'cornerops.task.create',
   ],
   permissionLevel: PERMISSION_LEVELS.APPROVAL_REQUIRED,
   requiresHumanApprovalFor: [

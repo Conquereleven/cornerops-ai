@@ -117,12 +117,18 @@ const consoleRequest = <T>(path: string, token = '', options?: RequestInit) => r
 });
 
 export const getControlTowerV08 = (token = '') =>
-  consoleRequest<ControlTowerV08Report>('/api/control-tower/v0.8/status', token);
+  consoleRequest<ControlTowerV08Report>('/api/control-tower/v0.9/status', token);
 export const getControlTowerApprovals = (token = '') =>
   consoleRequest<ApprovalCenterResponse>('/api/control-tower/v0.8/approvals', token);
 export const decideApprovalDryRun = (id: string, decision: 'approve' | 'reject', token = '') =>
   consoleRequest<{ executed: false; auditId?: string }>(
     `/api/control-tower/v0.8/approvals/${encodeURIComponent(id)}/${decision}-dry-run`,
+    token,
+    { method: 'POST', body: '{}' },
+  );
+export const executeControlledActionDryRun = (id: string, token = '') =>
+  consoleRequest<{ status: string; auditId?: string; duplicate?: boolean }>(
+    `/api/actions/approvals/${encodeURIComponent(id)}/execute-dry-run`,
     token,
     { method: 'POST', body: '{}' },
   );

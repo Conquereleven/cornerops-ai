@@ -4,6 +4,7 @@ process.env.CORNEROPS_CLI_MODE = 'true';
 const readline = require('readline');
 const env = require('../config/env');
 const { approvals } = require('./commands/approvals');
+const { actions } = require('./commands/actions');
 const { ask } = require('./commands/ask');
 const { audit } = require('./commands/audit');
 const { briefing } = require('./commands/briefing');
@@ -24,6 +25,8 @@ const execute = async (args, options = {}) => {
       return health(options);
     case 'approvals':
       return approvals(rest[0], rest[1], options);
+    case 'actions':
+      return actions(options);
     case 'audit':
       return audit(rest[0], options);
     case 'help':

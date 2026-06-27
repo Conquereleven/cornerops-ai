@@ -7,6 +7,8 @@ const { ControlTowerService } = require('./ControlTowerService');
 const { ApprovalCenterService } = require('./ApprovalCenterService');
 const { AuditViewerService } = require('./AuditViewerService');
 const { ControlTowerV08ReportService } = require('./ControlTowerV08ReportService');
+const { ControlTowerV09ReportService } = require('./ControlTowerV09ReportService');
+const actions = require('../actions');
 const { operatorChannelStatusStore } = require('../operator-channel/OperatorChannelStatusStore');
 
 const controlTowerService = new ControlTowerService({
@@ -120,14 +122,22 @@ const controlTowerV08ReportService = new ControlTowerV08ReportService({
   baseService: controlTowerService,
   config: env,
 });
+const controlTowerV09ReportService = new ControlTowerV09ReportService({
+  approvalCenterService,
+  baseService: controlTowerV08ReportService,
+  controlledActionExecutor: actions.controlledActionExecutor,
+  config: env,
+});
 
 module.exports = {
   ApprovalCenterService,
   AuditViewerService,
   ControlTowerService,
   ControlTowerV08ReportService,
+  ControlTowerV09ReportService,
   approvalCenterService,
   auditViewerService,
   controlTowerService,
   controlTowerV08ReportService,
+  controlTowerV09ReportService,
 };

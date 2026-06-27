@@ -20,6 +20,7 @@ const auditLogService = new AuditLogService({
   }),
 });
 const humanApprovalService = new HumanApprovalService({
+  auditLogService,
   store: persistenceProviderRegistry.createStore('approvals', {
     critical: true,
     initialData: { version: 1, records: [] },

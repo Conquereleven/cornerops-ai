@@ -20,6 +20,8 @@ module.exports = {
     'draft_message',
     'draft_email',
     'create_task_pending_approval',
+    'cornerops.note.create',
+    'cornerops.task.create',
   ],
   permissionLevel: PERMISSION_LEVELS.DRAFT_ONLY,
   requiresHumanApprovalFor: ['send_message', 'send_email', 'create_task'],

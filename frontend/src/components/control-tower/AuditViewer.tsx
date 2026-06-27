@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ControlTowerAuditEvent } from '../../lib/types';
 import { StatusBadge } from '../ui/StatusBadge';
 
-const filters = ['all', 'denied', 'errors', 'approvals', 'telegram'] as const;
+const filters = ['all', 'denied', 'errors', 'approvals', 'actions', 'telegram'] as const;
 
 export function AuditViewer({ events }: { events: ControlTowerAuditEvent[] }) {
   const [filter, setFilter] = useState<(typeof filters)[number]>('all');
@@ -11,6 +11,7 @@ export function AuditViewer({ events }: { events: ControlTowerAuditEvent[] }) {
     if (filter === 'denied') return event.status === 'denied' || event.policyDecision === 'denied';
     if (filter === 'errors') return event.status === 'error';
     if (filter === 'approvals') return event.eventType.includes('approval');
+    if (filter === 'actions') return event.eventType.includes('controlled_action');
     return event.channel === 'telegram';
   });
   return <section className="panel ct-panel ct-wide">

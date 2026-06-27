@@ -18,6 +18,7 @@ module.exports = {
     'draft_issue',
     'draft_pr_description',
     'create_issue_pending_approval',
+    'github.issue.create',
   ],
   permissionLevel: PERMISSION_LEVELS.APPROVAL_REQUIRED,
   requiresHumanApprovalFor: ['create_issue', 'merge_pr', 'deploy'],

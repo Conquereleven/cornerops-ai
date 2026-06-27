@@ -44,3 +44,9 @@ Operator Ask supports briefing, leads, quotes, orders, GitHub suggestions, secur
 Set `CORNEROPS_WEB_CONSOLE_ENABLED=false`, restart the backend and verify `GET /api/control-tower/v0.8/status` returns `404`.
 
 Still disabled: production writes, external sends, payments, order status changes, WhatsApp, customer/prospect channels, crawler syncs, native tools and ClawHub execution.
+
+## v0.9 extension
+
+`GET /api/control-tower/v0.9/status` adds the controlled-action allowlist, global/action modes, pending controlled approvals, dry-run/real/blocked counters, idempotency health and last execution. The React console uses this report and keeps the v0.8 endpoints compatible.
+
+Approval Center may execute only checksum-protected controlled approvals in dry-run. Audit Viewer adds the `actions` lifecycle filter. The console does not expose PR merge, workflow, payment, order, lead or quote mutation controls.
