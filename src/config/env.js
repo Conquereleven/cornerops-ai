@@ -213,6 +213,8 @@ const baseEnv = {
   ),
   corneropsPersistenceRoot:
     process.env.CORNEROPS_PERSISTENCE_ROOT || './.cornerops/state',
+  corneropsBackupRoot:
+    process.env.CORNEROPS_BACKUP_ROOT || './.cornerops/backups',
   corneropsPersistenceFailClosed:
     process.env.CORNEROPS_PERSISTENCE_FAIL_CLOSED === undefined
       ? true

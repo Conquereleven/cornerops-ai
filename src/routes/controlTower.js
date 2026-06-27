@@ -33,5 +33,9 @@ router.use('/v0.9', createWebConsoleGuard());
 router.get('/v0.9/status', controller.v09);
 router.get('/v0.9/approvals', controller.approvalList);
 router.get('/v0.9/audit-summary', controller.auditEvents);
+router.use('/v1.0', createWebConsoleGuard());
+router.get('/v1.0/status', controller.v10);
+router.get('/v1.0/approvals', controller.approvalList);
+router.get('/v1.0/audit-summary', controller.auditEvents);
 
 module.exports = router;

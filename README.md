@@ -42,6 +42,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - Controlled Actions v0.9 con tres acciones allowlisted, approval lifecycle,
   checksum de payload, idempotencia persistente, notas/tareas locales aisladas,
   GitHub issue draft/dry-run y estado visible en Control Tower.
+- Founder Operational Beta v1.0 con setup-check, daily operating loop, backup
+  local sanitizado, export summary, template `.env.founder.local.example`,
+  Control Tower Founder Beta Readiness y docs de onboarding.
 
 ## Inicio rápido
 
@@ -50,7 +53,9 @@ Requiere Node.js 18+ y npm 9+.
 ```bash
 npm install
 npm --prefix frontend install
-cp .env.example .env
+cp .env.founder.local.example .env
+npm run founder:setup-check
+npm run founder:daily
 npm run dev
 ```
 
@@ -189,6 +194,21 @@ ejecucion requiere policy, approval explicita, checksum, audit e idempotencia.
 Consulta la [arquitectura](docs/architecture/controlled-actions-v0.9.md), el
 [security review](docs/security/controlled-actions-security-v0.9.md) y el
 [runbook](docs/operator/controlled-actions-runbook-v0.9.md).
+
+Founder Operational Beta v1.0 es el flujo recomendado para uso diario local:
+
+```bash
+npm run founder:setup-check
+npm run founder:daily
+npm run state:export-summary
+npm run state:backup
+npm run demo:v1.0
+```
+
+Consulta el [quickstart v1.0](docs/operator/founder-quickstart-v1.0.md), el
+[daily loop](docs/operator/daily-operating-loop-v1.0.md), la
+[seguridad founder beta](docs/security/founder-beta-security-v1.0.md) y las
+[release notes](docs/release/release-notes-v1.0.md).
 
 ## Supabase
 

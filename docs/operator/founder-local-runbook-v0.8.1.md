@@ -83,3 +83,20 @@ npm run demo:v0.9
 ```
 
 Keep `GITHUB_ALLOW_ISSUE_CREATION=false`, `GITHUB_READ_ONLY=true`, `GITHUB_DRY_RUN=true`, `CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN=true` and `CORNEROPS_ALLOW_LOCAL_INTERNAL_WRITES=false` for founder acceptance.
+
+## v1.0 founder beta addendum
+
+Use the v1.0 quickstart for daily operation:
+
+```bash
+cp .env.founder.local.example .env
+npm run founder:setup-check
+npm run founder:daily
+npm run state:export-summary
+npm run state:backup
+npm run demo:v1.0
+```
+
+Control Tower now includes `Founder Beta Readiness`, covering setup, local env,
+persistence, backup, auth/local-only, controlled actions, GitHub real issue
+creation, Telegram real mode, external sends and writes.

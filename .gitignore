@@ -8,3 +8,4 @@ npm-debug.log*
 .cornerops/security/
 .cornerops/state/
 .cornerops/reports/
+.cornerops/backups/

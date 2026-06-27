@@ -50,3 +50,21 @@ Still disabled: production writes, external sends, payments, order status change
 `GET /api/control-tower/v0.9/status` adds the controlled-action allowlist, global/action modes, pending controlled approvals, dry-run/real/blocked counters, idempotency health and last execution. The React console uses this report and keeps the v0.8 endpoints compatible.
 
 Approval Center may execute only checksum-protected controlled approvals in dry-run. Audit Viewer adds the `actions` lifecycle filter. The console does not expose PR merge, workflow, payment, order, lead or quote mutation controls.
+
+## v1.0 founder readiness
+
+`GET /api/control-tower/v1.0/status` wraps the v0.9 report with
+`founderBetaReadiness`. The React console now shows:
+
+- setup check status
+- local env status
+- persistence and backup status
+- auth/local-only status
+- controlled actions status
+- GitHub real issue creation status
+- Telegram real mode status
+- external sends and writes status
+- last backup
+
+The visual release gate for v1.0 is documented in
+`docs/acceptance/visual-acceptance-v1.0.md`.
