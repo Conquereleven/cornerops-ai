@@ -49,7 +49,7 @@ describe('CornerMex Lovable Real Config Onboarding v1.1.2', () => {
   test('repo config can reach repo_discovered candidate', () => {
     const result = makeStack({
       cornermexLovableProjectName: 'CornerMex',
-      cornermexLovableGithubRepo: 'Conquereleven/Cornermex-Marketplace',
+      cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae',
       cornermexLovableReadOnly: true,
       cornermexLovableDryRun: true,
       cornermexSupabaseReadOnly: true,
@@ -62,7 +62,7 @@ describe('CornerMex Lovable Real Config Onboarding v1.1.2', () => {
   test('Supabase anon/read-only config can reach real_read_only candidate', () => {
     const result = makeStack({
       cornermexLovableProjectName: 'CornerMex',
-      cornermexLovableGithubRepo: 'Conquereleven/Cornermex-Marketplace',
+      cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae',
       cornermexSupabaseEnabled: true,
       cornermexSupabaseUrl: 'https://example.supabase.co',
       cornermexSupabaseAnonKey: 'anon-test-key',
@@ -87,7 +87,7 @@ describe('CornerMex Lovable Real Config Onboarding v1.1.2', () => {
   });
 
   test('repo discovery documents env references and write-risk paths only', async () => {
-    const { discoveryService } = makeStack({ cornermexLovableGithubRepo: 'Conquereleven/Cornermex-Marketplace' });
+    const { discoveryService } = makeStack({ cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae' });
     const result = await discoveryService.discover();
     expect(result.repo.sourceMode).toBe('repo_discovered');
     expect(result.repo.supabaseReferences).toContain('createClient');

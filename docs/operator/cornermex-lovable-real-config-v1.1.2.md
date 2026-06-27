@@ -25,6 +25,20 @@ CORNERMEX_SUPABASE_ALLOW_WRITES=false
 CORNERMEX_SUPABASE_SCHEMA_DISCOVERY_ENABLED=false
 ```
 
+## Current CornerMex config intake
+
+The founder provided the Lovable project URL for CornerMex:
+
+```env
+CORNERMEX_LOVABLE_PROJECT_URL=https://lovable.dev/projects/d9495376-339d-44dd-9c8a-db0f7b451f96
+CORNERMEX_LOVABLE_PROJECT_NAME=CornerMex
+CORNERMEX_LOVABLE_GITHUB_REPO=Conquereleven/corner-mex-uae
+CORNERMEX_LOVABLE_DEPLOYMENT_URL=https://corner-mex-uae.lovable.app
+```
+
+These values are non-secret and are safe to include in `.env.founder.local.example`.
+Supabase remains unconfigured until the founder provides a Supabase URL and anon/read-only key.
+
 ## Commands
 
 ```bash

@@ -18,9 +18,9 @@ npm run founder:daily
 
 ## Expected current mode
 
-- Connector mode: `mock`
-- Project discovery: `missing_config`
-- Repo candidate: missing until `CORNERMEX_LOVABLE_GITHUB_REPO` is set
+- Connector mode without local env: `mock`
+- Project discovery without local env: `missing_config`
+- Repo candidate with provided founder config: `repo_discovered`
 - Supabase candidate: missing until URL + anon/read-only key are set
 - Data contract confidence: low in mock, medium in repo_discovered, high in real_read_only
 
@@ -34,6 +34,7 @@ npm run founder:daily
 - Frontend Vitest: 4 files / 7 tests OK
 - Frontend build: OK
 - `cornermex:lovable-config-check`: OK without credentials, status `missing_config`
+- `cornermex:lovable-config-check` with provided Lovable URL/repo: OK, status `missing_config`, repo candidate `repo_discovered`
 - `demo:cornermex-lovable-real-config`: OK without credentials, writes blocked
 - `demo:v1.1.2`: OK without credentials, Telegram v1.2 not started
 - `founder:daily`: OK, reports `cornerMexConfigIntakeStatus=missing_config` and next action
@@ -42,9 +43,20 @@ npm run founder:daily
 
 ## Missing founder config
 
-- Lovable project URL or name
-- Lovable-connected GitHub repo
-- Deployment URL
+- Supabase project URL
+- Supabase anon/read-only key
+- Optional table names/schema confirmation
+
+## Provided non-secret CornerMex config
+
+- Lovable project URL: `https://lovable.dev/projects/d9495376-339d-44dd-9c8a-db0f7b451f96`
+- Lovable project name: `CornerMex`
+- Lovable-connected GitHub repo: `Conquereleven/corner-mex-uae`
+- Deployment URL candidate: `https://corner-mex-uae.lovable.app`
+- Repo discovery result: TanStack Start/Vite/React/Lovable app with Supabase client, admin routes, B2B routes, order/payment/catalog functions and Supabase migrations.
+
+## Still missing founder config
+
 - Supabase URL
 - Supabase anon/read-only key
 

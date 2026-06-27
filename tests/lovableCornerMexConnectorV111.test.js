@@ -95,7 +95,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
   });
 
   test('CornerMex connector labels repo_discovered and real_read_only modes from safe config', async () => {
-    const repo = makeServices({ cornermexLovableGithubRepo: 'Conquereleven/Cornermex-Marketplace' });
+    const repo = makeServices({ cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae' });
     expect((await repo.connector.getConnectorStatus()).sourceMode).toBe('repo_discovered');
 
     const supabase = makeServices({

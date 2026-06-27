@@ -20,18 +20,20 @@ Date: 2026-06-27
 
 ## Current connector state
 
-- Lovable config: missing
-- Connector current mode: `mock`
-- Project discovery mode: `missing_config`
-- Founder daily source label: `cornerMexLovableMode=mock`
+- Lovable config without local env: missing
+- Connector current mode without local env: `mock`
+- Project discovery mode without local env: `missing_config`
+- Founder-provided Lovable URL: `https://lovable.dev/projects/d9495376-339d-44dd-9c8a-db0f7b451f96`
+- Founder-provided GitHub repo: `Conquereleven/corner-mex-uae`
+- Deployment URL candidate: `https://corner-mex-uae.lovable.app`
+- Config check with these non-secret values: `repo_discovered` candidate
+- Founder daily source label without local env: `cornerMexLovableMode=mock`
 
 ## Missing real config
 
-- `CORNERMEX_LOVABLE_PROJECT_URL` or `CORNERMEX_LOVABLE_PROJECT_NAME`
-- `CORNERMEX_LOVABLE_GITHUB_REPO`
-- `CORNERMEX_LOVABLE_DEPLOYMENT_URL`
 - `CORNERMEX_SUPABASE_URL`
 - `CORNERMEX_SUPABASE_ANON_KEY`
+- Optional schema/table confirmation for high-confidence contract mapping
 
 ## Implementation plan
 
