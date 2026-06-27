@@ -90,3 +90,14 @@ Los agentes pueden usar context tools para buscar archivos locales mock,
 mensajes archivados, notas, PDFs y GitHub archive context. Si una fuente esta
 deshabilitada o no hay resultados, el agente debe reportar contexto faltante y
 no inventar historial.
+## v0.9 Controlled Action Proposals
+
+Agents may propose, but never directly execute, these action ids:
+
+- `dev-codex-github-agent`: `github.issue.create`
+- `daily-briefing-agent`: `cornerops.task.create`
+- `b2b-sales-agent`: `cornerops.note.create`, `cornerops.task.create`
+- `quotes-orders-agent`: local note/task only; order/quote/payment mutations remain blocked
+- `security-audit-agent`: `cornerops.task.create`
+
+The proposal carries `controlledActionId`, `requiresApproval=true` and `dryRunOnly=true`. Structured execution must restart at `ControlledActionExecutor` with a validated payload; an agent approval is not an execution capability.

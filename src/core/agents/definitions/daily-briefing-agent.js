@@ -20,6 +20,7 @@ module.exports = {
     'read_quotes',
     'read_orders',
     'read_calendar',
+    'cornerops.task.create',
   ],
   permissionLevel: PERMISSION_LEVELS.READ_ONLY,
   requiresHumanApprovalFor: ['create_task', 'send_message', 'send_email'],

@@ -67,8 +67,9 @@ class AgentOrchestrator {
     const dataSnapshot = await this.buildDataSnapshot(agent, normalizedInput);
 
     if (policy.requiresApproval) {
+      const approvalAction = proposedActions.find((action) => action.requiresApproval) || proposedActions[0];
       const approval = this.humanApprovalService.createApproval({
-        actionType: proposedActions[0]?.type || route.intent,
+        actionType: approvalAction?.controlledActionId || approvalAction?.type || route.intent,
         channel: normalizedInput.channel,
         conversationId: normalizedInput.conversationId,
         createdBy: normalizedInput.userId,
@@ -80,7 +81,9 @@ class AgentOrchestrator {
         },
         reason: policy.reason,
         requestId: normalizedInput.requestId,
-        toolName: proposedActions[0]?.toolName,
+        riskLevel: route.riskLevel,
+        requestedDryRun: true,
+        toolName: approvalAction?.toolName,
       });
       const responseText = new BaseAgent({ definition: agent, prompt })
         .render({ input: normalizedInput, route, proposedActions, dataSnapshot });
@@ -168,6 +171,12 @@ class AgentOrchestrator {
 
   routeMessage(input) {
     const text = normalizeText(input.text);
+    if (
+      hasAny(text, ['github', 'codex', 'issue', 'bug'])
+      && hasAny(text, ['crea', 'crear', 'create', 'prepara', 'prepare', 'draft'])
+    ) {
+      return this.route(AGENT_IDS.DEV_CODEX_GITHUB, 'dev_codex_github', 0.96, 'Explicit GitHub/Codex action intent detected.', RISK_LEVELS.HIGH);
+    }
     if (hasAny(text, ['seguridad', 'security', 'audit', 'auditoria', 'logs', 'rechazad', 'denied', 'riesgo', 'risk', 'permisos', 'high-risk tool'])) {
       return this.route(AGENT_IDS.SECURITY_AUDIT, 'security_audit', 0.94, 'Security/audit intent detected.', RISK_LEVELS.LOW);
     }
@@ -213,11 +222,24 @@ class AgentOrchestrator {
           this.action('read_quotes', 'read_quotes', 'Leer quotes sin seguimiento.'),
           this.action('read_orders', 'read_orders', 'Leer órdenes que requieren acción.'),
           this.action('read_tasks', 'read_tasks', 'Leer tareas técnicas y bloqueos.'),
+          ...(hasAny(text, ['crea', 'crear', 'create', 'tarea', 'task']) ? [
+            this.action('create_internal_task', 'cornerops.task.create', 'Proponer tarea interna local.', {
+              mutates: true,
+              requiresApproval: true,
+              controlledActionId: 'cornerops.task.create',
+            }),
+          ] : []),
         ];
       case AGENT_IDS.B2B_SALES:
         return [
           this.action('read_leads', 'read_leads', 'Leer contexto de leads B2B.'),
           this.action('draft_message', 'draft_message', 'Preparar mensaje comercial en borrador.', { mutates: true }),
+          ...(hasAny(text, ['tarea', 'task']) ? [this.action('create_internal_task', 'cornerops.task.create', 'Proponer tarea interna de seguimiento.', {
+            mutates: true, requiresApproval: true, controlledActionId: 'cornerops.task.create',
+          })] : []),
+          ...(hasAny(text, ['nota', 'note']) ? [this.action('create_internal_note', 'cornerops.note.create', 'Proponer nota interna de seguimiento.', {
+            mutates: true, requiresApproval: true, controlledActionId: 'cornerops.note.create',
+          })] : []),
         ];
       case AGENT_IDS.QUOTES_ORDERS:
         if (hasAny(text, ['pagada', 'pagado', 'paid', 'marca', 'marcar'])) {
@@ -241,6 +263,12 @@ class AgentOrchestrator {
         return [
           this.action('read_quotes', 'read_quotes', 'Leer quotes sin seguimiento.'),
           this.action('read_orders', 'read_orders', 'Leer órdenes relacionadas.'),
+          ...(hasAny(text, ['nota', 'note']) ? [this.action('create_internal_note', 'cornerops.note.create', 'Proponer nota interna local.', {
+            mutates: true, requiresApproval: true, controlledActionId: 'cornerops.note.create',
+          })] : []),
+          ...(hasAny(text, ['tarea', 'task']) ? [this.action('create_internal_task', 'cornerops.task.create', 'Proponer tarea interna local.', {
+            mutates: true, requiresApproval: true, controlledActionId: 'cornerops.task.create',
+          })] : []),
         ];
       case AGENT_IDS.DEV_CODEX_GITHUB:
         if (hasAny(text, ['crea', 'crear', 'create'])) {
@@ -249,6 +277,7 @@ class AgentOrchestrator {
             this.action('create_issue', 'create_issue_pending_approval', 'Proponer creación de issue en GitHub.', {
               mutates: true,
               requiresApproval: true,
+              controlledActionId: 'github.issue.create',
             }),
           ];
         }
@@ -260,6 +289,13 @@ class AgentOrchestrator {
           this.action('read_audit_logs', 'read_audit_logs', 'Leer audit logs recientes.'),
           this.action('read_agent_logs', 'read_agent_logs', 'Leer eventos de agentes.'),
           this.action('read_config_summary', 'read_config_summary', 'Leer resumen seguro de configuración.'),
+          ...(hasAny(text, ['crea', 'crear', 'create', 'tarea', 'task', 'follow-up']) ? [
+            this.action('create_internal_task', 'cornerops.task.create', 'Proponer tarea interna de seguridad.', {
+              mutates: true,
+              requiresApproval: true,
+              controlledActionId: 'cornerops.task.create',
+            }),
+          ] : []),
         ];
       default:
         return [];
@@ -276,6 +312,7 @@ class AgentOrchestrator {
       requiresApproval: Boolean(options.requiresApproval),
       destructive: Boolean(options.destructive),
       dryRunOnly: true,
+      controlledActionId: options.controlledActionId,
     };
   }
 

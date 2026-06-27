@@ -11,8 +11,12 @@ class ApprovalService {
       createdBy: input.createdBy || input.userId || 'operator',
       impact: input.impact || 'Real action is blocked until approved.',
       payload: input.payload,
+      actionPayload: input.actionPayload,
+      payloadChecksum: input.payloadChecksum,
       reason: input.reason || 'Approval required by CornerOps policy.',
       requestId: input.requestId,
+      requestedDryRun: input.requestedDryRun,
+      riskLevel: input.riskLevel,
       toolName: input.toolName,
     });
   }
@@ -23,6 +27,14 @@ class ApprovalService {
 
   async rejectApproval(id, approverUserId = 'operator') {
     return this.humanApprovalService.reject(id, approverUserId);
+  }
+
+  async expireApproval(id, actor = 'system') {
+    return this.humanApprovalService.expire(id, actor);
+  }
+
+  async transitionExecution(id, status, actor = 'operator', details = {}) {
+    return this.humanApprovalService.transitionExecution(id, status, actor, details);
   }
 
   async getApproval(id) {

@@ -70,6 +70,8 @@ class AuditViewerService {
       events = events.filter((event) => event.eventType.includes('approval'));
     } else if (filter === 'telegram') {
       events = events.filter((event) => event.channel === 'telegram');
+    } else if (filter === 'actions') {
+      events = events.filter((event) => event.eventType.includes('controlled_action'));
     }
     const recent = events.filter((event) => withinLast24Hours(event.timestamp));
     return {

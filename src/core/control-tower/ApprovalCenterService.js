@@ -27,14 +27,23 @@ class ApprovalCenterService {
       status: approval.status,
       requestedAction: approval.actionType || approval.toolName || 'unknown',
       requestedByAgent: approval.createdBy || 'unknown',
-      riskLevel: riskLevelFor(approval),
+      riskLevel: approval.riskLevel || riskLevelFor(approval),
       dataTouched: dataTouchedFor(approval),
-      sourceMode: approval.payloadSummary?.sourceMode || 'dry_run',
+      sourceMode: approval.requestedDryRun === false ? 'approval_required' : (approval.payloadSummary?.sourceMode || 'dry_run'),
       createdAt: approval.createdAt,
       updatedAt: approval.updatedAt,
       approvalRequiredReason: approval.reason || 'Required by CornerOps policy.',
-      dryRun: true,
-      realExecutionAllowed: false,
+      executionStatus: approval.executionStatus || approval.status,
+      executable: approval.status === 'approved'
+        && (approval.executionStatus || approval.status) === 'approved'
+        && String(approval.actionType || '').includes('.')
+        && Boolean(approval.actionPayload && approval.payloadChecksum),
+      dryRun: approval.requestedDryRun !== false,
+      realExecutionAllowed: Boolean(
+        approval.requestedDryRun === false
+        && this.config.corneropsControlledActionsEnabled
+        && !this.config.corneropsControlledActionsDryRun
+      ),
     });
   }
 
@@ -47,12 +56,19 @@ class ApprovalCenterService {
     return {
       enabled: true,
       dryRun: this.config.corneropsApprovalCenterDryRun,
-      realExecutionAllowed: false,
+      realExecutionAllowed: Boolean(
+        this.config.corneropsControlledActionsEnabled
+        && !this.config.corneropsControlledActionsDryRun
+      ),
       summary: {
         total: items.length,
         pending: items.filter((item) => item.status === 'pending').length,
         approved: items.filter((item) => item.status === 'approved').length,
         rejected: items.filter((item) => item.status === 'rejected').length,
+        controlledPending: items.filter((item) => item.status === 'pending' && item.requestedAction.includes('.')).length,
+        dryRunExecuted: items.filter((item) => item.executionStatus === 'dry_run_executed').length,
+        realExecuted: items.filter((item) => item.executionStatus === 'executed').length,
+        executionFailed: items.filter((item) => item.executionStatus === 'execution_failed').length,
         highRiskPending: items.filter((item) => item.status === 'pending' && item.riskLevel === 'high').length,
       },
       items,

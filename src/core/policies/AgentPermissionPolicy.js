@@ -56,7 +56,8 @@ class AgentPermissionPolicy {
       if (!actionPolicy.allowed) return actionPolicy;
       if (
         agent.permissionLevel === PERMISSION_LEVELS.READ_ONLY &&
-        action.mutates
+        action.mutates &&
+        !(action.controlledActionId && action.requiresApproval && action.dryRunOnly)
       ) {
         return this.deny(`${agent.id} is read-only and cannot mutate data.`);
       }

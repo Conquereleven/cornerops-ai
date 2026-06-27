@@ -69,3 +69,17 @@ Stop the server with `Ctrl+C`. To disable the console, set `CORNEROPS_WEB_CONSOL
 - A real business source without a dedicated verified read-only credential
 
 If a critical store reports corruption, stop the server. Preserve `.cornerops/state`, switch to `memory` only for a clearly labeled temporary diagnostic session, and follow the rollback runbook.
+
+## v0.9 dry-run addendum
+
+To evaluate controlled actions without real side effects, add the safe block from `controlled-actions-runbook-v0.9.md`, restart and run:
+
+```bash
+npm run cornerops -- actions
+npm run demo:controlled-actions
+npm run demo:github-issue-action
+npm run demo:internal-notes-tasks
+npm run demo:v0.9
+```
+
+Keep `GITHUB_ALLOW_ISSUE_CREATION=false`, `GITHUB_READ_ONLY=true`, `GITHUB_DRY_RUN=true`, `CORNEROPS_CONTROLLED_ACTIONS_DRY_RUN=true` and `CORNEROPS_ALLOW_LOCAL_INTERNAL_WRITES=false` for founder acceptance.

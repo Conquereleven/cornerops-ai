@@ -216,6 +216,21 @@ export interface ControlTowerApproval {
   approvalRequiredReason: string;
   dryRun: boolean;
   realExecutionAllowed: boolean;
+  executionStatus?: string;
+  executable?: boolean;
+}
+
+export interface ControlledActionDefinition {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  defaultMode: string;
+  riskLevel: string;
+  allowedAgents: string[];
+  allowedChannels: string[];
+  requiresApproval: boolean;
+  externalSideEffect: boolean;
 }
 
 export interface ControlTowerV08Report {
@@ -236,6 +251,9 @@ export interface ControlTowerV08Report {
     nativeToolsDisabled: boolean;
     clawhubExecutionDisabled: boolean;
     approvalRealExecutionBlocked: boolean;
+    controlledActionsFailClosed?: boolean;
+    controlledActionsRealExecutionBlocked?: boolean;
+    paymentOrderLeadQuoteMutationsBlocked?: boolean;
     warnings: string[];
   };
   webConsole: {
@@ -288,6 +306,24 @@ export interface ControlTowerV08Report {
     highRiskPending: number;
     dryRun: boolean;
     realExecutionAllowed: boolean;
+    controlledPending?: number;
+    dryRunExecuted?: number;
+    realExecuted?: number;
+    executionFailed?: number;
+  };
+  controlledActions?: {
+    enabled: boolean;
+    dryRun: boolean;
+    requireApproval: boolean;
+    realExecutionAllowed: boolean;
+    githubIssueCreationEnabled: boolean;
+    internalNoteCreationEnabled: boolean;
+    internalTaskCreationEnabled: boolean;
+    localInternalWritesEnabled: boolean;
+    pendingApprovals: number;
+    actions: ControlledActionDefinition[];
+    idempotency: { healthy: boolean; provider: string };
+    executions: { dryRun: number; real: number; blocked: number; last: Record<string, unknown> | null };
   };
   audit: {
     eventsLast24h: number;

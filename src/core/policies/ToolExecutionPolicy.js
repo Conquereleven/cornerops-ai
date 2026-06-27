@@ -14,6 +14,7 @@ const KNOWN_ACTION_TYPES = new Set([
   'read_leads', 'read_quotes', 'read_orders', 'read_tasks',
   'draft_message', 'mark_order_paid', 'change_order_status',
   'draft_issue', 'create_issue', 'read_audit_logs',
+  'create_internal_note', 'create_internal_task',
   'read_agent_logs', 'read_config_summary',
   ...FORBIDDEN_ACTION_TYPES,
 ]);

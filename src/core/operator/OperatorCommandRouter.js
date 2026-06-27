@@ -436,7 +436,7 @@ class OperatorCommandRouter {
       warnings: prefix ? [prefix] : [],
       answerText: [
         prefix,
-        'Available commands: ask, briefing, control, health, approvals, audit, help.',
+        'Available commands: ask, briefing, control, health, actions, approvals, audit, help.',
         'Examples:',
         '- Give me today\'s briefing.',
         '- Which B2B leads need follow-up?',

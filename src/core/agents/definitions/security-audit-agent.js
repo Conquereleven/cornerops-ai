@@ -17,6 +17,7 @@ module.exports = {
     'read_audit_logs',
     'read_agent_logs',
     'read_config_summary',
+    'cornerops.task.create',
   ],
   permissionLevel: PERMISSION_LEVELS.READ_ONLY,
   requiresHumanApprovalFor: ['change_config', 'delete_logs', 'rotate_secret'],
