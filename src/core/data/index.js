@@ -12,6 +12,8 @@ const { GitHubPullRequestService } = require('../../integrations/github/GitHubPu
 const { GitHubActionsService } = require('../../integrations/github/GitHubActionsService');
 const { GitHubWebhookHandler } = require('../../integrations/github/GitHubWebhookHandler');
 const {
+  CornerMexLovableConfigIntakeService,
+  CornerMexLovableConfigValidator,
   LovableCornerMexConnector,
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
@@ -269,6 +271,12 @@ const lovableCornerMexConnector = new LovableCornerMexConnector({
   discoveryService: lovableProjectDiscoveryService,
   config: env,
 });
+const cornerMexLovableConfigValidator = new CornerMexLovableConfigValidator({ config: env });
+const cornerMexLovableConfigIntakeService = new CornerMexLovableConfigIntakeService({
+  config: env,
+  discoveryService: lovableProjectDiscoveryService,
+  validator: cornerMexLovableConfigValidator,
+});
 const githubIssueService = new GitHubIssueService({ client: githubClient });
 const githubPullRequestService = new GitHubPullRequestService({ client: githubClient });
 const githubActionsService = new GitHubActionsService({ client: githubClient });
@@ -349,6 +357,8 @@ module.exports = {
   businessDataReadinessService,
   businessDataService,
   cornerMexDataContractRegistry,
+  cornerMexLovableConfigIntakeService,
+  cornerMexLovableConfigValidator,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,

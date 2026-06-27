@@ -95,7 +95,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
   });
 
   test('CornerMex connector labels repo_discovered and real_read_only modes from safe config', async () => {
-    const repo = makeServices({ cornermexLovableGithubRepo: 'Conquereleven/Cornermex-Marketplace' });
+    const repo = makeServices({ cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae' });
     expect((await repo.connector.getConnectorStatus()).sourceMode).toBe('repo_discovered');
 
     const supabase = makeServices({
@@ -132,7 +132,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
     expect(missing.entities).toEqual(expect.arrayContaining(['product', 'lead', 'quote', 'order', 'customer', 'payment']));
     expect(missing.contracts.every((contract) => contract.confidence === 'low')).toBe(true);
     expect(missing.contracts.every((contract) => contract.missingFields.length > 0)).toBe(true);
-    expect(mock.contracts.every((contract) => contract.confidence === 'medium')).toBe(true);
+    expect(mock.contracts.every((contract) => contract.confidence === 'low')).toBe(true);
   });
 
   test('Control Tower exposes CornerMex Lovable connector section and write blocking', async () => {

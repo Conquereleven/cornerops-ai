@@ -14,6 +14,7 @@ npm run demo:v0.9
 npm run demo:v1.0
 npm run demo:v1.1
 npm run demo:v1.1.1
+npm run demo:v1.1.2
 npm run build
 npm start
 ```
@@ -24,6 +25,8 @@ Open `http://127.0.0.1:3000/control-tower`, enter the local console token from `
 - Real Source Expansion v1.1 shows GitHub and Business DB source modes clearly.
 - CornerMex Lovable Connector v1.1.1 shows Lovable project/repo/Supabase config,
   mapped contracts, PII masking and write blocking.
+- CornerMex Lovable Real Config v1.1.2 shows config completeness, mode
+  progression and the exact next founder action.
 - Controlled actions are dry-run.
 - GitHub real issue creation is disabled.
 - External sends and writes are blocked.
@@ -66,6 +69,9 @@ npm run demo:real-sources
 npm run demo:lovable-discovery
 npm run demo:cornermex-connector
 npm run demo:v1.1.1
+npm run cornermex:lovable-config-check
+npm run demo:cornermex-lovable-real-config
+npm run demo:v1.1.2
 ```
 
 These commands run without credentials and fall back to labeled mock mode. They never mutate GitHub or business data.

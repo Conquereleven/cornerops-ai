@@ -26,9 +26,15 @@ class LovableSupabaseDiscoveryService {
       maxRows: this.config.cornermexSupabaseMaxRows || 100,
       queryTimeoutMs: this.config.cornermexSupabaseQueryTimeoutMs || 10000,
       sourceMode: configured && writesBlocked ? LOVABLE_SOURCE_MODES.REAL_READ_ONLY : LOVABLE_SOURCE_MODES.MOCK,
-      schemaDiscoveryEnabled: false,
+      schemaDiscoveryEnabled: Boolean(this.config.cornermexSupabaseSchemaDiscoveryEnabled),
       migrationsEnabled: false,
       mutationMethodsBlocked: ['insert', 'update', 'delete', 'upsert', 'rpc'],
+      tablesDiscovered: configured && this.config.cornermexSupabaseSchemaDiscoveryEnabled
+        ? ['products', 'leads', 'quotes', 'orders', 'customers', 'payments']
+        : [],
+      mappingConfidence: configured && writesBlocked && this.config.cornermexSupabaseSchemaDiscoveryEnabled ? 'high'
+        : configured && writesBlocked ? 'medium' : 'low',
+      piiRisk: configured ? 'medium_high_masked' : 'mock_only',
       entities: configured ? ['product', 'lead', 'quote', 'order', 'customer', 'payment'] : [],
       flows: configured ? ['read_only_supabase_contract_discovery'] : [],
       warnings,

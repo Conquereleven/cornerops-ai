@@ -31,6 +31,10 @@ In v1.1.1, CornerMex product, lead, quote, order and customer context may come
 from the Lovable connector. If Lovable repo/Supabase config is missing, the
 answer must say `mock` or `missing_config`; it must not imply production data.
 
+In v1.1.2, `founder:daily` also reports config intake status, repo discovery
+status, Supabase read-only status and the next action required to move from
+`mock` toward `repo_discovered` or `real_read_only`.
+
 ## Security review
 
 Ask: “Revisa eventos de seguridad recientes”.
@@ -61,6 +65,7 @@ Backups are local, sanitized and stored under `.cornerops/backups`.
 ```bash
 npm run demo:v1.1
 npm run demo:v1.1.1
+npm run demo:v1.1.2
 ```
 
 Review the `sourceModeSummary`, GitHub readiness, Business DB readiness and final safety summary before trusting any real-data readout.
