@@ -73,7 +73,8 @@ class OperatorChannelPolicy {
       });
     }
     const text = normalize(message.text);
-    if (includesAny(text, ['send ', 'envia ', 'enviar ', 'email real', 'whatsapp', 'sync whatsapp', 'message to '])) {
+    const draftOnlyExternalMention = includesAny(text, ['draft whatsapp', 'draft email', 'borrador whatsapp', 'borrador email']);
+    if (!draftOnlyExternalMention && includesAny(text, ['send ', 'envia ', 'enviar ', 'email real', 'whatsapp', 'sync whatsapp', 'message to '])) {
       return deny('External sends and WhatsApp are blocked in v0.6.', 'OPERATOR_CHANNEL_EXTERNAL_SEND_BLOCKED', {
         replyAllowed: true,
         requiresApproval: true,

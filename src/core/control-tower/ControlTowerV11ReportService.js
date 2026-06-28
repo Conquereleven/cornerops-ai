@@ -48,12 +48,15 @@ class ControlTowerV11ReportService {
       nativeTools: base.safety?.nativeToolsDisabled === true,
       clawhubExecution: base.safety?.clawhubExecutionDisabled === true,
     };
+    const telegramOperator = await this.getTelegramOperatorStatus(base);
+    const cornerMexFlowEngine = await this.getCornerMexFlowEngineStatus(cornerMexLovableConnector);
     const warnings = [
       ...(base.safety?.warnings || []),
       ...github.warnings,
       ...businessData.warnings,
       ...(cornerMexLovableConnector?.warnings || []),
       ...(cornerMexConfigIntake?.warnings || []),
+      ...(telegramOperator.warnings || []),
     ];
     return {
       ...base,
@@ -96,6 +99,8 @@ class ControlTowerV11ReportService {
           ? 'Add CORNERMEX_SUPABASE_URL and CORNERMEX_SUPABASE_ANON_KEY, verify RLS, then run npm run cornermex:supabase-read-only-check.'
           : cornerMexConfigIntake?.founderNextSteps?.[0] || cornerMexLovableConnector.founderNextSteps?.[0],
       } : null,
+      telegramOperator,
+      cornerMexFlowEngine,
       github: {
         ...base.github,
         ...github,
@@ -109,6 +114,76 @@ class ControlTowerV11ReportService {
         ...base.safety,
         warnings: [...new Set(warnings)],
       },
+    };
+  }
+
+  async getTelegramOperatorStatus(base) {
+    const telegram = base.telegram || {};
+    return {
+      version: 'v1.2',
+      enabled: this.config.telegramOperatorEnabled === true,
+      realMode: this.config.corneropsTelegramRealMode === true,
+      dryRun: this.config.corneropsTelegramDryRun !== false,
+      readOnly: this.config.corneropsTelegramReadOnly !== false,
+      replyEnabled: this.config.telegramOperatorReplyEnabled !== false,
+      replyDryRun: this.config.telegramOperatorReplyDryRun !== false,
+      allowedUsersCount: telegram.allowedUsersCount || this.config.telegramOperatorAllowedUserIds?.length || 0,
+      allowedChatsCount: telegram.allowedChatsCount || this.config.telegramOperatorAllowedChatIds?.length || 0,
+      groupsRejected: this.config.telegramOperatorRejectGroups !== false,
+      requireDm: this.config.telegramOperatorRequireDm !== false,
+      replayProtection: telegram.replayProtection || { enabled: this.config.corneropsReplayProtectionEnabled === true },
+      rejectionTracking: telegram.rejectionTracking || { enabled: this.config.corneropsRejectionStoreEnabled === true },
+      rateLimiting: telegram.rateLimiting || { enabled: this.config.corneropsRateLimitingEnabled === true },
+      missingConfig: [
+        !this.config.telegramOperatorBotToken ? 'TELEGRAM_OPERATOR_BOT_TOKEN' : null,
+        !this.config.telegramOperatorWebhookSecret ? 'TELEGRAM_OPERATOR_WEBHOOK_SECRET' : null,
+        !(this.config.telegramOperatorAllowedUserIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_USER_IDS' : null,
+        !(this.config.telegramOperatorAllowedChatIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS' : null,
+      ].filter(Boolean),
+      lastInbound: base.operatorChannel?.lastInbound,
+      lastOutbound: base.operatorChannel?.lastOutbound,
+      warnings: telegram.warnings || [],
+    };
+  }
+
+  async getCornerMexFlowEngineStatus(connector) {
+    const sourceMode = connector?.sourceMode || SOURCE_MODES.MOCK;
+    const mapped = connector?.mappedContracts || [];
+    const availableFlows = [
+      'b2b_lead_flow',
+      'quote_follow_up_flow',
+      'order_attention_flow',
+      'manual_payment_review_flow',
+      'product_quality_flow',
+      'customer_follow_up_flow',
+      'fulfillment_review_flow',
+    ];
+    const enoughData = mapped
+      .filter((contract) => !contract.warnings?.length || contract.confidence !== 'low')
+      .map((contract) => contract.entity);
+    return {
+      version: 'v1.2',
+      enabled: true,
+      sourceMode,
+      availableFlows,
+      flowsWithEnoughData: sourceMode === SOURCE_MODES.MOCK || sourceMode === 'repo_discovered'
+        ? ['b2b_lead_flow', 'quote_follow_up_flow', 'order_attention_flow', 'manual_payment_review_flow']
+        : availableFlows,
+      flowsMissingData: sourceMode === 'real_read_only' ? [] : ['customer_follow_up_flow'],
+      mappedContracts: mapped.map((contract) => ({
+        entity: contract.entity,
+        confidence: contract.confidence,
+        sourceMode: contract.sourceMode,
+      })),
+      enoughDataContracts: enoughData,
+      draftSendingDisabled: true,
+      whatsappDisabled: true,
+      emailSendingDisabled: true,
+      writesBlocked: connector?.writesBlocked !== false,
+      lastFlowAnalysisAuditId: null,
+      founderNextAction: connector?.supabaseConfigured
+        ? 'Use Telegram in dry-run founder DM mode and keep actions approval-gated.'
+        : 'Add Supabase anon/read-only config to unlock real_read_only flow summaries.',
     };
   }
 }
