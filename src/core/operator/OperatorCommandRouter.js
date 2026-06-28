@@ -1,5 +1,7 @@
 const { randomUUID } = require('crypto');
 const { sanitizeMessage, sanitizeValue } = require('../security/SecuritySanitizer');
+const { CONTROLLED_ACTION_IDS } = require('../actions/actionTypes');
+const { CORNERMEX_FLOW_IDS } = require('../flows/cornermex');
 const { OPERATOR_INTENTS } = require('./operatorTypes');
 
 const normalizeText = (value) => String(value || '')
@@ -16,11 +18,14 @@ class OperatorCommandRouter {
     agentOrchestrator,
     approvalService,
     auditLogService,
+    controlledActionExecutor,
     config,
     contextHealthService,
     controlTowerService,
     dataHealthService,
+    flowEngine,
     formatter,
+    messageDraftService,
     openclawAuditService,
     sessionService,
   } = {}) {
@@ -28,11 +33,14 @@ class OperatorCommandRouter {
     this.agentOrchestrator = agentOrchestrator;
     this.approvalService = approvalService;
     this.auditLogService = auditLogService;
+    this.controlledActionExecutor = controlledActionExecutor;
     this.config = config;
     this.contextHealthService = contextHealthService;
     this.controlTowerService = controlTowerService;
     this.dataHealthService = dataHealthService;
+    this.flowEngine = flowEngine;
     this.formatter = formatter;
+    this.messageDraftService = messageDraftService;
     this.openclawAuditService = openclawAuditService;
     this.sessionService = sessionService;
   }
@@ -48,6 +56,18 @@ class OperatorCommandRouter {
     }
     if (approvalId && hasAny(text, ['reject', 'rechazar', 'rechaza'])) {
       return { intent: OPERATOR_INTENTS.APPROVAL_ACTION, action: 'reject', approvalId };
+    }
+    if (hasAny(text, ['draft whatsapp follow-up:', 'draft whatsapp follow up:', 'borrador whatsapp:'])) {
+      return { intent: OPERATOR_INTENTS.DRAFT_WHATSAPP_FOLLOW_UP, body: textValue.split(':').slice(1).join(':').trim() };
+    }
+    if (hasAny(text, ['draft email follow-up:', 'draft email follow up:', 'borrador email:'])) {
+      return { intent: OPERATOR_INTENTS.DRAFT_EMAIL_FOLLOW_UP, body: textValue.split(':').slice(1).join(':').trim() };
+    }
+    if (hasAny(text, ['create internal task:', 'crear tarea interna:'])) {
+      return { intent: OPERATOR_INTENTS.CREATE_INTERNAL_TASK_DRAFT, body: textValue.split(':').slice(1).join(':').trim() };
+    }
+    if (hasAny(text, ['create github issue draft:', 'github issue draft:', 'crear issue draft:'])) {
+      return { intent: OPERATOR_INTENTS.CREATE_GITHUB_ISSUE_DRAFT, body: textValue.split(':').slice(1).join(':').trim() };
     }
     if (hasAny(text, ['send ', 'envia ', 'enviar ', 'email real', 'whatsapp real', 'message real'])) {
       return { intent: OPERATOR_INTENTS.FORBIDDEN_EXTERNAL_ACTION };
@@ -69,6 +89,21 @@ class OperatorCommandRouter {
           : hasAny(text, ['error', 'errores']) ? 'errors' : 'recent',
       };
     }
+    if (hasAny(text, ['cornermex status', 'lovable connector status'])) {
+      return { intent: OPERATOR_INTENTS.CORNERMEX_STATUS };
+    }
+    if (hasAny(text, ['supabase status'])) {
+      return { intent: OPERATOR_INTENTS.SUPABASE_STATUS };
+    }
+    if (hasAny(text, ['github status'])) {
+      return { intent: OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY };
+    }
+    if (hasAny(text, ['flows status'])) {
+      return { intent: OPERATOR_INTENTS.FLOWS_STATUS };
+    }
+    if (hasAny(text, ['controlled actions'])) {
+      return { intent: OPERATOR_INTENTS.CONTROLLED_ACTIONS_STATUS };
+    }
     if (
       ['status', 'estado'].includes(text)
       || hasAny(text, ['control tower', 'system health', 'estado del sistema', 'show system', 'status del sistema'])
@@ -87,13 +122,16 @@ class OperatorCommandRouter {
     if (hasAny(text, ['github', 'codex', 'pull request', 'workflow', 'ci issues'])) {
       return { intent: OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY };
     }
-    if (hasAny(text, ['manual payment', 'pagos manuales', 'bank transfer', 'cod review'])) {
+    if (hasAny(text, ['product issues', 'products need fixes', 'productos con problemas'])) {
+      return { intent: OPERATOR_INTENTS.PRODUCT_ISSUES };
+    }
+    if (hasAny(text, ['manual payment', 'pagos manuales', 'bank transfer', 'cod review', 'payments require review', 'payment review'])) {
       return { intent: OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW };
     }
     if (hasAny(text, ['quotes', 'quote ', 'cotizaciones', 'cotizacion'])) {
       return { intent: OPERATOR_INTENTS.QUOTES_REVIEW };
     }
-    if (hasAny(text, ['orders', 'ordenes', 'pedidos', 'order review'])) {
+    if (hasAny(text, ['orders', 'ordenes', 'pedidos', 'order review', 'orders need attention'])) {
       return { intent: OPERATOR_INTENTS.ORDERS_REVIEW };
     }
     if (
@@ -102,10 +140,10 @@ class OperatorCommandRouter {
     ) {
       return { intent: OPERATOR_INTENTS.B2B_MESSAGE_DRAFT };
     }
-    if (hasAny(text, ['b2b', 'leads', 'prospectos']) && hasAny(text, ['follow', 'seguimiento', 'pending', 'pendientes'])) {
+    if (hasAny(text, ['b2b', 'leads', 'prospectos']) && hasAny(text, ['follow', 'seguimiento', 'pending', 'pendientes', 'warm'])) {
       return { intent: OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP };
     }
-    if (hasAny(text, ['briefing', 'resumen de hoy', "today's briefing", 'daily summary'])) {
+    if (hasAny(text, ['briefing', 'resumen de hoy', "today's briefing", 'daily summary', 'founder daily'])) {
       return { intent: OPERATOR_INTENTS.BRIEFING };
     }
     return { intent: OPERATOR_INTENTS.UNKNOWN };
@@ -208,14 +246,18 @@ class OperatorCommandRouter {
   async execute(route, request) {
     switch (route.intent) {
       case OPERATOR_INTENTS.BRIEFING:
-      case OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP:
       case OPERATOR_INTENTS.B2B_MESSAGE_DRAFT:
-      case OPERATOR_INTENTS.QUOTES_REVIEW:
-      case OPERATOR_INTENTS.ORDERS_REVIEW:
-      case OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW:
       case OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY:
       case OPERATOR_INTENTS.SECURITY_AUDIT_SUMMARY:
         return this.executeAgent(route.intent, request);
+      case OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP:
+        return this.flowResult(CORNERMEX_FLOW_IDS.B2B_LEAD, request);
+      case OPERATOR_INTENTS.QUOTES_REVIEW:
+        return this.flowResult(CORNERMEX_FLOW_IDS.QUOTE_FOLLOW_UP, request);
+      case OPERATOR_INTENTS.ORDERS_REVIEW:
+        return this.flowResult(CORNERMEX_FLOW_IDS.ORDER_ATTENTION, request);
+      case OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW:
+        return this.flowResult(CORNERMEX_FLOW_IDS.MANUAL_PAYMENT_REVIEW, request);
       case OPERATOR_INTENTS.CONTROL_TOWER_STATUS:
         return this.controlTowerStatus();
       case OPERATOR_INTENTS.DATA_HEALTH:
@@ -228,6 +270,23 @@ class OperatorCommandRouter {
         return this.resolveApproval(route, request);
       case OPERATOR_INTENTS.AUDIT_SUMMARY:
         return this.auditSummary(route.filter);
+      case OPERATOR_INTENTS.CORNERMEX_STATUS:
+        return this.cornerMexStatus();
+      case OPERATOR_INTENTS.SUPABASE_STATUS:
+        return this.supabaseStatus();
+      case OPERATOR_INTENTS.FLOWS_STATUS:
+        return this.flowStatus();
+      case OPERATOR_INTENTS.PRODUCT_ISSUES:
+        return this.flowResult(CORNERMEX_FLOW_IDS.PRODUCT_QUALITY, request);
+      case OPERATOR_INTENTS.CONTROLLED_ACTIONS_STATUS:
+        return this.controlledActionsStatus();
+      case OPERATOR_INTENTS.CREATE_INTERNAL_TASK_DRAFT:
+        return this.createInternalTaskDraft(route, request);
+      case OPERATOR_INTENTS.CREATE_GITHUB_ISSUE_DRAFT:
+        return this.createGitHubIssueDraft(route, request);
+      case OPERATOR_INTENTS.DRAFT_WHATSAPP_FOLLOW_UP:
+      case OPERATOR_INTENTS.DRAFT_EMAIL_FOLLOW_UP:
+        return this.createMessageDraft(route, request);
       case OPERATOR_INTENTS.FORBIDDEN_EXTERNAL_ACTION:
         return this.blockedAction('External sends are blocked in interactive beta.');
       case OPERATOR_INTENTS.FORBIDDEN_WRITE:
@@ -296,7 +355,7 @@ class OperatorCommandRouter {
   }
 
   async controlTowerStatus() {
-    const report = await this.controlTowerService.getBetaReport();
+    const report = await this.getControlTowerReport();
     const sourceMode = report.firstRealSource?.mode === 'read_only'
       ? 'real_read_only'
       : report.businessData.mode === 'read_only' ? 'read_only' : 'mock';
@@ -311,6 +370,176 @@ class OperatorCommandRouter {
         `Business data: ${report.businessData.mode}; read-only verified: ${report.businessData.readOnlyVerified}.`,
         `Writes blocked: ${report.security.writesBlocked}. External sends blocked: ${report.security.externalSendsBlocked}.`,
         `Pending approvals: ${report.approvals.pending}. Audit events (24h): ${report.audit.eventsLast24h}.`,
+      ].join('\n'),
+    };
+  }
+
+  async cornerMexStatus() {
+    const report = await this.getControlTowerReport();
+    const connector = report.cornerMexLovableConnector || {};
+    return {
+      agentId: 'operator-cornermex-status',
+      status: 'success',
+      sourceMode: connector.sourceMode || 'mock',
+      warnings: connector.warnings || [],
+      answerText: [
+        `CornerMex connector mode: ${connector.sourceMode || 'mock'}.`,
+        `Lovable repo configured: ${connector.githubRepoConfigured ? 'yes' : 'no'}.`,
+        `Supabase configured: ${connector.supabaseConfigured ? 'yes' : 'no'}.`,
+        `Schema status: ${connector.schemaDiscovery?.status || 'not_available'}.`,
+        `Writes blocked: ${connector.writesBlocked !== false}.`,
+        `Next action: ${connector.exactNextRecommendedAction || 'Keep connector in read-only/dry-run mode.'}`,
+      ].join('\n'),
+    };
+  }
+
+  async supabaseStatus() {
+    const report = await this.getControlTowerReport();
+    const connector = report.cornerMexLovableConnector || {};
+    const readiness = connector.supabaseReadOnlyStatus || connector.supabaseRealReadOnlyReadiness || 'missing_config';
+    return {
+      agentId: 'operator-supabase-status',
+      status: 'success',
+      sourceMode: connector.sourceMode || 'mock',
+      warnings: connector.warnings || [],
+      answerText: [
+        `Supabase read-only status: ${readiness}.`,
+        `Configured: ${connector.supabaseConfigured ? 'yes' : 'no'}.`,
+        `Service role blocked: true.`,
+        `Writes blocked: ${connector.writesBlocked !== false}.`,
+        'Required for real_read_only: CORNERMEX_SUPABASE_ENABLED=true, CORNERMEX_SUPABASE_URL, CORNERMEX_SUPABASE_ANON_KEY.',
+      ].join('\n'),
+    };
+  }
+
+  async flowStatus() {
+    const analysis = await this.flowEngine.analyzeFlows({ requestId: `flow-status-${randomUUID().slice(0, 8)}` });
+    return {
+      agentId: 'cornermex-flow-engine',
+      status: 'success',
+      sourceMode: analysis.sourceMode,
+      warnings: analysis.warnings,
+      auditId: analysis.auditId,
+      answerText: [
+        `CornerMex Flow Engine: enabled.`,
+        `Source mode: ${analysis.sourceMode}.`,
+        `Available flows: ${analysis.availableFlows.join(', ')}.`,
+        `Flows with data: ${analysis.summary.flowsWithData.join(', ') || 'none'}.`,
+        `Flows missing data: ${analysis.summary.flowsMissingData.join(', ') || 'none'}.`,
+        'WhatsApp/email drafts: local only, not sendable in v1.2.',
+      ].join('\n'),
+    };
+  }
+
+  async flowResult(flowId, request) {
+    const analysis = await this.flowEngine.analyzeFlows({
+      requestId: request.requestId,
+      operatorId: request.operatorId,
+      flowIds: [flowId],
+    });
+    const proposedActions = analysis.flows.flatMap((flow) => flow.records.slice(0, 5).map((record) => ({
+      id: `proposal-${record.id}`,
+      type: 'create_internal_task_pending_approval',
+      label: record.proposedTask,
+      mutates: false,
+      requiresApproval: true,
+      dryRunOnly: true,
+    })));
+    return {
+      agentId: 'cornermex-flow-engine',
+      status: 'success',
+      sourceMode: analysis.sourceMode,
+      warnings: analysis.warnings,
+      auditId: analysis.auditId,
+      answerText: this.flowEngine.formatFlowSummary(analysis, flowId),
+      proposedActions,
+      approvals: { required: proposedActions.length > 0 },
+    };
+  }
+
+  controlledActionsStatus() {
+    const status = this.controlledActionExecutor?.status?.() || { enabled: false, dryRun: true, actions: [] };
+    return {
+      agentId: 'operator-controlled-actions',
+      status: 'success',
+      sourceMode: 'local_internal',
+      warnings: status.realExecutionAllowed ? ['Real controlled action execution is enabled.'] : [],
+      answerText: [
+        `Controlled actions enabled: ${status.enabled}.`,
+        `Dry run: ${status.dryRun}.`,
+        `Real execution allowed: ${status.realExecutionAllowed === true}.`,
+        `Actions: ${(status.actions || []).map((action) => action.id || action).join(', ') || 'none'}.`,
+      ].join('\n'),
+    };
+  }
+
+  async createInternalTaskDraft(route, request) {
+    const body = route.body || request.text;
+    const result = await this.controlledActionExecutor.createDraft(CONTROLLED_ACTION_IDS.INTERNAL_TASK_CREATE, {
+      title: body.slice(0, 120) || 'CornerMex internal task draft',
+      description: body,
+      priority: 'medium',
+      relatedEntityType: 'general',
+      sourceAgentId: 'operator-telegram-v1.2',
+    }, {
+      agentId: 'operator-telegram-v1.2',
+      channel: request.channel,
+      operatorId: request.operatorId,
+      requestId: request.requestId,
+    });
+    return {
+      agentId: 'operator-controlled-actions',
+      status: 'dry_run',
+      sourceMode: 'local_internal',
+      auditId: result.auditId,
+      warnings: ['Internal task was prepared as a draft only; no local write was executed.'],
+      answerText: `Internal task draft prepared: ${result.payload.title}.`,
+    };
+  }
+
+  async createGitHubIssueDraft(route, request) {
+    const body = route.body || request.text;
+    const result = await this.controlledActionExecutor.createDraft(CONTROLLED_ACTION_IDS.GITHUB_ISSUE_CREATE, {
+      title: body.slice(0, 120) || 'CornerMex issue draft',
+      body,
+      labels: ['cornerops-draft'],
+      sourceAgentId: 'operator-telegram-v1.2',
+      sourceRequestId: request.requestId,
+    }, {
+      agentId: 'operator-telegram-v1.2',
+      channel: request.channel,
+      operatorId: request.operatorId,
+      requestId: request.requestId,
+    });
+    return {
+      agentId: 'operator-controlled-actions',
+      status: 'dry_run',
+      sourceMode: 'local_internal',
+      auditId: result.auditId,
+      warnings: ['GitHub issue creation remains draft/dry-run; no GitHub write was executed.'],
+      answerText: `GitHub issue draft prepared: ${result.payload.title}.`,
+    };
+  }
+
+  async createMessageDraft(route, request) {
+    const channel = route.intent === OPERATOR_INTENTS.DRAFT_EMAIL_FOLLOW_UP ? 'email' : 'whatsapp';
+    const result = await this.messageDraftService.createDraft({
+      channel,
+      text: route.body || request.text,
+      requestId: request.requestId,
+      operatorId: request.operatorId,
+      sourceMode: 'local_internal',
+    });
+    return {
+      agentId: 'cornermex-message-draft-service',
+      status: result.status,
+      sourceMode: result.sourceMode,
+      auditId: result.auditId,
+      warnings: result.warnings,
+      answerText: [
+        `${channel} draft created locally.`,
+        `sendStatus=${result.draft?.sendStatus || 'not_sendable_in_v1.2'}`,
+        result.draft?.body || 'No draft body available.',
       ].join('\n'),
     };
   }
@@ -424,15 +653,18 @@ class OperatorCommandRouter {
   }
 
   async help(prefix = '') {
-    const report = await this.controlTowerService.getBetaReport();
-    const enabled = report.realSourcesEnabled.map((source) => source.id);
-    const disabled = report.disabledExternalSources.map((source) => source.id);
+    const report = await this.getControlTowerReport();
+    const enabled = (report.realSourcesEnabled || []).map((source) => source.id);
+    const disabled = (report.disabledExternalSources || []).map((source) => source.id);
+    const businessMode = report.businessData?.mode || report.mode || 'mock';
+    const writesBlocked = report.security?.writesBlocked ?? report.safety?.writesBlocked ?? true;
+    const externalSendsBlocked = report.security?.externalSendsBlocked ?? report.safety?.externalSendsBlocked ?? true;
     return {
       agentId: 'cornerops-router-agent',
       status: 'success',
       sourceMode: report.firstRealSource?.mode === 'read_only'
         ? 'real_read_only'
-        : report.businessData.mode === 'read_only' ? 'read_only' : 'mock',
+        : businessMode === 'read_only' ? 'read_only' : 'mock',
       warnings: prefix ? [prefix] : [],
       answerText: [
         prefix,
@@ -445,10 +677,10 @@ class OperatorCommandRouter {
         '- Which orders require action?',
         '- Review GitHub issues and suggest what Codex should do next.',
         '- Show me security risks.',
-        `Current mode: ${report.businessData.mode}; operator dry-run/read-only.`,
+        `Current mode: ${businessMode}; operator dry-run/read-only.`,
         `Enabled real sources: ${enabled.length ? enabled.join(', ') : 'none'}.`,
         `Disabled sources: ${disabled.join(', ')}.`,
-        `Safety: writesBlocked=${report.security.writesBlocked}, externalSendsBlocked=${report.security.externalSendsBlocked}.`,
+        `Safety: writesBlocked=${writesBlocked}, externalSendsBlocked=${externalSendsBlocked}.`,
         'Blocked: production writes, external sends, crawler syncs, native host tools, ClawHub execution and deploys.',
         'Demos: npm run demo:interactive-beta, npm run demo:beta, npm run demo:control-tower.',
         'Read-only onboarding: docs/runbooks/business-data-read-only-onboarding.md.',
@@ -465,6 +697,13 @@ class OperatorCommandRouter {
       warnings: [reason],
       answerText: `${reason} No tool or external action was executed.`,
     };
+  }
+
+  async getControlTowerReport() {
+    if (typeof this.controlTowerService.getBetaReport === 'function') {
+      return this.controlTowerService.getBetaReport();
+    }
+    return this.controlTowerService.getReport();
   }
 
   deniedOutput(request, intent, reason, code, auditId) {
