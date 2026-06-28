@@ -181,6 +181,12 @@ const baseEnv = {
     process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_TELEGRAM_FAIL_CLOSED),
+  corneropsTelegramAllowWebhookSetup: parseBoolean(
+    process.env.CORNEROPS_TELEGRAM_ALLOW_WEBHOOK_SETUP,
+  ),
+  corneropsTelegramAllowRealReply: parseBoolean(
+    process.env.CORNEROPS_TELEGRAM_ALLOW_REAL_REPLY,
+  ),
   telegramOperatorEnabled: parseBoolean(process.env.TELEGRAM_OPERATOR_ENABLED),
   telegramOperatorBotToken: process.env.TELEGRAM_OPERATOR_BOT_TOKEN || '',
   telegramOperatorAllowedChatIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS),

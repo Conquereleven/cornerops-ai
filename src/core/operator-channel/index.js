@@ -90,7 +90,9 @@ const telegramOperatorChannelAdapter = new TelegramOperatorChannelAdapter({
       && env.corneropsRateLimitingEnabled,
     readOnly: env.corneropsTelegramReadOnly,
     rejectGroups: env.telegramOperatorRejectGroups,
-    replyDryRun: env.telegramOperatorReplyDryRun || env.corneropsOperatorReplyDryRun,
+    replyDryRun: env.telegramOperatorReplyDryRun
+      || env.corneropsOperatorReplyDryRun
+      || env.corneropsTelegramAllowRealReply !== true,
     replyEnabled: env.telegramOperatorReplyEnabled && env.corneropsOperatorReplyEnabled,
     requireDm: env.telegramOperatorRequireDm,
   },
