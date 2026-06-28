@@ -14,6 +14,8 @@ const { GitHubWebhookHandler } = require('../../integrations/github/GitHubWebhoo
 const {
   CornerMexLovableConfigIntakeService,
   CornerMexLovableConfigValidator,
+  CornerMexSupabaseReadOnlyActivationService,
+  CornerMexSupabaseReadOnlyConfigValidator,
   LovableCornerMexConnector,
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
@@ -267,6 +269,25 @@ const lovableSupabaseMigrationDiscoveryService = new LovableSupabaseMigrationDis
   repoDiscoveryService: lovableRepoDiscoveryService,
   schemaMapper: lovableSupabaseSchemaMapper,
 });
+const cornerMexSupabaseReadOnlyConfigValidator = new CornerMexSupabaseReadOnlyConfigValidator({ config: env });
+const cornerMexSupabaseClient = env.cornermexSupabaseEnabled
+  && env.cornermexSupabaseUrl
+  && env.cornermexSupabaseAnonKey
+  && env.cornermexSupabaseReadOnly
+  && !env.cornermexSupabaseAllowWrites
+  && env.cornermexSupabaseBlockMutations
+  && env.cornermexSupabaseServiceRoleKeyBlocked
+  ? createClient(env.cornermexSupabaseUrl, env.cornermexSupabaseAnonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  : null;
+const cornerMexSupabaseReadOnlyActivationService = new CornerMexSupabaseReadOnlyActivationService({
+  auditLogService,
+  config: env,
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+  supabaseClient: cornerMexSupabaseClient,
+  validator: cornerMexSupabaseReadOnlyConfigValidator,
+});
 const cornerMexSchemaEvidenceService = new CornerMexSchemaEvidenceService({
   migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
 });
@@ -283,6 +304,7 @@ const lovableCornerMexConnector = new LovableCornerMexConnector({
   auditLogService,
   contractRegistry: cornerMexDataContractRegistry,
   discoveryService: lovableProjectDiscoveryService,
+  supabaseReadOnlyActivationService: cornerMexSupabaseReadOnlyActivationService,
   config: env,
 });
 const cornerMexLovableConfigValidator = new CornerMexLovableConfigValidator({ config: env });
@@ -374,6 +396,8 @@ module.exports = {
   cornerMexLovableConfigIntakeService,
   cornerMexLovableConfigValidator,
   cornerMexSchemaEvidenceService,
+  cornerMexSupabaseReadOnlyActivationService,
+  cornerMexSupabaseReadOnlyConfigValidator,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,

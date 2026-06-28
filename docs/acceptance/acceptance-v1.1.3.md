@@ -29,7 +29,8 @@ npm run build
 
 ## Current Mode
 
-- Without live Supabase credentials: `schema_discovered`
+- Without live Supabase credentials: connector mode `repo_discovered`
+- Migration map substatus: `schema_discovered`
 - With safe Supabase URL + anon/read-only key: candidate `real_read_only`
 - With unsafe write flags or service-role-like key: `blocked_unsafe_config`
 
@@ -51,7 +52,8 @@ npm run build
 - Frontend TypeScript: OK.
 - Frontend Vitest: 4 files / 7 tests OK.
 - Frontend build: OK.
-- `cornermex:supabase-read-only-check`: OK with non-secret Lovable repo config, mode `schema_discovered`.
+- `cornermex:supabase-read-only-check`: OK with non-secret Lovable repo config, mode `repo_discovered`.
+- Connector real-read path: OK with safe mock Supabase config, mode `real_read_only`.
 - `demo:cornermex-schema-discovery`: OK without Supabase credentials.
 - `demo:cornermex-supabase-read-only`: OK without Supabase credentials.
 - `demo:v1.1.3`: OK without Supabase credentials, Telegram v1.2 not started.

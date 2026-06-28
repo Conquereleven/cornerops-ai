@@ -1,6 +1,6 @@
 # CornerMex Supabase Real Read-Only v1.1.3
 
-v1.1.3 prepares CornerMex for Supabase `real_read_only` without requiring credentials for tests.
+v1.1.3 prepares CornerMex for Supabase `real_read_only` without requiring credentials for tests. The connector remains `repo_discovered` until safe Supabase URL and anon/read-only key are configured.
 
 ## Required Founder Config
 

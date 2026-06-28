@@ -631,6 +631,10 @@ const baseEnv = {
     process.env.CORNERMEX_SUPABASE_BLOCK_MUTATIONS === undefined
       ? true
       : parseBoolean(process.env.CORNERMEX_SUPABASE_BLOCK_MUTATIONS),
+  cornermexSupabaseServiceRoleKeyBlocked:
+    process.env.CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED),
   cornermexSupabaseMaxRows: parseInteger(
     process.env.CORNERMEX_SUPABASE_MAX_ROWS,
     100,

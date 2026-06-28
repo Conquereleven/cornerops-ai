@@ -5,6 +5,8 @@ const { CornerMexDataContractRegistry, CornerMexSchemaEvidenceService } = requir
 const { FounderFirstRunService } = require('../src/core/setup/FounderFirstRunService');
 const {
   LovableCornerMexConnector,
+  CornerMexSupabaseReadOnlyActivationService,
+  CornerMexSupabaseReadOnlyConfigValidator,
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
   LovableSupabaseDiscoveryService,
@@ -145,7 +147,7 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
     expect(report.cornerMexLovableConnector.exactNextRecommendedAction).toMatch(/CORNERMEX_SUPABASE_URL/);
   });
 
-  test('founder daily labels schema_discovered without implying live data', async () => {
+  test('founder daily labels repo_discovered with schema status without implying live data', async () => {
     const service = new FounderFirstRunService({
       actions: { controlledActionExecutor: { status: () => ({ enabled: false, dryRun: true, realExecutionAllowed: false, actions: [], idempotency: { healthy: true } }) } },
       backupService: { getLatestBackupSummary: () => ({ exists: false }) },
@@ -156,7 +158,7 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
           founderBetaReadiness: { ready: true },
           safety: { warnings: [], externalSendsBlocked: true, writesBlocked: true },
           cornerMexLovableConnector: {
-            sourceMode: 'schema_discovered',
+            sourceMode: 'repo_discovered',
             projectConfigured: true,
             githubRepoConfigured: true,
             supabaseConfigured: false,
@@ -179,9 +181,55 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
       setupValidator: { run: () => ({ status: 'ok', counts: { ok: 2, warning: 0, blocked: 0 } }) },
     });
     const result = await service.runDaily();
-    expect(result.sources.cornerMexLovableMode).toBe('schema_discovered');
+    expect(result.sources.cornerMexLovableMode).toBe('repo_discovered');
     expect(result.sources.cornerMexSupabaseConfigured).toBe(false);
     expect(result.sources.cornerMexSchemaDiscoveryStatus).toBe('schema_discovered');
+  });
+
+  test('connector reaches real_read_only with safe mock Supabase config', async () => {
+    const auditEvents = [];
+    const mockSupabaseClient = {
+      from: (table) => ({
+        select: () => ({
+          limit: async () => ({
+            data: table === 'products'
+              ? [{ id: 'prod-real-1', name_en: 'Tajin', email: 'should-mask@example.test' }]
+              : [],
+            error: null,
+          }),
+        }),
+      }),
+    };
+    const stack = makeStack({
+      cornermexSupabaseEnabled: true,
+      cornermexSupabaseUrl: 'https://example.supabase.co',
+      cornermexSupabaseAnonKey: 'anon-public-test-key',
+      cornermexSupabasePiiMasking: true,
+      cornermexSupabaseAuditReads: true,
+    });
+    const validator = new CornerMexSupabaseReadOnlyConfigValidator({ config: stack.config });
+    const activation = new CornerMexSupabaseReadOnlyActivationService({
+      auditLogService: { record: async (event) => { auditEvents.push(event); return { id: 'audit-real-read', ...event }; } },
+      config: stack.config,
+      migrationDiscoveryService: stack.migrationDiscoveryService,
+      supabaseClient: mockSupabaseClient,
+      validator,
+    });
+    const connector = new LovableCornerMexConnector({
+      auditLogService: { record: async (event) => { auditEvents.push(event); return { id: 'audit-connector', ...event }; } },
+      config: stack.config,
+      contractRegistry: stack.contractRegistry,
+      discoveryService: stack.discoveryService,
+      supabaseReadOnlyActivationService: activation,
+    });
+    const status = await connector.getConnectorStatus({ requestId: 'real-read-test' });
+    const products = await connector.listProducts({ limit: 1 }, { requestId: 'real-read-test' });
+    expect(status.sourceMode).toBe('real_read_only');
+    expect(products.meta.source).toBe('real_read_only');
+    expect(products.meta.rowCount).toBe(1);
+    expect(products.data[0].email).toBe('masked@example.test');
+    expect(auditEvents.some((event) => event.eventType === 'cornermex_supabase_read')).toBe(true);
+    expect(typeof connector.createProduct).toBe('undefined');
   });
 
   test('v1.1.3 scripts run without Supabase credentials and never print secrets', () => {
@@ -199,7 +247,7 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
     const check = parseLastJson(execFileSync(nodeBin, ['scripts/cornermex-supabase-read-only-check.js'], { cwd: root, env, encoding: 'utf8' }));
     const schemaDemo = parseLastJson(execFileSync(nodeBin, ['scripts/demo-cornermex-schema-discovery.js'], { cwd: root, env, encoding: 'utf8' }));
     const v113 = parseLastJson(execFileSync(nodeBin, ['scripts/demo-v1.1.3.js'], { cwd: root, env, encoding: 'utf8' }));
-    expect(check.mode).toBe('schema_discovered');
+    expect(check.mode).toBe('repo_discovered');
     expect(check.secrets.anonKeyPrinted).toBe(false);
     expect(schemaDemo.safety.migrations).toBe('not_executed');
     expect(v113.finalSafetySummary.telegramV12).toBe('not_started');

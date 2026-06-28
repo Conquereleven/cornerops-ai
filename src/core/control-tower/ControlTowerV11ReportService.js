@@ -92,7 +92,7 @@ class ControlTowerV11ReportService {
         supabaseRealReadOnlyReadiness: cornerMexLovableConnector.sourceMode === 'real_read_only' ? 'ready' : 'pending_credentials',
         discoveredWriteRiskPaths: cornerMexConfigIntake?.repoDiscovery?.writeRiskPaths || [],
         missingFounderConfig: cornerMexConfigIntake?.missing || [],
-        exactNextRecommendedAction: cornerMexLovableConnector.sourceMode === 'schema_discovered'
+        exactNextRecommendedAction: cornerMexLovableConnector.schemaDiscovery?.status === 'schema_discovered'
           ? 'Add CORNERMEX_SUPABASE_URL and CORNERMEX_SUPABASE_ANON_KEY, verify RLS, then run npm run cornermex:supabase-read-only-check.'
           : cornerMexConfigIntake?.founderNextSteps?.[0] || cornerMexLovableConnector.founderNextSteps?.[0],
       } : null,

@@ -26,11 +26,13 @@ class LovableCornerMexConnector {
     auditLogService,
     contractRegistry,
     discoveryService,
+    supabaseReadOnlyActivationService,
     config = {},
   } = {}) {
     this.auditLogService = auditLogService;
     this.contractRegistry = contractRegistry;
     this.discoveryService = discoveryService;
+    this.supabaseReadOnlyActivationService = supabaseReadOnlyActivationService;
     this.config = {
       auditReads: config.corneropsCornermexConnectorAuditReads !== false,
       enabled: Boolean(config.corneropsCornermexConnectorEnabled),
@@ -43,18 +45,16 @@ class LovableCornerMexConnector {
       supabaseReadOnly: config.cornermexSupabaseReadOnly !== false,
       supabaseAllowWrites: Boolean(config.cornermexSupabaseAllowWrites),
       supabaseBlockMutations: config.cornermexSupabaseBlockMutations !== false,
+      supabaseServiceRoleKeyBlocked: config.cornermexSupabaseServiceRoleKeyBlocked !== false,
     };
   }
 
   getSourceMode(discovery = null) {
-    if (this.config.supabaseAllowWrites || !this.config.supabaseReadOnly || !this.config.supabaseBlockMutations) {
+    if (this.config.supabaseAllowWrites || !this.config.supabaseReadOnly || !this.config.supabaseBlockMutations || !this.config.supabaseServiceRoleKeyBlocked) {
       return LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG;
     }
     if (this.config.supabaseConfigured && this.config.supabaseReadOnly && !this.config.supabaseAllowWrites) {
       return LOVABLE_SOURCE_MODES.REAL_READ_ONLY;
-    }
-    if (discovery?.supabase?.sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED) {
-      return LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED;
     }
     if (this.config.lovableRepoConfigured) return LOVABLE_SOURCE_MODES.REPO_DISCOVERED;
     return LOVABLE_SOURCE_MODES.MOCK;
@@ -64,14 +64,16 @@ class LovableCornerMexConnector {
     const discovery = await this.discoveryService.discover();
     const sourceMode = this.getSourceMode(discovery);
     const schemaEvidence = discovery.supabase?.migrationDiscovery?.schemaEvidence || [];
-    const contractSourceMode = [
+    const contractSourceMode = sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED && schemaEvidence.length
+      ? LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
+      : [
       LOVABLE_SOURCE_MODES.REPO_DISCOVERED,
       LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED,
       LOVABLE_SOURCE_MODES.REAL_READ_ONLY,
       LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG,
     ].includes(sourceMode)
-      ? sourceMode
-      : LOVABLE_SOURCE_MODES.MOCK;
+        ? sourceMode
+        : LOVABLE_SOURCE_MODES.MOCK;
     const contracts = this.contractRegistry.getSummary({
       sourceMode: contractSourceMode,
       sourceReference: sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
@@ -83,6 +85,7 @@ class LovableCornerMexConnector {
       ...(discovery.warnings || []),
       ...(this.config.supabaseAllowWrites ? ['CRITICAL: CornerMex Supabase writes are enabled.'] : []),
       ...(this.config.supabaseBlockMutations ? [] : ['CRITICAL: CornerMex Supabase mutation blocking is disabled.']),
+      ...(this.config.supabaseServiceRoleKeyBlocked ? [] : ['CRITICAL: CornerMex Supabase service role key blocking is disabled.']),
       ...(this.config.piiMasking ? [] : ['CRITICAL: CornerMex connector PII masking is disabled.']),
     ];
     const status = {
@@ -92,6 +95,9 @@ class LovableCornerMexConnector {
       projectConfigured: discovery.project.configured,
       githubRepoConfigured: discovery.repo.configured,
       supabaseConfigured: discovery.supabase.configured,
+      supabaseReadOnlyStatus: this.supabaseReadOnlyActivationService?.getStatus
+        ? await this.supabaseReadOnlyActivationService.getStatus(context)
+        : null,
       discoveredEntities: discovery.entities,
       discoveredFlows: discovery.flows,
       mappedContracts: contracts.contracts.map((contract) => ({
@@ -112,7 +118,7 @@ class LovableCornerMexConnector {
         writeRiskSql: discovery.supabase?.migrationDiscovery?.writeRiskSql || [],
       },
       piiMasking: this.config.piiMasking,
-      writesBlocked: !this.config.supabaseAllowWrites && this.config.supabaseReadOnly && this.config.supabaseBlockMutations,
+      writesBlocked: !this.config.supabaseAllowWrites && this.config.supabaseReadOnly && this.config.supabaseBlockMutations && this.config.supabaseServiceRoleKeyBlocked,
       lastReadAuditStatus: this.config.auditReads ? 'enabled' : 'disabled',
       warnings: [...new Set(warnings)],
       founderNextSteps: discovery.nextSteps,
@@ -136,11 +142,16 @@ class LovableCornerMexConnector {
   }
 
   async readCollection(name, filters = {}, context = {}) {
+    const discovery = this.discoveryService?.discover ? await this.discoveryService.discover() : null;
+    const sourceMode = this.getSourceMode(discovery);
+    if (sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY && this.supabaseReadOnlyActivationService?.listEntity) {
+      return this.supabaseReadOnlyActivationService.listEntity(name, filters, context);
+    }
     const rows = this.applyFilters(this.fixture(name), filters);
     const result = {
       data: rows,
       meta: {
-        source: this.getSourceMode(),
+        source: sourceMode,
         readOnly: true,
         rowCount: rows.length,
         truncated: rows.length >= Math.min(Number(filters.limit) || this.config.maxRows, this.config.maxRows),
@@ -157,6 +168,11 @@ class LovableCornerMexConnector {
   }
 
   async readById(name, id, context = {}) {
+    const discovery = this.discoveryService?.discover ? await this.discoveryService.discover() : null;
+    const sourceMode = this.getSourceMode(discovery);
+    if (sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY && this.supabaseReadOnlyActivationService?.getEntityById) {
+      return this.supabaseReadOnlyActivationService.getEntityById(name, id, context);
+    }
     const result = await this.readCollection(name, {}, context);
     return {
       ...result,
