@@ -122,17 +122,26 @@ class ControlTowerV11ReportService {
     return {
       version: 'v1.2',
       founderWebhookVersion: 'v1.2.1',
+      founderPollingVersion: 'v1.2.2',
       enabled: this.config.telegramOperatorEnabled === true,
+      operatorMode: this.config.telegramOperatorMode || 'webhook',
       realMode: this.config.corneropsTelegramRealMode === true,
       dryRun: this.config.corneropsTelegramDryRun !== false,
       readOnly: this.config.corneropsTelegramReadOnly !== false,
       founderWebhookReadiness: this.getTelegramFounderWebhookReadiness(),
+      founderPollingStatus: this.getTelegramFounderPollingStatus(),
+      pollingMissingConfig: this.getTelegramFounderPollingMissingConfig(),
+      pollingAvailable: true,
+      pollingEnabled: this.config.telegramOperatorEnabled === true
+        && this.config.telegramOperatorMode === 'polling'
+        && this.config.corneropsTelegramAllowPolling === true,
       botTokenPresent: Boolean(this.config.telegramOperatorBotToken),
       webhookSecretPresent: Boolean(this.config.telegramOperatorWebhookSecret),
       replyEnabled: this.config.telegramOperatorReplyEnabled !== false,
       replyDryRun: this.config.telegramOperatorReplyDryRun !== false,
       realReplyAllowed: this.config.corneropsTelegramAllowRealReply === true,
       webhookSetupAllowed: this.config.corneropsTelegramAllowWebhookSetup === true,
+      pollingAllowed: this.config.corneropsTelegramAllowPolling === true,
       allowedUsersCount: telegram.allowedUsersCount || this.config.telegramOperatorAllowedUserIds?.length || 0,
       allowedChatsCount: telegram.allowedChatsCount || this.config.telegramOperatorAllowedChatIds?.length || 0,
       groupsRejected: this.config.telegramOperatorRejectGroups !== false,
@@ -149,10 +158,20 @@ class ControlTowerV11ReportService {
       lastInbound: base.operatorChannel?.lastInbound,
       lastOutbound: base.operatorChannel?.lastOutbound,
       lastDryRunWebhookVerification: telegram.lastDryRunWebhookVerification || null,
+      lastPollingStart: telegram.lastPollingStart || null,
+      lastApprovedInbound: telegram.lastApprovedInbound || null,
+      lastReply: telegram.lastReply || null,
       rejectedUnknownUsersCount: telegram.rejectionTracking?.byReason?.TELEGRAM_UNKNOWN_USER || 0,
       rejectedUnknownChatsCount: telegram.rejectionTracking?.byReason?.TELEGRAM_UNKNOWN_CHAT || 0,
       replayDuplicateCount: telegram.replayProtection?.duplicatesLast24h || 0,
       exactNextFounderAction: this.getTelegramFounderWebhookNextAction(),
+      exactNextPollingAction: this.getTelegramFounderPollingMissingConfig().length
+        ? `Set polling env vars locally: ${this.getTelegramFounderPollingMissingConfig().join(', ')}.`
+        : 'Run npm run telegram:founder-polling.',
+      exactFounderPollingCommands: [
+        'npm run telegram:founder-id-discovery',
+        'npm run telegram:founder-polling',
+      ],
       warnings: telegram.warnings || [],
     };
   }
@@ -180,6 +199,34 @@ class ControlTowerV11ReportService {
     ].filter(Boolean);
     if (missing.length) return `Set missing founder Telegram env vars locally: ${missing.join(', ')}.`;
     return 'Run npm run demo:telegram-founder-webhook and keep real replies disabled.';
+  }
+
+  getTelegramFounderPollingStatus() {
+    const missing = this.getTelegramFounderPollingMissingConfig();
+    if (missing.length) return 'missing_config';
+    if (this.config.telegramOperatorRejectGroups === false || this.config.telegramOperatorRequireDm === false) {
+      return 'blocked_unsafe_config';
+    }
+    if (
+      this.config.corneropsTelegramAllowRealReply === true
+      && this.config.telegramOperatorReplyDryRun === false
+      && this.config.corneropsTelegramDryRun === false
+      && this.config.corneropsTelegramRealMode === true
+    ) {
+      return 'polling_real_reply_ready';
+    }
+    return 'polling_dry_run_ready';
+  }
+
+  getTelegramFounderPollingMissingConfig() {
+    return [
+      !this.config.telegramOperatorBotToken ? 'TELEGRAM_OPERATOR_BOT_TOKEN' : null,
+      this.config.telegramOperatorEnabled !== true ? 'TELEGRAM_OPERATOR_ENABLED=true' : null,
+      this.config.telegramOperatorMode !== 'polling' ? 'TELEGRAM_OPERATOR_MODE=polling' : null,
+      this.config.corneropsTelegramAllowPolling !== true ? 'CORNEROPS_TELEGRAM_ALLOW_POLLING=true' : null,
+      !(this.config.telegramOperatorAllowedUserIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_USER_IDS' : null,
+      !(this.config.telegramOperatorAllowedChatIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS' : null,
+    ].filter(Boolean);
   }
 
   async getCornerMexFlowEngineStatus(connector) {

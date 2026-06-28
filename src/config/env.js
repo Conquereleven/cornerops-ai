@@ -187,7 +187,23 @@ const baseEnv = {
   corneropsTelegramAllowRealReply: parseBoolean(
     process.env.CORNEROPS_TELEGRAM_ALLOW_REAL_REPLY,
   ),
+  corneropsTelegramAllowPolling: parseBoolean(process.env.CORNEROPS_TELEGRAM_ALLOW_POLLING),
+  corneropsTelegramPollingIntervalMs: parseInteger(
+    process.env.CORNEROPS_TELEGRAM_POLLING_INTERVAL_MS,
+    3000,
+    { min: 500, max: 60000 },
+  ),
+  corneropsTelegramMaxMessageChars: parseInteger(
+    process.env.CORNEROPS_TELEGRAM_MAX_MESSAGE_CHARS,
+    4000,
+    { min: 100, max: 12000 },
+  ),
   telegramOperatorEnabled: parseBoolean(process.env.TELEGRAM_OPERATOR_ENABLED),
+  telegramOperatorMode: parseEnum(
+    process.env.TELEGRAM_OPERATOR_MODE,
+    ['webhook', 'polling'],
+    'webhook',
+  ),
   telegramOperatorBotToken: process.env.TELEGRAM_OPERATOR_BOT_TOKEN || '',
   telegramOperatorAllowedChatIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS),
   telegramOperatorAllowedUserIds: parseCsv(process.env.TELEGRAM_OPERATOR_ALLOWED_USER_IDS),

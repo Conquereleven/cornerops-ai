@@ -23,7 +23,7 @@ describe('Telegram founder webhook dry-run verification v1.2.1', () => {
   test('config check degrades safely and never prints token or webhook secret', () => {
     const result = new TelegramFounderWebhookConfigValidator({
       config: {
-        telegramOperatorBotToken: 'present-token-placeholder',
+        telegramOperatorBotToken: 'local-token-placeholder',
         telegramOperatorWebhookSecret: 'present-webhook-placeholder',
         telegramOperatorAllowedUserIds: [],
         telegramOperatorAllowedChatIds: [],
@@ -44,7 +44,7 @@ describe('Telegram founder webhook dry-run verification v1.2.1', () => {
     ]));
     expect(result.webhookSetup.allowed).toBe(false);
     expect(result.reply.realReplyAllowed).toBe(false);
-    expect(JSON.stringify(result)).not.toContain('present-token-placeholder');
+    expect(JSON.stringify(result)).not.toContain('local-token-placeholder');
     expect(JSON.stringify(result)).not.toContain('present-webhook-placeholder');
     expect(result.secrets.fullChatTextPrinted).toBe(false);
   });
@@ -252,7 +252,7 @@ describe('Telegram founder webhook dry-run verification v1.2.1', () => {
       maxBuffer: 5 * 1024 * 1024,
     });
     expect(output).toContain(expected);
-    expect(output).not.toContain('present-token-placeholder');
+    expect(output).not.toContain('local-token-placeholder');
     expect(output).not.toContain('present-webhook-placeholder');
     expect(output).not.toContain('demo-founder-webhook-placeholder');
   });
