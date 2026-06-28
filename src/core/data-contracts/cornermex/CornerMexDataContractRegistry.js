@@ -11,8 +11,8 @@ class CornerMexDataContractRegistry {
     this.sourceReference = sourceReference;
   }
 
-  listContracts({ sourceMode = this.sourceMode, sourceReference = this.sourceReference } = {}) {
-    const options = { sourceMode, sourceReference };
+  listContracts({ sourceMode = this.sourceMode, sourceReference = this.sourceReference, schemaEvidence } = {}) {
+    const options = { sourceMode, sourceReference, schemaEvidence };
     return [
       createCornerMexProductContract(options),
       createCornerMexLeadContract(options),

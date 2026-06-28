@@ -14,10 +14,14 @@ const { GitHubWebhookHandler } = require('../../integrations/github/GitHubWebhoo
 const {
   CornerMexLovableConfigIntakeService,
   CornerMexLovableConfigValidator,
+  CornerMexSupabaseReadOnlyActivationService,
+  CornerMexSupabaseReadOnlyConfigValidator,
   LovableCornerMexConnector,
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
   LovableSupabaseDiscoveryService,
+  LovableSupabaseMigrationDiscoveryService,
+  LovableSupabaseSchemaMapper,
 } = require('../../integrations/lovable');
 const { DataNormalizer } = require('./DataNormalizer');
 const { DataSourceRegistry } = require('./DataSourceRegistry');
@@ -38,7 +42,7 @@ const { QuoteReadOnlyRepository } = require('../domain/quotes/QuoteReadOnlyRepos
 const { OrderReadOnlyRepository } = require('../domain/orders/OrderReadOnlyRepository');
 const { BusinessDataService } = require('../domain/business/BusinessDataService');
 const { BusinessDataContractRegistry } = require('../data-contracts');
-const { CornerMexDataContractRegistry } = require('../data-contracts/cornermex');
+const { CornerMexDataContractRegistry, CornerMexSchemaEvidenceService } = require('../data-contracts/cornermex');
 const { OpenClawEcosystemRegistry } = require('../openclaw-ecosystem/OpenClawEcosystemRegistry');
 const { OpenClawEcosystemPolicy } = require('../openclaw-ecosystem/OpenClawEcosystemPolicy');
 const { CraboxRunnerAdapter } = require('../openclaw-ecosystem/adapters/CraboxRunnerAdapter');
@@ -259,7 +263,38 @@ const lovableRepoDiscoveryService = new LovableRepoDiscoveryService({
   config: env,
   githubClient,
 });
-const lovableSupabaseDiscoveryService = new LovableSupabaseDiscoveryService({ config: env });
+const lovableSupabaseSchemaMapper = new LovableSupabaseSchemaMapper();
+const lovableSupabaseMigrationDiscoveryService = new LovableSupabaseMigrationDiscoveryService({
+  config: env,
+  repoDiscoveryService: lovableRepoDiscoveryService,
+  schemaMapper: lovableSupabaseSchemaMapper,
+});
+const cornerMexSupabaseReadOnlyConfigValidator = new CornerMexSupabaseReadOnlyConfigValidator({ config: env });
+const cornerMexSupabaseClient = env.cornermexSupabaseEnabled
+  && env.cornermexSupabaseUrl
+  && env.cornermexSupabaseAnonKey
+  && env.cornermexSupabaseReadOnly
+  && !env.cornermexSupabaseAllowWrites
+  && env.cornermexSupabaseBlockMutations
+  && env.cornermexSupabaseServiceRoleKeyBlocked
+  ? createClient(env.cornermexSupabaseUrl, env.cornermexSupabaseAnonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  : null;
+const cornerMexSupabaseReadOnlyActivationService = new CornerMexSupabaseReadOnlyActivationService({
+  auditLogService,
+  config: env,
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+  supabaseClient: cornerMexSupabaseClient,
+  validator: cornerMexSupabaseReadOnlyConfigValidator,
+});
+const cornerMexSchemaEvidenceService = new CornerMexSchemaEvidenceService({
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+});
+const lovableSupabaseDiscoveryService = new LovableSupabaseDiscoveryService({
+  config: env,
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+});
 const lovableProjectDiscoveryService = new LovableProjectDiscoveryService({
   config: env,
   repoDiscoveryService: lovableRepoDiscoveryService,
@@ -269,6 +304,7 @@ const lovableCornerMexConnector = new LovableCornerMexConnector({
   auditLogService,
   contractRegistry: cornerMexDataContractRegistry,
   discoveryService: lovableProjectDiscoveryService,
+  supabaseReadOnlyActivationService: cornerMexSupabaseReadOnlyActivationService,
   config: env,
 });
 const cornerMexLovableConfigValidator = new CornerMexLovableConfigValidator({ config: env });
@@ -359,6 +395,9 @@ module.exports = {
   cornerMexDataContractRegistry,
   cornerMexLovableConfigIntakeService,
   cornerMexLovableConfigValidator,
+  cornerMexSchemaEvidenceService,
+  cornerMexSupabaseReadOnlyActivationService,
+  cornerMexSupabaseReadOnlyConfigValidator,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,
@@ -378,6 +417,8 @@ module.exports = {
   lovableProjectDiscoveryService,
   lovableRepoDiscoveryService,
   lovableSupabaseDiscoveryService,
+  lovableSupabaseMigrationDiscoveryService,
+  lovableSupabaseSchemaMapper,
   githubWebhookHandler,
   leadService,
   leadReadOnlyRepository,

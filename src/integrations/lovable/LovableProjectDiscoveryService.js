@@ -17,8 +17,12 @@ class LovableProjectDiscoveryService {
     if (!this.config.cornermexSupabaseUrl || !this.config.cornermexSupabaseAnonKey) {
       warnings.push('Missing CORNERMEX_SUPABASE_URL and/or CORNERMEX_SUPABASE_ANON_KEY.');
     }
-    const sourceMode = supabase.sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY
+    const sourceMode = supabase.sourceMode === LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG
+      ? LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG
+      : supabase.sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY
       ? LOVABLE_SOURCE_MODES.REAL_READ_ONLY
+      : supabase.sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
+        ? LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
       : repo.sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED
         ? LOVABLE_SOURCE_MODES.REPO_DISCOVERED
         : projectConfigured ? LOVABLE_SOURCE_MODES.MOCK : LOVABLE_SOURCE_MODES.MISSING_CONFIG;
@@ -47,9 +51,11 @@ class LovableProjectDiscoveryService {
         'Supabase reads require anon/read-only credentials and write flags disabled.',
       ],
       nextSteps: [
-        'Provide Lovable project URL/name.',
-        'Provide the connected GitHub repository URL if available.',
-        'Provide Supabase URL and anon/read-only key if available.',
+        projectConfigured ? 'Lovable project URL/name configured.' : 'Provide Lovable project URL/name.',
+        this.config.cornermexLovableGithubRepo ? 'Lovable-connected GitHub repo configured.' : 'Provide the connected GitHub repository URL if available.',
+        supabase.sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
+          ? 'Add Supabase URL and anon/read-only key, verify RLS, then run cornermex:supabase-read-only-check.'
+          : 'Provide Supabase URL and anon/read-only key if available.',
         'Share Lovable .env.example and known schema/table names if available.',
       ],
     };

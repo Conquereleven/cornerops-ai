@@ -619,6 +619,22 @@ const baseEnv = {
       : parseBoolean(process.env.CORNERMEX_SUPABASE_READ_ONLY),
   cornermexSupabaseAllowWrites: parseBoolean(process.env.CORNERMEX_SUPABASE_ALLOW_WRITES),
   cornermexSupabaseSchemaDiscoveryEnabled: parseBoolean(process.env.CORNERMEX_SUPABASE_SCHEMA_DISCOVERY_ENABLED),
+  cornermexSupabaseAuditReads:
+    process.env.CORNERMEX_SUPABASE_AUDIT_READS === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_AUDIT_READS),
+  cornermexSupabasePiiMasking:
+    process.env.CORNERMEX_SUPABASE_PII_MASKING === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_PII_MASKING),
+  cornermexSupabaseBlockMutations:
+    process.env.CORNERMEX_SUPABASE_BLOCK_MUTATIONS === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_BLOCK_MUTATIONS),
+  cornermexSupabaseServiceRoleKeyBlocked:
+    process.env.CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED),
   cornermexSupabaseMaxRows: parseInteger(
     process.env.CORNERMEX_SUPABASE_MAX_ROWS,
     100,
@@ -632,7 +648,7 @@ const baseEnv = {
   corneropsCornermexConnectorEnabled: parseBoolean(process.env.CORNEROPS_CORNERMEX_CONNECTOR_ENABLED),
   corneropsCornermexConnectorMode: parseEnum(
     process.env.CORNEROPS_CORNERMEX_CONNECTOR_MODE,
-    ['mock', 'repo_discovered', 'real_read_only'],
+    ['mock', 'repo_discovered', 'schema_discovered', 'real_read_only', 'blocked_unsafe_config'],
     'mock',
   ),
   corneropsCornermexConnectorAuditReads:

@@ -144,7 +144,7 @@ describe('CornerMex Lovable Real Config Onboarding v1.1.2', () => {
       config: { corneropsDryRun: true, corneropsControlledActionsDryRun: true },
     });
     const report = await service.getReport();
-    expect(report.cornerMexLovableConnector.version).toBe('v1.1.2');
+    expect(report.cornerMexLovableConnector.version).toBe('v1.1.3');
     expect(report.cornerMexLovableConnector.configIntakeStatus).toBe('missing_config');
     expect(report.cornerMexLovableConnector.missingFounderConfig).toContain('CORNERMEX_LOVABLE_GITHUB_REPO');
     expect(report.cornerMexLovableConnector.discoveredWriteRiskPaths.length).toBeGreaterThan(0);

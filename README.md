@@ -56,6 +56,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - CornerMex Lovable Real Config v1.1.2 con validator/intake de configuracion,
   progresion `mock` -> `repo_discovered` -> `real_read_only`, confidence de
   contratos por nivel de discovery y checks seguros sin credenciales.
+- CornerMex Supabase Schema Discovery v1.1.3 con evidencia de migraciones del
+  repo Lovable, modo `schema_discovered`, check Supabase read-only, deteccion de
+  riesgo RPC/write y confidence de contratos sin credenciales live.
 
 ## Inicio rápido
 
@@ -70,6 +73,7 @@ npm run founder:daily
 npm run demo:v1.1
 npm run demo:v1.1.1
 npm run demo:v1.1.2
+npm run demo:v1.1.3
 npm run dev
 ```
 

@@ -35,6 +35,11 @@ In v1.1.2, `founder:daily` also reports config intake status, repo discovery
 status, Supabase read-only status and the next action required to move from
 `mock` toward `repo_discovered` or `real_read_only`.
 
+In v1.1.3, `founder:daily` also reports `schema_discovered` when CornerMex
+Supabase migrations/generated types are mapped from the Lovable repo. It must
+still say live Supabase data is pending until URL and anon/read-only key are
+configured.
+
 ## Security review
 
 Ask: “Revisa eventos de seguridad recientes”.
@@ -66,6 +71,7 @@ Backups are local, sanitized and stored under `.cornerops/backups`.
 npm run demo:v1.1
 npm run demo:v1.1.1
 npm run demo:v1.1.2
+npm run demo:v1.1.3
 ```
 
 Review the `sourceModeSummary`, GitHub readiness, Business DB readiness and final safety summary before trusting any real-data readout.
