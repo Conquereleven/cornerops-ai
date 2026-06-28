@@ -46,8 +46,8 @@ class TelegramOperatorChannelAdapter {
     return Boolean(this.config.webhookSecret) && safeEqual(secret, this.config.webhookSecret);
   }
 
-  normalizeUpdate(payload = {}, secret) {
-    if (!this.validateWebhookSecret(secret)) {
+  normalizeUpdate(payload = {}, secret, { validateSecret = true } = {}) {
+    if (validateSecret && !this.validateWebhookSecret(secret)) {
       const error = new Error('Invalid Telegram webhook secret.');
       error.code = 'TELEGRAM_WEBHOOK_SECRET_DENIED';
       error.statusCode = 401;
@@ -107,6 +107,33 @@ class TelegramOperatorChannelAdapter {
       }
       throw error;
     }
+    return this.handleNormalizedMessage(message);
+  }
+
+  async handlePollingUpdate(payload) {
+    if (!this.channelService) throw new Error('Telegram operator channel is not connected.');
+    let message;
+    try {
+      message = this.normalizeUpdate(payload, undefined, { validateSecret: false });
+    } catch (error) {
+      try {
+        await this.rejectionTrackingService?.record({
+          provider: 'telegram',
+          reason: error.code || 'TELEGRAM_PAYLOAD_REJECTED',
+          riskLevel: 'high',
+          chatId: payload.message?.chat?.id,
+          userId: payload.message?.from?.id,
+          messageId: payload.message?.message_id,
+        });
+      } catch (_storeError) {
+        // Preserve the policy error.
+      }
+      throw error;
+    }
+    return this.handleNormalizedMessage(message);
+  }
+
+  async handleNormalizedMessage(message) {
     if (this.config.enabled && !this.config.botToken) {
       return this.rejectMessage(message, 'TELEGRAM_BOT_TOKEN_REQUIRED', 'critical');
     }
