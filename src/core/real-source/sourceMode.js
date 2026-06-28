@@ -6,7 +6,9 @@ const SOURCE_MODES = Object.freeze({
   MIXED: 'mixed',
   MOCK: 'mock',
   REPO_DISCOVERED: 'repo_discovered',
+  SCHEMA_DISCOVERED: 'schema_discovered',
   REAL_READ_ONLY: 'real_read_only',
+  BLOCKED_UNSAFE_CONFIG: 'blocked_unsafe_config',
 });
 
 const normalizeSourceMode = (mode) => {
@@ -23,6 +25,9 @@ const combineSourceModes = (modes = []) => {
     return SOURCE_MODES.MIXED;
   }
   if (normalized.includes(SOURCE_MODES.REAL_READ_ONLY)) return SOURCE_MODES.MIXED;
+  if (normalized.includes(SOURCE_MODES.BLOCKED_UNSAFE_CONFIG)) return SOURCE_MODES.BLOCKED_UNSAFE_CONFIG;
+  if (normalized.includes(SOURCE_MODES.SCHEMA_DISCOVERED) && normalized.length > 1) return SOURCE_MODES.MIXED;
+  if (normalized.includes(SOURCE_MODES.SCHEMA_DISCOVERED)) return SOURCE_MODES.SCHEMA_DISCOVERED;
   if (normalized.includes(SOURCE_MODES.REPO_DISCOVERED) && normalized.length > 1) return SOURCE_MODES.MIXED;
   return normalized[0];
 };

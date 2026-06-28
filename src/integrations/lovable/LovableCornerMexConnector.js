@@ -42,12 +42,19 @@ class LovableCornerMexConnector {
       supabaseConfigured: Boolean(config.cornermexSupabaseEnabled && config.cornermexSupabaseUrl && config.cornermexSupabaseAnonKey),
       supabaseReadOnly: config.cornermexSupabaseReadOnly !== false,
       supabaseAllowWrites: Boolean(config.cornermexSupabaseAllowWrites),
+      supabaseBlockMutations: config.cornermexSupabaseBlockMutations !== false,
     };
   }
 
-  getSourceMode() {
+  getSourceMode(discovery = null) {
+    if (this.config.supabaseAllowWrites || !this.config.supabaseReadOnly || !this.config.supabaseBlockMutations) {
+      return LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG;
+    }
     if (this.config.supabaseConfigured && this.config.supabaseReadOnly && !this.config.supabaseAllowWrites) {
       return LOVABLE_SOURCE_MODES.REAL_READ_ONLY;
+    }
+    if (discovery?.supabase?.sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED) {
+      return LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED;
     }
     if (this.config.lovableRepoConfigured) return LOVABLE_SOURCE_MODES.REPO_DISCOVERED;
     return LOVABLE_SOURCE_MODES.MOCK;
@@ -55,17 +62,27 @@ class LovableCornerMexConnector {
 
   async getConnectorStatus(context = {}) {
     const discovery = await this.discoveryService.discover();
-    const sourceMode = this.getSourceMode();
-    const contractSourceMode = sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED || sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY
+    const sourceMode = this.getSourceMode(discovery);
+    const schemaEvidence = discovery.supabase?.migrationDiscovery?.schemaEvidence || [];
+    const contractSourceMode = [
+      LOVABLE_SOURCE_MODES.REPO_DISCOVERED,
+      LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED,
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY,
+      LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG,
+    ].includes(sourceMode)
       ? sourceMode
       : LOVABLE_SOURCE_MODES.MOCK;
     const contracts = this.contractRegistry.getSummary({
       sourceMode: contractSourceMode,
-      sourceReference: sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED ? 'lovable-connected-repo' : 'mock/template',
+      sourceReference: sourceMode === LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
+        ? 'lovable-repo-supabase-migrations'
+        : sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED ? 'lovable-connected-repo' : 'mock/template',
+      schemaEvidence,
     });
     const warnings = [
       ...(discovery.warnings || []),
       ...(this.config.supabaseAllowWrites ? ['CRITICAL: CornerMex Supabase writes are enabled.'] : []),
+      ...(this.config.supabaseBlockMutations ? [] : ['CRITICAL: CornerMex Supabase mutation blocking is disabled.']),
       ...(this.config.piiMasking ? [] : ['CRITICAL: CornerMex connector PII masking is disabled.']),
     ];
     const status = {
@@ -85,8 +102,17 @@ class LovableCornerMexConnector {
         warnings: contract.warnings,
       })),
       contractConfidence: contracts.confidence,
+      schemaDiscovery: {
+        status: discovery.supabase?.migrationDiscovery?.mode || 'not_available',
+        migrationFileCount: discovery.supabase?.migrationDiscovery?.migrationFileCount || 0,
+        tables: discovery.supabase?.migrationDiscovery?.tables || [],
+        contracts: discovery.supabase?.migrationDiscovery?.contracts || [],
+        piiCandidateFields: discovery.supabase?.migrationDiscovery?.piiCandidateFields || [],
+        rlsPoliciesDiscovered: discovery.supabase?.migrationDiscovery?.rlsPoliciesDiscovered || [],
+        writeRiskSql: discovery.supabase?.migrationDiscovery?.writeRiskSql || [],
+      },
       piiMasking: this.config.piiMasking,
-      writesBlocked: !this.config.supabaseAllowWrites && this.config.supabaseReadOnly,
+      writesBlocked: !this.config.supabaseAllowWrites && this.config.supabaseReadOnly && this.config.supabaseBlockMutations,
       lastReadAuditStatus: this.config.auditReads ? 'enabled' : 'disabled',
       warnings: [...new Set(warnings)],
       founderNextSteps: discovery.nextSteps,

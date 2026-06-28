@@ -15,6 +15,7 @@ npm run demo:v1.0
 npm run demo:v1.1
 npm run demo:v1.1.1
 npm run demo:v1.1.2
+npm run demo:v1.1.3
 npm run build
 npm start
 ```
@@ -27,6 +28,8 @@ Open `http://127.0.0.1:3000/control-tower`, enter the local console token from `
   mapped contracts, PII masking and write blocking.
 - CornerMex Lovable Real Config v1.1.2 shows config completeness, mode
   progression and the exact next founder action.
+- CornerMex Supabase v1.1.3 shows schema discovery, mapped contract confidence,
+  Supabase read-only readiness and missing Supabase URL/key.
 - Controlled actions are dry-run.
 - GitHub real issue creation is disabled.
 - External sends and writes are blocked.
@@ -72,6 +75,10 @@ npm run demo:v1.1.1
 npm run cornermex:lovable-config-check
 npm run demo:cornermex-lovable-real-config
 npm run demo:v1.1.2
+npm run cornermex:supabase-read-only-check
+npm run demo:cornermex-schema-discovery
+npm run demo:cornermex-supabase-read-only
+npm run demo:v1.1.3
 ```
 
 These commands run without credentials and fall back to labeled mock mode. They never mutate GitHub or business data.

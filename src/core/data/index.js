@@ -18,6 +18,8 @@ const {
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
   LovableSupabaseDiscoveryService,
+  LovableSupabaseMigrationDiscoveryService,
+  LovableSupabaseSchemaMapper,
 } = require('../../integrations/lovable');
 const { DataNormalizer } = require('./DataNormalizer');
 const { DataSourceRegistry } = require('./DataSourceRegistry');
@@ -38,7 +40,7 @@ const { QuoteReadOnlyRepository } = require('../domain/quotes/QuoteReadOnlyRepos
 const { OrderReadOnlyRepository } = require('../domain/orders/OrderReadOnlyRepository');
 const { BusinessDataService } = require('../domain/business/BusinessDataService');
 const { BusinessDataContractRegistry } = require('../data-contracts');
-const { CornerMexDataContractRegistry } = require('../data-contracts/cornermex');
+const { CornerMexDataContractRegistry, CornerMexSchemaEvidenceService } = require('../data-contracts/cornermex');
 const { OpenClawEcosystemRegistry } = require('../openclaw-ecosystem/OpenClawEcosystemRegistry');
 const { OpenClawEcosystemPolicy } = require('../openclaw-ecosystem/OpenClawEcosystemPolicy');
 const { CraboxRunnerAdapter } = require('../openclaw-ecosystem/adapters/CraboxRunnerAdapter');
@@ -259,7 +261,19 @@ const lovableRepoDiscoveryService = new LovableRepoDiscoveryService({
   config: env,
   githubClient,
 });
-const lovableSupabaseDiscoveryService = new LovableSupabaseDiscoveryService({ config: env });
+const lovableSupabaseSchemaMapper = new LovableSupabaseSchemaMapper();
+const lovableSupabaseMigrationDiscoveryService = new LovableSupabaseMigrationDiscoveryService({
+  config: env,
+  repoDiscoveryService: lovableRepoDiscoveryService,
+  schemaMapper: lovableSupabaseSchemaMapper,
+});
+const cornerMexSchemaEvidenceService = new CornerMexSchemaEvidenceService({
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+});
+const lovableSupabaseDiscoveryService = new LovableSupabaseDiscoveryService({
+  config: env,
+  migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+});
 const lovableProjectDiscoveryService = new LovableProjectDiscoveryService({
   config: env,
   repoDiscoveryService: lovableRepoDiscoveryService,
@@ -359,6 +373,7 @@ module.exports = {
   cornerMexDataContractRegistry,
   cornerMexLovableConfigIntakeService,
   cornerMexLovableConfigValidator,
+  cornerMexSchemaEvidenceService,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,
@@ -378,6 +393,8 @@ module.exports = {
   lovableProjectDiscoveryService,
   lovableRepoDiscoveryService,
   lovableSupabaseDiscoveryService,
+  lovableSupabaseMigrationDiscoveryService,
+  lovableSupabaseSchemaMapper,
   githubWebhookHandler,
   leadService,
   leadReadOnlyRepository,

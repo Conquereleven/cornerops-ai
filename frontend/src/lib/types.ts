@@ -388,6 +388,22 @@ export interface ControlTowerV08Report {
       warnings: string[];
     }>;
     contractConfidence: Record<string, string>;
+    schemaDiscovery?: {
+      status: string;
+      migrationFileCount: number;
+      tables: string[];
+      contracts: string[];
+      piiCandidateFields: string[];
+      rlsPoliciesDiscovered: string[];
+      writeRiskSql: string[];
+    };
+    supabaseMigrationDiscoveryStatus?: string;
+    schemaDiscovered?: boolean;
+    discoveredTablesCount?: number;
+    mappedContractConfidence?: Record<string, string>;
+    rlsEvidenceStatus?: string;
+    piiCandidateFields?: string[];
+    supabaseRealReadOnlyReadiness?: string;
     piiMasking: boolean;
     writesBlocked: boolean;
     lastReadAuditStatus: string;

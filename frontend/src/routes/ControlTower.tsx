@@ -83,10 +83,13 @@ export function ControlTower() {
         ['Schema discovery', booleanLabel(report.realSourceExpansion.businessData.schemaDiscoveryEnabled)],
         ['Warnings', String(report.realSourceExpansion.warnings.length)],
       ].map(([label, value]) => <div className="ct-safety-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div></section>}
-      {report.cornerMexLovableConnector && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">CornerMex Lovable Connector · v1.1.1</span><h2>Lovable project and data contracts</h2></div><StatusBadge tone={toneFor(report.cornerMexLovableConnector.sourceMode)}>{report.cornerMexLovableConnector.sourceMode}</StatusBadge></div><div className="ct-safety-grid">{[
+      {report.cornerMexLovableConnector && <section className="panel ct-panel ct-wide"><div className="panel-heading"><div><span className="eyebrow">CornerMex Lovable Connector · {report.cornerMexLovableConnector.version || 'v1.1.1'}</span><h2>Lovable project and data contracts</h2></div><StatusBadge tone={toneFor(report.cornerMexLovableConnector.sourceMode)}>{report.cornerMexLovableConnector.sourceMode}</StatusBadge></div><div className="ct-safety-grid">{[
         ['Enabled', booleanLabel(report.cornerMexLovableConnector.enabled)],
         ['Config intake', report.cornerMexLovableConnector.configIntakeStatus || 'unknown'],
         ['Discovery mode', report.cornerMexLovableConnector.discoveryMode],
+        ['Schema discovery', report.cornerMexLovableConnector.schemaDiscovery?.status || 'not_available'],
+        ['Tables discovered', String(report.cornerMexLovableConnector.discoveredTablesCount || report.cornerMexLovableConnector.schemaDiscovery?.tables?.length || 0)],
+        ['Supabase read-only', report.cornerMexLovableConnector.supabaseRealReadOnlyReadiness || 'pending_credentials'],
         ['Lovable project', report.cornerMexLovableConnector.projectConfigured ? 'configured' : 'missing'],
         ['GitHub repo', report.cornerMexLovableConnector.githubRepoConfigured ? 'configured' : 'missing'],
         ['Supabase', report.cornerMexLovableConnector.supabaseConfigured ? 'configured' : 'missing'],

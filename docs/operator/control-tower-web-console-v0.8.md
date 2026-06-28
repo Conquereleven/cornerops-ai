@@ -113,5 +113,19 @@ The `cornerMexLovableConnector` section now also shows:
 - write-risk paths found/documented by repo discovery
 - exact next recommended action
 
-Modes remain explicit: `missing_config`, `mock`, `repo_discovered` and
-`real_read_only`. The console does not print Supabase keys.
+## v1.1.3 Supabase schema discovery
+
+The `cornerMexLovableConnector` section now also shows:
+
+- Supabase migration discovery status
+- schema discovered status
+- discovered tables count
+- mapped contract confidence
+- RLS evidence status
+- PII candidate fields
+- Supabase real read-only readiness
+- exact founder action to add Supabase URL/key and run read-only checks
+
+Modes remain explicit: `missing_config`, `mock`, `repo_discovered`,
+`schema_discovered`, `real_read_only` and `blocked_unsafe_config`. The console
+does not print Supabase keys.

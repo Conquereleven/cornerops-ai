@@ -3,6 +3,8 @@ const { CornerMexLovableConfigValidator, serviceRoleLike } = require('./CornerMe
 const { LovableProjectDiscoveryService } = require('./LovableProjectDiscoveryService');
 const { LovableRepoDiscoveryService } = require('./LovableRepoDiscoveryService');
 const { LovableSupabaseDiscoveryService } = require('./LovableSupabaseDiscoveryService');
+const { LovableSupabaseMigrationDiscoveryService } = require('./LovableSupabaseMigrationDiscoveryService');
+const { LovableSupabaseSchemaMapper } = require('./LovableSupabaseSchemaMapper');
 const { LovableCornerMexConnector, maskPii } = require('./LovableCornerMexConnector');
 const { CORNERMEX_ENTITIES, LOVABLE_DISCOVERY_MODES, LOVABLE_SOURCE_MODES } = require('./lovableTypes');
 
@@ -16,6 +18,8 @@ module.exports = {
   LovableProjectDiscoveryService,
   LovableRepoDiscoveryService,
   LovableSupabaseDiscoveryService,
+  LovableSupabaseMigrationDiscoveryService,
+  LovableSupabaseSchemaMapper,
   maskPii,
   serviceRoleLike,
 };

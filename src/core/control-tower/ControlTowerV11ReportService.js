@@ -79,13 +79,22 @@ class ControlTowerV11ReportService {
       },
       cornerMexLovableConnector: cornerMexLovableConnector ? {
         ...cornerMexLovableConnector,
-        version: 'v1.1.2',
+        version: 'v1.1.3',
         configIntake: cornerMexConfigIntake,
         configIntakeStatus: cornerMexConfigIntake?.status || 'unknown',
         configCompleteness: cornerMexConfigIntake?.configCompleteness || {},
+        supabaseMigrationDiscoveryStatus: cornerMexLovableConnector.schemaDiscovery?.status || 'not_available',
+        schemaDiscovered: cornerMexLovableConnector.schemaDiscovery?.status === 'schema_discovered',
+        discoveredTablesCount: cornerMexLovableConnector.schemaDiscovery?.tables?.length || 0,
+        mappedContractConfidence: cornerMexLovableConnector.contractConfidence,
+        rlsEvidenceStatus: cornerMexLovableConnector.schemaDiscovery?.rlsPoliciesDiscovered?.length ? 'present_in_repo_migrations' : 'not_found',
+        piiCandidateFields: cornerMexLovableConnector.schemaDiscovery?.piiCandidateFields || [],
+        supabaseRealReadOnlyReadiness: cornerMexLovableConnector.sourceMode === 'real_read_only' ? 'ready' : 'pending_credentials',
         discoveredWriteRiskPaths: cornerMexConfigIntake?.repoDiscovery?.writeRiskPaths || [],
         missingFounderConfig: cornerMexConfigIntake?.missing || [],
-        exactNextRecommendedAction: cornerMexConfigIntake?.founderNextSteps?.[0] || cornerMexLovableConnector.founderNextSteps?.[0],
+        exactNextRecommendedAction: cornerMexLovableConnector.sourceMode === 'schema_discovered'
+          ? 'Add CORNERMEX_SUPABASE_URL and CORNERMEX_SUPABASE_ANON_KEY, verify RLS, then run npm run cornermex:supabase-read-only-check.'
+          : cornerMexConfigIntake?.founderNextSteps?.[0] || cornerMexLovableConnector.founderNextSteps?.[0],
       } : null,
       github: {
         ...base.github,
