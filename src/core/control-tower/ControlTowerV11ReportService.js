@@ -121,12 +121,18 @@ class ControlTowerV11ReportService {
     const telegram = base.telegram || {};
     return {
       version: 'v1.2',
+      founderWebhookVersion: 'v1.2.1',
       enabled: this.config.telegramOperatorEnabled === true,
       realMode: this.config.corneropsTelegramRealMode === true,
       dryRun: this.config.corneropsTelegramDryRun !== false,
       readOnly: this.config.corneropsTelegramReadOnly !== false,
+      founderWebhookReadiness: this.getTelegramFounderWebhookReadiness(),
+      botTokenPresent: Boolean(this.config.telegramOperatorBotToken),
+      webhookSecretPresent: Boolean(this.config.telegramOperatorWebhookSecret),
       replyEnabled: this.config.telegramOperatorReplyEnabled !== false,
       replyDryRun: this.config.telegramOperatorReplyDryRun !== false,
+      realReplyAllowed: this.config.corneropsTelegramAllowRealReply === true,
+      webhookSetupAllowed: this.config.corneropsTelegramAllowWebhookSetup === true,
       allowedUsersCount: telegram.allowedUsersCount || this.config.telegramOperatorAllowedUserIds?.length || 0,
       allowedChatsCount: telegram.allowedChatsCount || this.config.telegramOperatorAllowedChatIds?.length || 0,
       groupsRejected: this.config.telegramOperatorRejectGroups !== false,
@@ -142,8 +148,38 @@ class ControlTowerV11ReportService {
       ].filter(Boolean),
       lastInbound: base.operatorChannel?.lastInbound,
       lastOutbound: base.operatorChannel?.lastOutbound,
+      lastDryRunWebhookVerification: telegram.lastDryRunWebhookVerification || null,
+      rejectedUnknownUsersCount: telegram.rejectionTracking?.byReason?.TELEGRAM_UNKNOWN_USER || 0,
+      rejectedUnknownChatsCount: telegram.rejectionTracking?.byReason?.TELEGRAM_UNKNOWN_CHAT || 0,
+      replayDuplicateCount: telegram.replayProtection?.duplicatesLast24h || 0,
+      exactNextFounderAction: this.getTelegramFounderWebhookNextAction(),
       warnings: telegram.warnings || [],
     };
+  }
+
+  getTelegramFounderWebhookReadiness() {
+    const missing = [
+      !this.config.telegramOperatorBotToken,
+      !this.config.telegramOperatorWebhookSecret,
+      !(this.config.telegramOperatorAllowedUserIds || []).length,
+      !(this.config.telegramOperatorAllowedChatIds || []).length,
+    ].some(Boolean);
+    if (missing) return 'missing_config';
+    if (this.config.telegramOperatorRejectGroups === false || this.config.telegramOperatorRequireDm === false) {
+      return 'blocked_unsafe_config';
+    }
+    return 'dry_run_webhook_ready';
+  }
+
+  getTelegramFounderWebhookNextAction() {
+    const missing = [
+      !this.config.telegramOperatorBotToken ? 'TELEGRAM_OPERATOR_BOT_TOKEN' : null,
+      !this.config.telegramOperatorWebhookSecret ? 'TELEGRAM_OPERATOR_WEBHOOK_SECRET' : null,
+      !(this.config.telegramOperatorAllowedUserIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_USER_IDS' : null,
+      !(this.config.telegramOperatorAllowedChatIds || []).length ? 'TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS' : null,
+    ].filter(Boolean);
+    if (missing.length) return `Set missing founder Telegram env vars locally: ${missing.join(', ')}.`;
+    return 'Run npm run demo:telegram-founder-webhook and keep real replies disabled.';
   }
 
   async getCornerMexFlowEngineStatus(connector) {
