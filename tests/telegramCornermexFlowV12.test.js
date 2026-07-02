@@ -5,6 +5,7 @@ const { TelegramOperatorConfigValidator } = require('../src/integrations/telegra
 const { CornerMexFlowEngine } = require('../src/core/flows/cornermex');
 const { CornerMexMessageDraftService } = require('../src/core/drafts');
 const { OperatorCommandRouter } = require('../src/core/operator/OperatorCommandRouter');
+const { OPERATOR_INTENTS } = require('../src/core/operator/operatorTypes');
 const { ControlTowerV11ReportService } = require('../src/core/control-tower/ControlTowerV11ReportService');
 
 const root = path.resolve(__dirname, '..');
@@ -163,6 +164,55 @@ describe('Telegram Operator + CornerMex Flow Engine v1.2', () => {
     await expect(router.handle({ channel: 'api', operatorId: '7001', text: 'create internal task: pending bank transfers' })).resolves.toMatchObject({ status: 'dry_run' });
   });
 
+  test('operator help exposes v1.2.2 founder command surface and keeps old aliases', async () => {
+    const router = new OperatorCommandRouter({
+      auditLogService: { record: jest.fn(async () => ({ id: 'audit-router-help' })) },
+      config: {
+        allowedChannels: ['api', 'cli', 'telegram'],
+        defaultAgent: 'cornerops-router-agent',
+        dryRun: true,
+        enabled: true,
+        readOnly: true,
+        requireApproval: true,
+        requireAudit: true,
+      },
+      controlTowerService: {
+        getReport: async () => ({
+          businessData: { mode: 'mock', warnings: [] },
+          firstRealSource: { mode: 'mock' },
+          disabledExternalSources: [],
+          realSourcesEnabled: [],
+          security: { writesBlocked: true, externalSendsBlocked: true, warnings: [] },
+          cornerMexLovableConnector: { sourceMode: 'mock', writesBlocked: true, warnings: [], schemaDiscovery: { status: 'mock' } },
+        }),
+      },
+      formatter: { format: (output) => output.answerText || 'formatted', inferSourceMode: () => 'mock' },
+      sessionService: { getOrCreate: () => ({ id: 'session-help' }), touch: jest.fn() },
+    });
+
+    const output = await router.handle({ channel: 'telegram', operatorId: '7001', text: 'help' });
+    expect(output.responseText).toContain('CornerOps Founder Commands');
+    expect(output.responseText).toContain('founder daily');
+    expect(output.responseText).toContain('cornermex status');
+    expect(output.responseText).toContain('draft whatsapp follow-up: <text>');
+    expect(output.responseText).toContain('writesBlocked=true');
+    expect(output.responseText).toContain('externalSendsBlocked=true');
+    expect(output.responseText).not.toContain('Available commands: ask, briefing, control, health, actions, approvals, audit, help.');
+    expect(output.responseText).not.toContain('quickstart-v0.5');
+
+    expect(router.classify('founder daily').intent).toBe(OPERATOR_INTENTS.BRIEFING);
+    expect(router.classify('cornermex status').intent).toBe(OPERATOR_INTENTS.CORNERMEX_STATUS);
+    expect(router.classify('flows status').intent).toBe(OPERATOR_INTENTS.FLOWS_STATUS);
+    expect(router.classify('what orders need attention?').intent).toBe(OPERATOR_INTENTS.ORDERS_REVIEW);
+    expect(router.classify('what quotes need follow-up?').intent).toBe(OPERATOR_INTENTS.QUOTES_REVIEW);
+    expect(router.classify('what B2B leads are warm?').intent).toBe(OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP);
+    expect(router.classify('what payments require review?').intent).toBe(OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW);
+    expect(router.classify('what products need fixes?').intent).toBe(OPERATOR_INTENTS.PRODUCT_ISSUES);
+    expect(router.classify('actions').intent).toBe(OPERATOR_INTENTS.CONTROLLED_ACTIONS_STATUS);
+    expect(router.classify('approvals').intent).toBe(OPERATOR_INTENTS.PENDING_APPROVALS);
+    expect(router.classify('audit').intent).toBe(OPERATOR_INTENTS.AUDIT_SUMMARY);
+  });
+
   test('Control Tower exposes Telegram and Flow Engine v1.2 status', async () => {
     const service = new ControlTowerV11ReportService({
       baseService: {
@@ -217,6 +267,9 @@ describe('Telegram Operator + CornerMex Flow Engine v1.2', () => {
         TELEGRAM_OPERATOR_WEBHOOK_SECRET: '',
         TELEGRAM_OPERATOR_ALLOWED_CHAT_IDS: '',
         TELEGRAM_OPERATOR_ALLOWED_USER_IDS: '',
+        TELEGRAM_OPERATOR_REPLY_DRY_RUN: 'true',
+        CORNEROPS_TELEGRAM_REAL_MODE: 'false',
+        CORNEROPS_TELEGRAM_DRY_RUN: 'true',
         CORNERMEX_SUPABASE_ANON_KEY: '',
       },
       maxBuffer: 5 * 1024 * 1024,

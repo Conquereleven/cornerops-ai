@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "sourceMode": "local_internal",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-audit-v13",
+  "warnings": [],
+  "data": {
+    "sanitized": true,
+    "events": [
+      {
+        "id": "audit-sample-telegram-help",
+        "eventType": "telegram_founder_command",
+        "status": "success",
+        "summary": "Founder requested help command."
+      },
+      {
+        "id": "audit-sample-draft",
+        "eventType": "cornermex_message_draft_created",
+        "status": "dry_run",
+        "summary": "Local draft created; no external send."
+      }
+    ]
+  }
+}

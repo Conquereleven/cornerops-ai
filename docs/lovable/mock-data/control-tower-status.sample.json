@@ -1,0 +1,26 @@
+{
+  "status": "success",
+  "sourceMode": "repo_discovered",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-status-v13",
+  "warnings": [],
+  "data": {
+    "appName": "CornerOps Control Tower",
+    "backendRole": "brain",
+    "lovableFrontendRole": "cockpit",
+    "cornerMexLovableRole": "marketplace",
+    "telegram": {
+      "mode": "polling",
+      "founderPollingStatus": "active_local_founder_only"
+    },
+    "safety": {
+      "writesBlocked": true,
+      "externalSendsBlocked": true,
+      "customerChannelsDisabled": true
+    }
+  }
+}

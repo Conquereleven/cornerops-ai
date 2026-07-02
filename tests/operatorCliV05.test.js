@@ -19,7 +19,7 @@ const runCli = (args) => spawnSync(process.execPath, ['src/cli/cornerops.js', ..
 
 describe('CornerOps operator CLI v0.5', () => {
   test.each([
-    [['help'], 'Available commands'],
+    [['help'], 'CornerOps Founder Commands'],
     [['ask', "Give me today's briefing"], 'Executive Briefing'],
     [['briefing'], 'Top 3 Priorities'],
     [['control'], 'Control Tower status'],

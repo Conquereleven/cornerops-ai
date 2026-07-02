@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "sourceMode": "local_internal",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": true,
+  "auditId": "audit-sample-drafts-v13",
+  "warnings": ["Drafts are local only; WhatsApp and email sends are disabled."],
+  "data": {
+    "draftTypes": [
+      "whatsapp_follow_up_draft",
+      "email_follow_up_draft",
+      "quote_follow_up_draft",
+      "payment_review_draft",
+      "b2b_lead_intro_draft"
+    ],
+    "sendStatus": "not_sendable_in_current_version",
+    "localOnly": true
+  }
+}

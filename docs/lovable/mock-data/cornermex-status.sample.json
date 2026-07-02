@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "sourceMode": "repo_discovered",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-cornermex-v13",
+  "warnings": ["Live Supabase read-only is pending founder credentials."],
+  "data": {
+    "currentMode": "repo_discovered",
+    "lovableProject": "configured",
+    "githubRepo": "Conquereleven/corner-mex-uae",
+    "supabaseReadOnlyStatus": "pending_credentials",
+    "mappedContracts": ["Product", "Lead", "Quote", "Order", "Customer", "Payment"],
+    "writesBlocked": true
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "sourceMode": "repo_discovered",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": true,
+  "auditId": "audit-sample-flows-v13",
+  "warnings": [],
+  "data": {
+    "availableFlows": [
+      "b2b_lead_flow",
+      "quote_follow_up_flow",
+      "order_attention_flow",
+      "manual_payment_review_flow",
+      "product_quality_flow",
+      "customer_follow_up_flow",
+      "fulfillment_review_flow"
+    ],
+    "summary": {
+      "flowsWithData": ["b2b_lead_flow", "quote_follow_up_flow", "manual_payment_review_flow"],
+      "flowsMissingData": ["customer_follow_up_flow"]
+    },
+    "draftSendingDisabled": true
+  }
+}

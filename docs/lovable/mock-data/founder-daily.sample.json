@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "sourceMode": "repo_discovered",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-founder-daily-v13",
+  "warnings": ["Supabase real_read_only requires URL and anon key."],
+  "data": {
+    "headline": "CornerOps is ready for founder operations through Telegram and backend reads.",
+    "urgentActions": [
+      "Review pending manual payments.",
+      "Follow up warm B2B leads.",
+      "Confirm Supabase read-only credentials before showing live marketplace records."
+    ],
+    "blocked": ["whatsapp_sends", "external_emails", "production_writes"]
+  }
+}
