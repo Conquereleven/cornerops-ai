@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "sourceMode": "local_internal",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": true,
+  "auditId": "audit-sample-approvals-v13",
+  "warnings": [],
+  "data": {
+    "pendingCount": 2,
+    "pending": [
+      {
+        "id": "approval-sample-task-bank-transfer",
+        "actionType": "create_internal_task",
+        "status": "pending",
+        "risk": "medium",
+        "externalSend": false
+      },
+      {
+        "id": "approval-sample-draft-follow-up",
+        "actionType": "draft_follow_up",
+        "status": "pending",
+        "risk": "low",
+        "externalSend": false
+      }
+    ]
+  }
+}

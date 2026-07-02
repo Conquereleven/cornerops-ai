@@ -34,6 +34,7 @@
     "demo:telegram-operator": "node scripts/demo-telegram-operator.js",
     "demo:telegram-founder-webhook": "node scripts/demo-telegram-founder-webhook.js",
     "demo:telegram-founder-real-reply": "node scripts/demo-telegram-founder-real-reply.js",
+    "demo:control-tower-frontend-contract": "node scripts/demo-control-tower-frontend-contract.js",
     "demo:cornermex-flows": "node scripts/demo-cornermex-flows.js",
     "demo:message-drafts": "node scripts/demo-message-drafts.js",
     "demo:v1.2": "node scripts/demo-v1.2.js",

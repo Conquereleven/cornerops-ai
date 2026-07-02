@@ -7,7 +7,29 @@ const {
   controlTowerV10ReportService,
   controlTowerV11ReportService,
 } = require('../core/control-tower');
+const actions = require('../core/actions');
+const data = require('../core/data');
+const { CornerMexFlowEngine } = require('../core/flows/cornermex');
+const { CornerMexMessageDraftService } = require('../core/drafts');
 const operatorChannel = require('../core/operator-channel');
+const { ControlTowerFrontendContract } = require('../api/contracts/controlTowerFrontendContract');
+
+const controlTowerFrontendFlowEngine = new CornerMexFlowEngine({
+  auditLogService: data.auditLogService,
+  connector: data.lovableCornerMexConnector,
+});
+const controlTowerFrontendDraftService = new CornerMexMessageDraftService({
+  auditLogService: data.auditLogService,
+});
+
+const controlTowerFrontendContract = new ControlTowerFrontendContract({
+  approvalCenterService,
+  auditViewerService,
+  controlTowerReportService: controlTowerV11ReportService,
+  controlledActionExecutor: actions.controlledActionExecutor,
+  flowEngine: controlTowerFrontendFlowEngine,
+  messageDraftService: controlTowerFrontendDraftService,
+});
 
 const status = async (req, res, next) => {
   try {
@@ -88,6 +110,22 @@ const v10 = async (_req, res, next) => {
 const v11 = async (_req, res, next) => {
   try {
     return res.json(await controlTowerV11ReportService.getReport());
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const frontendAll = async (_req, res, next) => {
+  try {
+    return res.json(await controlTowerFrontendContract.getAllSections());
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const frontendSection = (sectionName) => async (_req, res, next) => {
+  try {
+    return res.json(await controlTowerFrontendContract.getSection(sectionName));
   } catch (error) {
     return next(error);
   }
@@ -186,6 +224,17 @@ module.exports = {
   dataContracts,
   dataSourcesV08: section('dataSources'),
   firstRealSourceV08: section('firstRealSource'),
+  frontendActions: frontendSection('actions'),
+  frontendAll,
+  frontendApprovals: frontendSection('approvals'),
+  frontendAudit: frontendSection('audit'),
+  frontendCornerMex: frontendSection('cornermex'),
+  frontendDrafts: frontendSection('drafts'),
+  frontendFlows: frontendSection('flows'),
+  frontendFounderDaily: frontendSection('founder-daily'),
+  frontendSecurity: frontendSection('security'),
+  frontendStatus: frontendSection('status'),
+  frontendTelegram: frontendSection('telegram'),
   rateLimits,
   rejections,
   rejectDryRun: approvalDecision('reject'),

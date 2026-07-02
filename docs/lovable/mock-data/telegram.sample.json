@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "sourceMode": "local_internal",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-telegram-v13",
+  "warnings": [],
+  "data": {
+    "mode": "polling",
+    "founderOnly": true,
+    "realReplyAllowed": true,
+    "allowedUsersCount": 1,
+    "allowedChatsCount": 1,
+    "groupsRejected": true,
+    "noProactiveMessages": true
+  }
+}

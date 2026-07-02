@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "sourceMode": "local_internal",
+  "readOnly": true,
+  "dryRun": true,
+  "writesBlocked": true,
+  "externalSendsBlocked": true,
+  "approvalRequired": false,
+  "auditId": "audit-sample-security-v13",
+  "warnings": [],
+  "data": {
+    "noSecretsExposed": true,
+    "highRiskCapabilitiesDisabled": true,
+    "telegramAllowlistRequired": true,
+    "supabaseReadOnlyStatus": "pending_credentials",
+    "openclawStatus": "disabled_or_pending"
+  }
+}

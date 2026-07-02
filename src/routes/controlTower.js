@@ -41,5 +41,17 @@ router.use('/v1.1', createWebConsoleGuard());
 router.get('/v1.1/status', controller.v11);
 router.get('/v1.1/approvals', controller.approvalList);
 router.get('/v1.1/audit-summary', controller.auditEvents);
+router.use('/frontend/v1', createWebConsoleGuard());
+router.get('/frontend/v1', controller.frontendAll);
+router.get('/frontend/v1/status', controller.frontendStatus);
+router.get('/frontend/v1/founder-daily', controller.frontendFounderDaily);
+router.get('/frontend/v1/cornermex', controller.frontendCornerMex);
+router.get('/frontend/v1/flows', controller.frontendFlows);
+router.get('/frontend/v1/approvals', controller.frontendApprovals);
+router.get('/frontend/v1/audit', controller.frontendAudit);
+router.get('/frontend/v1/security', controller.frontendSecurity);
+router.get('/frontend/v1/telegram', controller.frontendTelegram);
+router.get('/frontend/v1/drafts', controller.frontendDrafts);
+router.get('/frontend/v1/actions', controller.frontendActions);
 
 module.exports = router;
