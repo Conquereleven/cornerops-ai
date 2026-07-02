@@ -15,10 +15,10 @@ Branch: `feature/lovable-control-tower-ui-build-v1.3.1`
 - Existing CornerMex marketplace project modified: no
 
 ## Build Status
-Lovable project creation succeeded, but the initial build was still in progress during verification:
+Lovable project creation succeeded and the initial build completed:
 
-- `status`: `building`
-- `agentFinished`: `false`
+- `status`: `ready`
+- `agentFinished`: `true`
 
 ## Mock Data
 Mock data from `docs/lovable/mock-data` was supplied in the Lovable build prompt. The project must stay in mock mode until backend API configuration is explicitly added later.
@@ -34,7 +34,7 @@ Mock data from `docs/lovable/mock-data` was supplied in the Lovable build prompt
 - Telegram
 - Settings
 
-View-by-view visual acceptance is pending until Lovable reports `ready`.
+View-by-view visual acceptance should now be completed inside Lovable while mock mode remains enabled.
 
 ## Safety
 - No secrets committed.
@@ -47,7 +47,6 @@ View-by-view visual acceptance is pending until Lovable reports `ready`.
 
 ## Founder Next Steps
 1. Open `https://lovable.dev/projects/de6bc54c-b2d7-4527-b464-adf97760ec25`.
-2. Wait for Lovable to finish the initial build.
-3. Confirm the nine views render.
-4. Keep mock mode enabled.
-5. Do not add Telegram, Supabase, GitHub or service role secrets in Lovable.
+2. Confirm the nine views render.
+3. Keep mock mode enabled.
+4. Do not add Telegram, Supabase, GitHub or service role secrets in Lovable.

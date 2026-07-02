@@ -47,17 +47,16 @@ The build was initiated from the v1.3 frontend pack:
 - Existing CornerMex Lovable marketplace was not modified.
 
 ## Verification
-At repo verification time, Lovable still reported:
+Lovable project creation and initial build completed.
 
-- `status`: `building`
-- `agentFinished`: `false`
+- `status`: `ready`
+- `agentFinished`: `true`
 
-Because the Lovable build had not yet reached `ready`, visual QA and view-by-view verification remain pending inside Lovable.
+The project is available in Lovable at the URL above. View-by-view visual acceptance should be completed inside Lovable before connecting a real backend.
 
 ## Next Steps
 1. Open the Lovable project URL.
-2. Wait for the initial agent build to finish.
-3. Verify all views render and navigation works.
-4. Keep mock mode enabled.
-5. Do not add secrets in Lovable.
-6. Later, connect the API adapter to the protected CornerOps backend endpoint.
+2. Verify all views render and navigation works.
+3. Keep mock mode enabled.
+4. Do not add secrets in Lovable.
+5. Later, connect the API adapter to the protected CornerOps backend endpoint.
