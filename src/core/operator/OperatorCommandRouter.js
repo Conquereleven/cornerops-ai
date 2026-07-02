@@ -47,7 +47,7 @@ class OperatorCommandRouter {
 
   classify(textValue) {
     const text = normalizeText(textValue);
-    if (!text || hasAny(text, ['help', 'ayuda', 'commands', 'comandos', 'what can you do'])) {
+    if (!text || ['help', 'ayuda', 'commands', 'comandos'].includes(text) || hasAny(text, ['what can you do'])) {
       return { intent: OPERATOR_INTENTS.HELP };
     }
     const approvalId = text.match(/approval-[a-z0-9-]+/i)?.[0];
@@ -79,10 +79,10 @@ class OperatorCommandRouter {
     ) {
       return { intent: OPERATOR_INTENTS.FORBIDDEN_WRITE };
     }
-    if (hasAny(text, ['pending approvals', 'aprobaciones pendientes', 'show approvals', 'muestra aprobaciones'])) {
+    if (['approvals'].includes(text) || hasAny(text, ['pending approvals', 'aprobaciones pendientes', 'show approvals', 'muestra aprobaciones'])) {
       return { intent: OPERATOR_INTENTS.PENDING_APPROVALS };
     }
-    if (hasAny(text, ['audit summary', 'audit events', 'audit logs', 'audit errors', 'denied actions', 'errores de audit', 'eventos de auditoria', 'acciones rechazadas'])) {
+    if (['audit'].includes(text) || hasAny(text, ['audit summary', 'audit events', 'audit logs', 'audit errors', 'denied actions', 'errores de audit', 'eventos de auditoria', 'acciones rechazadas'])) {
       return {
         intent: OPERATOR_INTENTS.AUDIT_SUMMARY,
         filter: hasAny(text, ['denied', 'rechazad']) ? 'denied'
@@ -92,46 +92,47 @@ class OperatorCommandRouter {
     if (hasAny(text, ['cornermex status', 'lovable connector status'])) {
       return { intent: OPERATOR_INTENTS.CORNERMEX_STATUS };
     }
-    if (hasAny(text, ['supabase status'])) {
+    if (hasAny(text, ['supabase status', 'supabase read-only status'])) {
       return { intent: OPERATOR_INTENTS.SUPABASE_STATUS };
     }
     if (hasAny(text, ['github status'])) {
       return { intent: OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY };
     }
-    if (hasAny(text, ['flows status'])) {
+    if (hasAny(text, ['flows status', 'flow engine status', 'cornermex flows'])) {
       return { intent: OPERATOR_INTENTS.FLOWS_STATUS };
     }
-    if (hasAny(text, ['controlled actions'])) {
+    if (['actions'].includes(text) || hasAny(text, ['controlled actions'])) {
       return { intent: OPERATOR_INTENTS.CONTROLLED_ACTIONS_STATUS };
     }
     if (
       ['status', 'estado'].includes(text)
+      || ['control'].includes(text)
       || hasAny(text, ['control tower', 'system health', 'estado del sistema', 'show system', 'status del sistema'])
     ) {
       return { intent: OPERATOR_INTENTS.CONTROL_TOWER_STATUS };
     }
-    if (hasAny(text, ['data health', 'salud de datos', 'data sources', 'fuentes de datos'])) {
+    if (['health'].includes(text) || hasAny(text, ['data health', 'salud de datos', 'data sources', 'fuentes de datos'])) {
       return { intent: OPERATOR_INTENTS.DATA_HEALTH };
     }
     if (hasAny(text, ['context health', 'salud del contexto'])) {
       return { intent: OPERATOR_INTENTS.CONTEXT_HEALTH };
     }
-    if (hasAny(text, ['security', 'seguridad', 'riesgos', 'risk review'])) {
+    if (hasAny(text, ['security summary', 'security', 'seguridad', 'riesgos', 'risk review'])) {
       return { intent: OPERATOR_INTENTS.SECURITY_AUDIT_SUMMARY };
     }
     if (hasAny(text, ['github', 'codex', 'pull request', 'workflow', 'ci issues'])) {
       return { intent: OPERATOR_INTENTS.GITHUB_ENGINEERING_SUMMARY };
     }
-    if (hasAny(text, ['product issues', 'products need fixes', 'productos con problemas'])) {
+    if (hasAny(text, ['product issues', 'products need fixes', 'products require fixes', 'productos con problemas'])) {
       return { intent: OPERATOR_INTENTS.PRODUCT_ISSUES };
     }
     if (hasAny(text, ['manual payment', 'pagos manuales', 'bank transfer', 'cod review', 'payments require review', 'payment review'])) {
       return { intent: OPERATOR_INTENTS.MANUAL_PAYMENTS_REVIEW };
     }
-    if (hasAny(text, ['quotes', 'quote ', 'cotizaciones', 'cotizacion'])) {
+    if (hasAny(text, ['quotes needing follow-up', 'quotes need follow-up', 'quotes without follow-up', 'quotes', 'quote ', 'cotizaciones', 'cotizacion'])) {
       return { intent: OPERATOR_INTENTS.QUOTES_REVIEW };
     }
-    if (hasAny(text, ['orders', 'ordenes', 'pedidos', 'order review', 'orders need attention'])) {
+    if (hasAny(text, ['orders needing attention', 'orders need attention', 'orders require action', 'orders', 'ordenes', 'pedidos', 'order review'])) {
       return { intent: OPERATOR_INTENTS.ORDERS_REVIEW };
     }
     if (
@@ -140,7 +141,10 @@ class OperatorCommandRouter {
     ) {
       return { intent: OPERATOR_INTENTS.B2B_MESSAGE_DRAFT };
     }
-    if (hasAny(text, ['b2b', 'leads', 'prospectos']) && hasAny(text, ['follow', 'seguimiento', 'pending', 'pendientes', 'warm'])) {
+    if (
+      hasAny(text, ['b2b leads', 'warm leads', 'leads b2b'])
+      || (hasAny(text, ['b2b', 'leads', 'prospectos']) && hasAny(text, ['follow', 'seguimiento', 'pending', 'pendientes', 'warm']))
+    ) {
       return { intent: OPERATOR_INTENTS.B2B_LEADS_FOLLOWUP };
     }
     if (hasAny(text, ['briefing', 'resumen de hoy', "today's briefing", 'daily summary', 'founder daily'])) {
@@ -654,11 +658,11 @@ class OperatorCommandRouter {
 
   async help(prefix = '') {
     const report = await this.getControlTowerReport();
-    const enabled = (report.realSourcesEnabled || []).map((source) => source.id);
-    const disabled = (report.disabledExternalSources || []).map((source) => source.id);
     const businessMode = report.businessData?.mode || report.mode || 'mock';
     const writesBlocked = report.security?.writesBlocked ?? report.safety?.writesBlocked ?? true;
     const externalSendsBlocked = report.security?.externalSendsBlocked ?? report.safety?.externalSendsBlocked ?? true;
+    const readOnly = this.config.readOnly !== false;
+    const dryRun = this.config.dryRun !== false;
     return {
       agentId: 'cornerops-router-agent',
       status: 'success',
@@ -668,23 +672,45 @@ class OperatorCommandRouter {
       warnings: prefix ? [prefix] : [],
       answerText: [
         prefix,
-        'Available commands: ask, briefing, control, health, actions, approvals, audit, help.',
-        'Examples:',
-        '- Give me today\'s briefing.',
-        '- Which B2B leads need follow-up?',
-        '- Prepare a follow-up draft for restaurants interested in Tajin and Pulparindo.',
-        '- Which quotes need follow-up?',
-        '- Which orders require action?',
-        '- Review GitHub issues and suggest what Codex should do next.',
-        '- Show me security risks.',
-        `Current mode: ${businessMode}; operator dry-run/read-only.`,
-        `Enabled real sources: ${enabled.length ? enabled.join(', ') : 'none'}.`,
-        `Disabled sources: ${disabled.join(', ')}.`,
+        'CornerOps Founder Commands',
+        '',
+        'Core:',
+        '- help',
+        '- status',
+        '- health',
+        '- founder daily',
+        '- briefing',
+        '- control tower',
+        '',
+        'CornerMex:',
+        '- cornermex status',
+        '- flows status',
+        '- orders needing attention',
+        '- quotes needing follow-up',
+        '- b2b leads',
+        '- payment review',
+        '- product issues',
+        '',
+        'Drafts:',
+        '- draft whatsapp follow-up: <text>',
+        '- draft email follow-up: <text>',
+        '',
+        'Ops:',
+        '- pending approvals',
+        '- actions',
+        '- approvals',
+        '- audit summary',
+        '- security summary',
+        '',
+        'Natural language:',
+        '- ask <question>',
+        '',
+        `Current source mode: ${businessMode}.`,
+        `Operator safety: readOnly=${readOnly}, dryRun=${dryRun}.`,
         `Safety: writesBlocked=${writesBlocked}, externalSendsBlocked=${externalSendsBlocked}.`,
-        'Blocked: production writes, external sends, crawler syncs, native host tools, ClawHub execution and deploys.',
-        'Demos: npm run demo:interactive-beta, npm run demo:beta, npm run demo:control-tower.',
-        'Read-only onboarding: docs/runbooks/business-data-read-only-onboarding.md.',
-        'Operator docs: docs/operator/quickstart-v0.5.md.',
+        'Drafts are local only: WhatsApp and email are not sent.',
+        'Operator docs: docs/operator/telegram-founder-real-reply-v1.2.2.md.',
+        'Local activation docs: docs/operator/telegram-founder-local-activation-v1.2.2.md.',
       ].filter(Boolean).join('\n'),
     };
   }
