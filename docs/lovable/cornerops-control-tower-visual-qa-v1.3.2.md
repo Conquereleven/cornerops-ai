@@ -14,7 +14,7 @@ Lovable returned a generated screenshot:
 
 `https://screenshot2.lovable.dev/ffed2c39-69cb-4eb2-8f8c-82dacad83fad/id-preview-b36d207b--de6bc54c-b2d7-4527-b464-adf97760ec25.lovable.app-1783036668661.png`
 
-The screenshot was downloaded locally for visual inspection.
+The screenshot was downloaded locally for visual inspection. The Lovable editor was also opened in Chrome with the authenticated user session, and the project preview iframe was inspected. Navigation was verified by clicking every sidebar view in the preview.
 
 ## Verified From Screenshot
 - Dark-mode internal cockpit shell exists.
@@ -54,20 +54,20 @@ The screenshot was downloaded locally for visual inspection.
 ## View QA Status
 | View | Status | Evidence |
 | --- | --- | --- |
-| Dashboard | verified | Rendered in Lovable screenshot |
-| CornerMex Ops | present in nav, not opened | Sidebar evidence only |
-| Flow Engine | present in nav, not opened | Sidebar evidence only |
-| Drafts | present in nav, not opened | Sidebar evidence only |
-| Approvals | present in nav, not opened | Sidebar evidence only |
-| Audit Log | present in nav, not opened | Sidebar evidence only |
-| Security | present in nav, not opened | Sidebar evidence only |
-| Telegram | present in nav, not opened | Sidebar evidence only |
-| Settings | present in nav, not opened | Sidebar evidence only |
+| Dashboard | verified | Renders Founder cockpit, daily summary, Telegram, CornerMex source, safety envelope and disabled dangerous actions |
+| CornerMex Ops | verified | Renders B2B leads, quotes, orders, payment review, product issues and source/read-only/audit labels |
+| Flow Engine | verified | Renders all seven flows, flows with data, missing data, draft sending disabled and approval required state |
+| Drafts | verified | Renders five draft types, `not sendable in current version`, five `Send (disabled)` controls and external sends warning |
+| Approvals | verified | Renders pending/approved/rejected/dry-run tabs, controlled action types, approval required and approve/reject mock controls |
+| Audit Log | verified | Renders audit ID, timestamp, source, action, status, risk, result and filter labels |
+| Security | verified | Renders write/send/channel/Supabase/Lovable/GitHub/OpenClaw disabled states, allowlist and PII masking |
+| Telegram | verified | Renders polling, founder-only, real reply status, allowlist, rejected attempts, rate limit and proactive messages disabled |
+| Settings | verified | Renders API placeholder, section endpoints, mock/source/read-only modes, environment checklist and no-secrets policy |
 
 ## API Adapter QA
-The v1.3 backend contract exists in `main` and the Lovable build was initiated with the API adapter placeholder requirement. Direct inspection of Lovable source files or runtime navigation was not available through the current Lovable connector.
+The v1.3 backend contract exists in `main`. The Lovable Settings view renders the API adapter placeholder and section endpoints. Mock mode remains active and no real backend URL is configured in the UI.
 
-Future adapter target remains:
+Visible adapter target:
 
 - `GET /api/control-tower/frontend/v1`
 - `/status`
@@ -82,11 +82,13 @@ Future adapter target remains:
 - `/actions`
 
 ## Safety QA
-Verified from screenshot and project prompt:
+Verified from screenshot and preview navigation:
 
 - Mock mode remains active.
 - No production backend connection is visible.
-- No secret fields are visible on Dashboard.
+- Settings states: `No secrets are stored or requested here.`
+- Settings has a backend base URL placeholder and root path only; no Telegram, Supabase, GitHub or service-role secret fields were found.
+- No actual secret-like values were detected in the inspected view text.
 - WhatsApp sends are shown blocked.
 - Email sends are shown blocked.
 - Customer channels are shown disabled.
@@ -95,30 +97,27 @@ Verified from screenshot and project prompt:
 - Supabase writes are shown blocked.
 - Lovable mutations are shown blocked.
 - GitHub writes are shown blocked.
+- Drafts show five `Send (disabled)` controls.
+- Approvals show risky actions require founder approval and external sends stay disabled.
 
 ## Tooling Limitation
-The current Lovable connector exposes project creation, project status, project URL, and generated screenshot. It does not expose:
+The Lovable connector exposes project status, project URL, and generated screenshot. Chrome browser inspection was used for preview navigation. Remaining limitations:
 
-- direct DOM inspection,
-- click/navigation automation,
 - code/source inspection,
-- project editing commands,
 - console logs.
 
 The public preview URL redirects through Lovable auth, so unauthenticated HTTP inspection cannot verify internal navigation.
 
 ## Improvements Made
-No in-Lovable UI edits were made in v1.3.2 because the available Lovable tools do not expose an edit operation. The current UI already satisfies the Dashboard-level visual posture from the screenshot: dark mode, compact operations layout, status pills, source labels, audit ID, and visible disabled dangerous actions.
+No in-Lovable UI edits were required after QA. The existing build already satisfied the requested founder cockpit posture: dark mode, compact operations layout, status pills, source labels, audit IDs, disabled dangerous actions, mock mode, read-only state, and all nine views rendering.
 
 ## Known Issues
-- View-by-view navigation QA remains pending inside Lovable.
-- API adapter source placeholder could not be inspected directly.
+- Lovable project source files could not be inspected directly through the current connector.
 - Responsive laptop-width QA beyond the generated 1920px screenshot remains pending.
 
 ## Next Steps
 1. Open the Lovable project in the browser.
-2. Click each sidebar view and confirm it renders.
-3. Confirm Drafts send controls are disabled.
-4. Confirm Settings contains no secret entry fields.
-5. Keep mock mode active.
-6. Do not connect the real backend until auth, HTTPS, token access, and CORS are configured.
+2. Keep mock mode active.
+3. Do not add secrets to Lovable.
+4. Before connecting the real backend, add auth, HTTPS, token-based backend access and CORS restrictions.
+5. Run a responsive QA pass on laptop/tablet widths.
