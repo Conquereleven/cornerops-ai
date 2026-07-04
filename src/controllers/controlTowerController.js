@@ -123,6 +123,18 @@ const frontendAll = async (_req, res, next) => {
   }
 };
 
+const frontendConnectionTest = async (req, res, next) => {
+  try {
+    return res.json(await controlTowerFrontendContract.getConnectionTest({
+      auditId: req.controlTowerFrontendAuth?.auditId,
+      authMode: req.controlTowerFrontendAuth?.authMode,
+      origin: req.get('origin') || '',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const frontendSection = (sectionName) => async (_req, res, next) => {
   try {
     return res.json(await controlTowerFrontendContract.getSection(sectionName));
@@ -226,6 +238,7 @@ module.exports = {
   firstRealSourceV08: section('firstRealSource'),
   frontendActions: frontendSection('actions'),
   frontendAll,
+  frontendConnectionTest,
   frontendApprovals: frontendSection('approvals'),
   frontendAudit: frontendSection('audit'),
   frontendCornerMex: frontendSection('cornermex'),

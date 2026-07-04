@@ -3,6 +3,10 @@ const controller = require('../controllers/controlTowerController');
 const env = require('../config/env');
 const internalAuth = require('../middleware/internalAuth');
 const { createWebConsoleGuard } = require('../middleware/webConsoleGuard');
+const { createControlTowerFrontendAuth } = require('../api/middleware/controlTowerFrontendAuth');
+const { createControlTowerFrontendCors } = require('../api/middleware/controlTowerFrontendCors');
+const { createControlTowerFrontendRateLimit } = require('../api/middleware/controlTowerFrontendRateLimit');
+const { createControlTowerFrontendSanitizer } = require('../api/middleware/controlTowerFrontendSanitizer');
 
 const router = express.Router();
 
@@ -41,8 +45,15 @@ router.use('/v1.1', createWebConsoleGuard());
 router.get('/v1.1/status', controller.v11);
 router.get('/v1.1/approvals', controller.approvalList);
 router.get('/v1.1/audit-summary', controller.auditEvents);
-router.use('/frontend/v1', createWebConsoleGuard());
+router.use(
+  '/frontend/v1',
+  createControlTowerFrontendCors(),
+  createControlTowerFrontendAuth(),
+  createControlTowerFrontendRateLimit(),
+  createControlTowerFrontendSanitizer(),
+);
 router.get('/frontend/v1', controller.frontendAll);
+router.get('/frontend/v1/connection-test', controller.frontendConnectionTest);
 router.get('/frontend/v1/status', controller.frontendStatus);
 router.get('/frontend/v1/founder-daily', controller.frontendFounderDaily);
 router.get('/frontend/v1/cornermex', controller.frontendCornerMex);
