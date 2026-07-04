@@ -74,7 +74,20 @@ Settings > Backend Bridge v1.3.3 result:
 Live Backend Connected - Read-Only Bridge Active.
 ```
 
-The raw operator token was used only for the session test and cleared afterward.
+Live SPA verification after the connection test:
+
+- Dashboard retained `source: live_backend`.
+- Telegram retained `source: live_backend`.
+- Security retained `source: live_backend`.
+- Flow Engine retained `source: live_backend`.
+- Drafts retained `source: live_backend`.
+- Source labels were visible.
+- Audit IDs were visible.
+- `writes blocked` was visible.
+- `external sends blocked` was visible.
+- Draft send buttons remained disabled.
+
+The raw operator token was used only for the session test and cleared afterward. Reloading without the session token falls back to mock mode, as expected.
 
 ## Current Mode
 
@@ -104,4 +117,3 @@ Use Lovable Settings:
 3. Mode: Live Read-Only.
 4. Click `Connection Test`.
 5. Confirm `Live Backend Connected - Read-Only Bridge Active.`
-

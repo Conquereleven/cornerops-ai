@@ -24,6 +24,27 @@ Live Backend Connected - Read-Only Bridge Active.
 
 The operator token was entered only in the browser session for the test and cleared after verification.
 
+## Live UI Verification
+
+After a successful connection test, the Lovable SPA was navigated through:
+
+- Dashboard
+- Telegram
+- Security
+- Flow Engine
+- Drafts
+
+Observed in the live session:
+
+- Top bar showed `source: live_backend`.
+- Top bar showed `Live Backend Connected`.
+- Top bar showed `Read-Only Bridge Active`.
+- Each checked view retained source labels.
+- Audit IDs were visible.
+- `writes blocked` remained visible.
+- `external sends blocked` remained visible.
+- Draft send buttons remained disabled.
+
 ## Current Data Mode
 
 The hosted backend currently reports `sourceMode=mock` because Railway is not configured with real CornerMex Supabase read-only credentials.
@@ -52,4 +73,3 @@ The Lovable frontend must not:
 - Send emails.
 - Mutate CornerMex, Supabase, GitHub, or Lovable marketplace data.
 - Execute OpenClaw actions.
-
