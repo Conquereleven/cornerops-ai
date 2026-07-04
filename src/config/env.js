@@ -433,6 +433,53 @@ const baseEnv = {
     process.env.CORNEROPS_WEB_CONSOLE_DRY_RUN === undefined
       ? true
       : parseBoolean(process.env.CORNEROPS_WEB_CONSOLE_DRY_RUN),
+  controlTowerFrontendApiEnabled: parseBoolean(process.env.CONTROL_TOWER_FRONTEND_API_ENABLED),
+  controlTowerFrontendAuthRequired:
+    process.env.CONTROL_TOWER_FRONTEND_AUTH_REQUIRED === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_AUTH_REQUIRED),
+  controlTowerFrontendAuthMode: parseEnum(
+    process.env.CONTROL_TOWER_FRONTEND_AUTH_MODE,
+    ['operator_token'],
+    'operator_token',
+  ),
+  controlTowerFrontendTokenHash: process.env.CONTROL_TOWER_FRONTEND_TOKEN_HASH || '',
+  controlTowerFrontendAllowedOrigins: parseCsv(process.env.CONTROL_TOWER_FRONTEND_ALLOWED_ORIGINS),
+  controlTowerFrontendAllowLocalhost:
+    process.env.CONTROL_TOWER_FRONTEND_ALLOW_LOCALHOST === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_ALLOW_LOCALHOST),
+  controlTowerFrontendReadOnly:
+    process.env.CONTROL_TOWER_FRONTEND_READ_ONLY === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_READ_ONLY),
+  controlTowerFrontendFailClosed:
+    process.env.CONTROL_TOWER_FRONTEND_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_FAIL_CLOSED),
+  controlTowerFrontendMaxPayloadKb: parseInteger(
+    process.env.CONTROL_TOWER_FRONTEND_MAX_PAYLOAD_KB,
+    256,
+    { min: 16, max: 1024 },
+  ),
+  controlTowerFrontendRequestTimeoutMs: parseInteger(
+    process.env.CONTROL_TOWER_FRONTEND_REQUEST_TIMEOUT_MS,
+    8000,
+    { min: 500, max: 60000 },
+  ),
+  controlTowerFrontendRateLimitPerMinute: parseInteger(
+    process.env.CONTROL_TOWER_FRONTEND_RATE_LIMIT_PER_MINUTE,
+    60,
+    { min: 1, max: 10000 },
+  ),
+  controlTowerFrontendAuditRequests:
+    process.env.CONTROL_TOWER_FRONTEND_AUDIT_REQUESTS === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_AUDIT_REQUESTS),
+  controlTowerFrontendMaskPii:
+    process.env.CONTROL_TOWER_FRONTEND_MASK_PII === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FRONTEND_MASK_PII),
   corneropsApprovalCenterEnabled:
     process.env.CORNEROPS_APPROVAL_CENTER_ENABLED === undefined
       ? true
@@ -1001,6 +1048,18 @@ const getEnvWarnings = () => {
     )
   ) {
     warnings.push('Web console is enabled without all local-only, auth, read-only and dry-run controls.');
+  }
+  if (
+    baseEnv.controlTowerFrontendApiEnabled
+    && (
+      !baseEnv.controlTowerFrontendReadOnly
+      || !baseEnv.controlTowerFrontendFailClosed
+      || !baseEnv.controlTowerFrontendMaskPii
+      || !baseEnv.controlTowerFrontendAuditRequests
+      || (baseEnv.controlTowerFrontendAuthRequired && !baseEnv.controlTowerFrontendTokenHash)
+    )
+  ) {
+    warnings.push('Control Tower frontend API bridge is enabled without full auth, read-only, fail-closed, audit and masking controls.');
   }
   if (
     baseEnv.corneropsApprovalCenterEnabled

@@ -21,6 +21,7 @@ const app = express();
 
 app.disable('x-powered-by');
 app.use((req, res, next) => {
+  if (req.path.startsWith('/api/control-tower/frontend/v1')) return next();
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',

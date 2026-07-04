@@ -61,6 +61,39 @@ class ControlTowerFrontendContract {
     };
   }
 
+  async getConnectionTest({ auditId, authMode = 'operator_token', origin = '' } = {}) {
+    const report = await this.safeReport();
+    return createFrontendEnvelope({
+      section: 'connection-test',
+      sourceMode: pickSourceMode(
+        report.cornerMexLovableConnector?.sourceMode,
+        report.realSourceExpansion?.sourceModeSummary,
+        'local_internal',
+      ),
+      auditId,
+      warnings: [
+        ...(report.safety?.warnings || []),
+        'Read-only bridge verified. Writes and external sends remain blocked.',
+      ],
+      data: {
+        status: 'ok',
+        backendTime: new Date().toISOString(),
+        apiVersion: CONTROL_TOWER_FRONTEND_VERSION,
+        authMode,
+        readOnly: true,
+        writesBlocked: true,
+        externalSendsBlocked: true,
+        sourceMode: pickSourceMode(
+          report.cornerMexLovableConnector?.sourceMode,
+          report.realSourceExpansion?.sourceModeSummary,
+          'local_internal',
+        ),
+        lovableOriginAllowed: Boolean(origin),
+        bridgeMode: 'read_only',
+      },
+    });
+  }
+
   async safeReport() {
     const fallback = {
       status: 'ready',
