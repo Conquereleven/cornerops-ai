@@ -32,6 +32,7 @@ describe('Railway hosted backend readiness v1.3.5', () => {
   test('railway.json uses npm start and health check endpoint', () => {
     const config = JSON.parse(fs.readFileSync(path.join(root, 'railway.json'), 'utf8'));
     expect(config.build.builder).toBe('NIXPACKS');
+    expect(config.build.buildCommand).toContain('Skipping frontend build');
     expect(config.deploy.startCommand).toBe('npm start');
     expect(config.deploy.healthcheckPath).toBe('/api/health');
   });
