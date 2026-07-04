@@ -9,3 +9,4 @@ npm-debug.log*
 .cornerops/state/
 .cornerops/reports/
 .cornerops/backups/
+.cornerops/local-secrets/
