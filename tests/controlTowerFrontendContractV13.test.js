@@ -96,6 +96,17 @@ const createContract = () => new ControlTowerFrontendContract({
 describe('Control Tower Frontend Contract v1.3', () => {
   test('returns all frontend sections with safe envelopes', async () => {
     const payload = await createContract().getAllSections();
+    expect(payload).toMatchObject({
+      status: 'success',
+      readOnly: true,
+      dryRun: true,
+      writesBlocked: true,
+      externalSendsBlocked: true,
+      approvalRequired: true,
+    });
+    expect(payload.sourceMode).toBeTruthy();
+    expect(payload.auditId).toBeTruthy();
+    expect(payload.data.bridgeMode).toBe('read_only');
     expect(Object.keys(payload.sections).sort()).toEqual([...CONTROL_TOWER_FRONTEND_SECTIONS].sort());
     for (const section of Object.values(payload.sections)) {
       expect(section).toMatchObject({
