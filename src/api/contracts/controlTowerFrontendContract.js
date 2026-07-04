@@ -54,10 +54,29 @@ class ControlTowerFrontendContract {
     const entries = await Promise.all(
       CONTROL_TOWER_FRONTEND_SECTIONS.map(async (section) => [section, await this.getSection(section)]),
     );
+    const sections = Object.fromEntries(entries);
+    const sectionValues = Object.values(sections);
+    const rootEnvelope = createFrontendEnvelope({
+      section: 'all',
+      sourceMode: pickSourceMode(
+        sections.status?.sourceMode,
+        sections.cornermex?.sourceMode,
+        sections.flows?.sourceMode,
+        'local_internal',
+      ),
+      approvalRequired: sectionValues.some((section) => section.approvalRequired === true),
+      warnings: sectionValues.flatMap((section) => section.warnings || []),
+      data: {
+        sectionCount: CONTROL_TOWER_FRONTEND_SECTIONS.length,
+        sections: CONTROL_TOWER_FRONTEND_SECTIONS,
+        bridgeMode: 'read_only',
+      },
+    });
     return {
+      ...rootEnvelope,
       version: CONTROL_TOWER_FRONTEND_VERSION,
       generatedAt: new Date().toISOString(),
-      sections: Object.fromEntries(entries),
+      sections,
     };
   }
 
