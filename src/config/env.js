@@ -31,7 +31,7 @@ const parseCsv = (value) =>
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
-  bindHost: process.env.CORNEROPS_BIND_HOST || '127.0.0.1',
+  bindHost: process.env.CORNEROPS_BIND_HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'),
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   frontendOrigin:
