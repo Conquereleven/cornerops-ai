@@ -4,7 +4,7 @@ const lower = (value) => String(value || '').toLowerCase();
 const includesAny = (value, terms) => terms.some((term) => lower(value).includes(term));
 
 class CornerMexFlowAnalyzer {
-  analyze({ collections = {}, sourceMode = 'mock', status = {} } = {}) {
+  analyze({ collections = {}, dataSource = 'mock_fallback', sourceMode = 'mock', status = {}, tableAvailability = {} } = {}) {
     const leads = collections.leads?.data || [];
     const quotes = collections.quotes?.data || [];
     const orders = collections.orders?.data || [];
@@ -34,6 +34,11 @@ class CornerMexFlowAnalyzer {
 
     return {
       sourceMode,
+      dataSource,
+      tableAvailability,
+      supabaseStatus: status.supabaseStatus || 'not_configured',
+      maskingApplied: status.maskingApplied !== false,
+      lastReadAt: status.lastReadAt || null,
       flows,
       summary: {
         totalFlows: flows.length,

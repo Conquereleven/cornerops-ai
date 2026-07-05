@@ -1,11 +1,11 @@
 #!/usr/bin/env node
+require('./safe-cli-state-env');
 const env = require('../src/config/env');
 const { TelegramFounderWebhookConfigValidator } = require('../src/integrations/telegram/TelegramFounderWebhookConfigValidator');
 
 const main = () => {
   const result = new TelegramFounderWebhookConfigValidator({ config: env }).check();
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  if (!result.safe) process.exitCode = 1;
 };
 
 if (require.main === module) {

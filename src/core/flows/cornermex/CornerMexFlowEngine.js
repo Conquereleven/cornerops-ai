@@ -28,10 +28,19 @@ class CornerMexFlowEngine {
       .map((result) => result.meta?.source)
       .filter(Boolean);
     const sourceMode = this.combineModes(sourceModes, status.sourceMode);
+    const metas = [products, leads, quotes, orders, customers].map((result) => result.meta || {});
+    const dataSource = this.combineModes(metas.map((meta) => meta.dataSource).filter(Boolean), status.dataSource || 'mock_fallback');
+    const tableAvailability = Object.assign(
+      {},
+      status.tableAvailability || {},
+      ...metas.map((meta) => meta.tableAvailability || {}),
+    );
     const analysis = this.analyzer.analyze({
       collections: { products, leads, quotes, orders, customers },
+      dataSource,
       sourceMode,
       status,
+      tableAvailability,
     });
     const selectedFlows = flowIds?.length
       ? analysis.flows.filter((flow) => flowIds.includes(flow.id))
@@ -47,6 +56,7 @@ class CornerMexFlowEngine {
       status: 'success',
       input: {
         sourceMode,
+        dataSource,
         flowCount: selectedFlows.length,
         writesBlocked: true,
       },
@@ -56,6 +66,11 @@ class CornerMexFlowEngine {
       flows: selectedFlows,
       availableFlows: this.registry.list().map((flow) => flow.id),
       auditId: audit?.id,
+      dataSource,
+      supabaseStatus: status.supabaseStatus || metas.find((meta) => meta.supabaseStatus)?.supabaseStatus || 'not_configured',
+      tableAvailability,
+      maskingApplied: metas.every((meta) => meta.maskingApplied !== false),
+      lastReadAt: status.lastReadAt || metas.find((meta) => meta.lastReadAt)?.lastReadAt || null,
       readOnly: true,
       writesBlocked: true,
       externalSendsBlocked: true,

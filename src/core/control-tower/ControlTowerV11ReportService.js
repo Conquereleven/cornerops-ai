@@ -92,7 +92,20 @@ class ControlTowerV11ReportService {
         mappedContractConfidence: cornerMexLovableConnector.contractConfidence,
         rlsEvidenceStatus: cornerMexLovableConnector.schemaDiscovery?.rlsPoliciesDiscovered?.length ? 'present_in_repo_migrations' : 'not_found',
         piiCandidateFields: cornerMexLovableConnector.schemaDiscovery?.piiCandidateFields || [],
-        supabaseRealReadOnlyReadiness: cornerMexLovableConnector.sourceMode === 'real_read_only' ? 'ready' : 'pending_credentials',
+        dataSource: cornerMexLovableConnector.dataSource || 'mock_fallback',
+        supabaseStatus: cornerMexLovableConnector.supabaseStatus || 'not_configured',
+        tableAvailability: cornerMexLovableConnector.tableAvailability || {},
+        rowCounts: cornerMexLovableConnector.rowCounts || {},
+        maskingApplied: cornerMexLovableConnector.maskingApplied !== false,
+        lastReadAt: cornerMexLovableConnector.lastReadAt || null,
+        auditId: cornerMexLovableConnector.auditId || null,
+        supabaseRealReadOnlyReadiness: cornerMexLovableConnector.sourceMode === 'real_read_only'
+          ? 'ready'
+          : cornerMexLovableConnector.sourceMode === 'real_read_only_partial'
+            ? 'partial'
+            : cornerMexLovableConnector.supabaseStatus === 'blocked'
+              ? 'blocked_unsafe_config'
+              : 'pending_credentials',
         discoveredWriteRiskPaths: cornerMexConfigIntake?.repoDiscovery?.writeRiskPaths || [],
         missingFounderConfig: cornerMexConfigIntake?.missing || [],
         exactNextRecommendedAction: cornerMexLovableConnector.schemaDiscovery?.status === 'schema_discovered'
@@ -248,11 +261,25 @@ class ControlTowerV11ReportService {
       version: 'v1.2',
       enabled: true,
       sourceMode,
+      dataSource: connector?.dataSource || (sourceMode === 'real_read_only' || sourceMode === 'real_read_only_partial'
+        ? 'cornermex_supabase'
+        : sourceMode === 'repo_discovered' ? 'lovable_repo_discovery' : 'mock_fallback'),
+      supabaseStatus: connector?.supabaseStatus || 'not_configured',
+      tableAvailability: connector?.tableAvailability || {},
+      maskingApplied: connector?.maskingApplied !== false,
+      lastReadAt: connector?.lastReadAt || null,
+      auditId: connector?.auditId || null,
       availableFlows,
       flowsWithEnoughData: sourceMode === SOURCE_MODES.MOCK || sourceMode === 'repo_discovered'
         ? ['b2b_lead_flow', 'quote_follow_up_flow', 'order_attention_flow', 'manual_payment_review_flow']
         : availableFlows,
-      flowsMissingData: sourceMode === 'real_read_only' ? [] : ['customer_follow_up_flow'],
+      flowsMissingData: sourceMode === 'real_read_only'
+        ? []
+        : sourceMode === 'real_read_only_partial'
+          ? Object.entries(connector?.tableAvailability || {})
+            .filter(([, availability]) => !['available', 'available_empty', 'available_masked'].includes(availability))
+            .map(([entity]) => `${entity}_flow_data`)
+          : ['customer_follow_up_flow'],
       mappedContracts: mapped.map((contract) => ({
         entity: contract.entity,
         confidence: contract.confidence,

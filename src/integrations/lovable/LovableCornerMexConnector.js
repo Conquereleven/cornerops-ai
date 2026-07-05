@@ -9,14 +9,17 @@ const readJson = (relativePath) =>
 const maskPii = (item) => {
   if (!item || typeof item !== 'object') return item;
   const copy = { ...item };
-  ['name', 'contactName'].forEach((key) => {
+  ['name', 'contactName', 'contact_name', 'customerName', 'customer_name'].forEach((key) => {
     if (copy[key]) copy[key] = `${String(copy[key]).slice(0, 1)}***`;
   });
   ['email'].forEach((key) => {
     if (copy[key]) copy[key] = 'masked@example.test';
   });
-  ['phone', 'whatsapp'].forEach((key) => {
+  ['phone', 'whatsapp', 'mobile', 'contactPhone', 'contact_phone'].forEach((key) => {
     if (copy[key]) copy[key] = String(copy[key]).replace(/\d(?=\d{2})/g, '*');
+  });
+  ['address', 'shippingAddress', 'shipping_address', 'deliveryAddress', 'delivery_address'].forEach((key) => {
+    if (copy[key]) copy[key] = '[masked-address]';
   });
   return copy;
 };
@@ -53,16 +56,24 @@ class LovableCornerMexConnector {
     if (this.config.supabaseAllowWrites || !this.config.supabaseReadOnly || !this.config.supabaseBlockMutations || !this.config.supabaseServiceRoleKeyBlocked) {
       return LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG;
     }
-    if (this.config.supabaseConfigured && this.config.supabaseReadOnly && !this.config.supabaseAllowWrites) {
-      return LOVABLE_SOURCE_MODES.REAL_READ_ONLY;
-    }
     if (this.config.lovableRepoConfigured) return LOVABLE_SOURCE_MODES.REPO_DISCOVERED;
+    if (this.config.supabaseConfigured) return LOVABLE_SOURCE_MODES.REPO_DISCOVERED;
     return LOVABLE_SOURCE_MODES.MOCK;
   }
 
   async getConnectorStatus(context = {}) {
     const discovery = await this.discoveryService.discover();
-    const sourceMode = this.getSourceMode(discovery);
+    const supabaseReadOnlyStatus = this.supabaseReadOnlyActivationService?.getStatus
+      ? await this.supabaseReadOnlyActivationService.getStatus(context)
+      : null;
+    const discoveredSourceMode = this.getSourceMode(discovery);
+    const sourceMode = [
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY,
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL,
+      LOVABLE_SOURCE_MODES.BLOCKED_UNSAFE_CONFIG,
+    ].includes(supabaseReadOnlyStatus?.mode)
+      ? supabaseReadOnlyStatus.mode
+      : discoveredSourceMode;
     const schemaEvidence = discovery.supabase?.migrationDiscovery?.schemaEvidence || [];
     const contractSourceMode = sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED && schemaEvidence.length
       ? LOVABLE_SOURCE_MODES.SCHEMA_DISCOVERED
@@ -95,9 +106,18 @@ class LovableCornerMexConnector {
       projectConfigured: discovery.project.configured,
       githubRepoConfigured: discovery.repo.configured,
       supabaseConfigured: discovery.supabase.configured,
-      supabaseReadOnlyStatus: this.supabaseReadOnlyActivationService?.getStatus
-        ? await this.supabaseReadOnlyActivationService.getStatus(context)
-        : null,
+      dataSource: [LOVABLE_SOURCE_MODES.REAL_READ_ONLY, LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL].includes(sourceMode)
+        ? 'cornermex_supabase'
+        : sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED
+          ? 'lovable_repo_discovery'
+          : 'mock_fallback',
+      supabaseReadOnlyStatus,
+      supabaseStatus: supabaseReadOnlyStatus?.supabaseStatus || 'not_configured',
+      tableAvailability: supabaseReadOnlyStatus?.tableAvailability || {},
+      rowCounts: supabaseReadOnlyStatus?.rowCounts || {},
+      maskingApplied: supabaseReadOnlyStatus?.maskingApplied ?? this.config.piiMasking,
+      lastReadAt: supabaseReadOnlyStatus?.lastReadAt || null,
+      auditId: supabaseReadOnlyStatus?.auditId || null,
       discoveredEntities: discovery.entities,
       discoveredFlows: discovery.flows,
       mappedContracts: contracts.contracts.map((contract) => ({
@@ -120,7 +140,7 @@ class LovableCornerMexConnector {
       piiMasking: this.config.piiMasking,
       writesBlocked: !this.config.supabaseAllowWrites && this.config.supabaseReadOnly && this.config.supabaseBlockMutations && this.config.supabaseServiceRoleKeyBlocked,
       lastReadAuditStatus: this.config.auditReads ? 'enabled' : 'disabled',
-      warnings: [...new Set(warnings)],
+      warnings: [...new Set([...warnings, ...(supabaseReadOnlyStatus?.warnings || [])])],
       founderNextSteps: discovery.nextSteps,
     };
     await this.audit(context, 'status', { sourceMode, entityCount: status.discoveredEntities.length });
@@ -142,9 +162,20 @@ class LovableCornerMexConnector {
   }
 
   async readCollection(name, filters = {}, context = {}) {
+    const status = this.supabaseReadOnlyActivationService?.getStatus
+      ? await this.supabaseReadOnlyActivationService.getStatus(context)
+      : null;
     const discovery = this.discoveryService?.discover ? await this.discoveryService.discover() : null;
-    const sourceMode = this.getSourceMode(discovery);
-    if (sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY && this.supabaseReadOnlyActivationService?.listEntity) {
+    const sourceMode = [
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY,
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL,
+    ].includes(status?.mode)
+      ? status.mode
+      : this.getSourceMode(discovery);
+    if (
+      [LOVABLE_SOURCE_MODES.REAL_READ_ONLY, LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL].includes(sourceMode)
+      && this.supabaseReadOnlyActivationService?.listEntity
+    ) {
       return this.supabaseReadOnlyActivationService.listEntity(name, filters, context);
     }
     const rows = this.applyFilters(this.fixture(name), filters);
@@ -152,7 +183,15 @@ class LovableCornerMexConnector {
       data: rows,
       meta: {
         source: sourceMode,
+        dataSource: sourceMode === LOVABLE_SOURCE_MODES.REPO_DISCOVERED ? 'lovable_repo_discovery' : 'mock_fallback',
+        supabaseStatus: status?.supabaseStatus || 'not_configured',
+        tableAvailability: status?.tableAvailability || {},
+        maskingApplied: this.config.piiMasking,
+        auditId: status?.auditId || null,
+        lastReadAt: status?.lastReadAt || null,
         readOnly: true,
+        writesBlocked: true,
+        externalSendsBlocked: true,
         rowCount: rows.length,
         truncated: rows.length >= Math.min(Number(filters.limit) || this.config.maxRows, this.config.maxRows),
         warnings: !this.config.enabled && !this.config.lovableRepoConfigured && !this.config.supabaseConfigured
@@ -168,9 +207,19 @@ class LovableCornerMexConnector {
   }
 
   async readById(name, id, context = {}) {
-    const discovery = this.discoveryService?.discover ? await this.discoveryService.discover() : null;
-    const sourceMode = this.getSourceMode(discovery);
-    if (sourceMode === LOVABLE_SOURCE_MODES.REAL_READ_ONLY && this.supabaseReadOnlyActivationService?.getEntityById) {
+    const status = this.supabaseReadOnlyActivationService?.getStatus
+      ? await this.supabaseReadOnlyActivationService.getStatus(context)
+      : null;
+    const sourceMode = [
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY,
+      LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL,
+    ].includes(status?.mode)
+      ? status.mode
+      : this.getSourceMode();
+    if (
+      [LOVABLE_SOURCE_MODES.REAL_READ_ONLY, LOVABLE_SOURCE_MODES.REAL_READ_ONLY_PARTIAL].includes(sourceMode)
+      && this.supabaseReadOnlyActivationService?.getEntityById
+    ) {
       return this.supabaseReadOnlyActivationService.getEntityById(name, id, context);
     }
     const result = await this.readCollection(name, {}, context);

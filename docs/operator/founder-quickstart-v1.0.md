@@ -30,6 +30,9 @@ Open `http://127.0.0.1:3000/control-tower`, enter the local console token from `
   progression and the exact next founder action.
 - CornerMex Supabase v1.1.3 shows schema discovery, mapped contract confidence,
   Supabase read-only readiness and missing Supabase URL/key.
+- CornerMex Supabase v1.4 shows strict read-only activation status, table
+  availability, `real_read_only_partial` when applicable and missing URL/key
+  blockers without exposing secrets.
 - Controlled actions are dry-run.
 - GitHub real issue creation is disabled.
 - External sends and writes are blocked.
@@ -79,6 +82,9 @@ npm run cornermex:supabase-read-only-check
 npm run demo:cornermex-schema-discovery
 npm run demo:cornermex-supabase-read-only
 npm run demo:v1.1.3
+npm run cornermex:supabase-readonly-check
+npm run demo:cornermex-real-readonly
+npm run demo:v1.4
 ```
 
 These commands run without credentials and fall back to labeled mock mode. They never mutate GitHub or business data.

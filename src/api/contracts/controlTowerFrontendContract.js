@@ -7,6 +7,21 @@ const {
 
 const pickSourceMode = (...modes) => modes.find(Boolean) || 'local_internal';
 
+const supabaseSummary = (report = {}) => {
+  const connector = report.cornerMexLovableConnector || {};
+  return {
+    dataSource: connector.dataSource || (connector.sourceMode === 'real_read_only' || connector.sourceMode === 'real_read_only_partial'
+      ? 'cornermex_supabase'
+      : connector.sourceMode === 'repo_discovered' ? 'lovable_repo_discovery' : 'mock_fallback'),
+    supabaseStatus: connector.supabaseStatus || 'not_configured',
+    tableAvailability: connector.tableAvailability || {},
+    maskingApplied: connector.maskingApplied !== false,
+    lastReadAt: connector.lastReadAt || null,
+    auditId: connector.auditId || null,
+    sourceMode: connector.sourceMode || 'repo_discovered',
+  };
+};
+
 class ControlTowerFrontendContract {
   constructor({
     approvalCenterService,
@@ -162,6 +177,7 @@ class ControlTowerFrontendContract {
   }
 
   status(report) {
+    const supabase = supabaseSummary(report);
     return this.envelope('status', report, {
       service: 'cornerops-ai',
       appName: 'CornerOps Control Tower',
@@ -170,6 +186,11 @@ class ControlTowerFrontendContract {
       cornerMexLovableRole: 'marketplace',
       generatedAt: report.generatedAt,
       sourceMode: pickSourceMode(report.realSourceExpansion?.sourceModeSummary, 'local_internal'),
+      dataSource: supabase.dataSource,
+      supabaseStatus: supabase.supabaseStatus,
+      tableAvailability: supabase.tableAvailability,
+      maskingApplied: supabase.maskingApplied,
+      lastReadAt: supabase.lastReadAt,
       telegram: {
         mode: report.telegramOperator?.operatorMode || 'polling',
         founderPollingStatus: report.telegramOperator?.founderPollingStatus || 'missing_config',
@@ -179,9 +200,15 @@ class ControlTowerFrontendContract {
   }
 
   founderDaily(report) {
+    const supabase = supabaseSummary(report);
     return this.envelope('founder-daily', report, {
       headline: 'CornerOps Founder Daily is available through backend and Telegram.',
       sourceMode: pickSourceMode(report.cornerMexLovableConnector?.sourceMode, 'repo_discovered'),
+      dataSource: supabase.dataSource,
+      supabaseStatus: supabase.supabaseStatus,
+      tableAvailability: supabase.tableAvailability,
+      maskingApplied: supabase.maskingApplied,
+      lastReadAt: supabase.lastReadAt,
       urgentActions: [
         'Keep Telegram founder polling allowlisted.',
         'Add Supabase URL and anon/read-only key to unlock real_read_only CornerMex summaries.',
@@ -194,12 +221,20 @@ class ControlTowerFrontendContract {
 
   cornerMex(report) {
     const connector = report.cornerMexLovableConnector || {};
+    const supabase = supabaseSummary(report);
     return this.envelope('cornermex', report, {
       sourceMode: connector.sourceMode || 'repo_discovered',
       currentMode: connector.sourceMode || 'repo_discovered',
+      dataSource: supabase.dataSource,
+      supabaseStatus: supabase.supabaseStatus,
+      tableAvailability: supabase.tableAvailability,
+      maskingApplied: supabase.maskingApplied,
+      lastReadAt: supabase.lastReadAt,
+      auditId: supabase.auditId,
       lovableProjectUrlConfigured: Boolean(connector.projectUrlConfigured || connector.configIntake?.configCompleteness?.lovableProjectUrl),
       githubRepoConfigured: Boolean(connector.githubRepoConfigured || connector.configIntake?.configCompleteness?.lovableGithubRepo),
       supabaseReadOnlyStatus: connector.supabaseRealReadOnlyReadiness || 'pending_credentials',
+      rowCounts: connector.rowCounts || {},
       mappedContracts: connector.mappedContracts || [],
       contractConfidence: connector.mappedContractConfidence || connector.contractConfidence || {},
       missingFounderConfig: connector.missingFounderConfig || ['CORNERMEX_SUPABASE_URL', 'CORNERMEX_SUPABASE_ANON_KEY'],
@@ -209,6 +244,7 @@ class ControlTowerFrontendContract {
   }
 
   async flows(report) {
+    const supabase = supabaseSummary(report);
     let analysis = null;
     if (this.flowEngine?.analyzeFlows) {
       try {
@@ -223,6 +259,11 @@ class ControlTowerFrontendContract {
     const flowStatus = report.cornerMexFlowEngine || {};
     return this.envelope('flows', report, {
       sourceMode: analysis?.sourceMode || flowStatus.sourceMode || 'repo_discovered',
+      dataSource: analysis?.dataSource || flowStatus.dataSource || supabase.dataSource,
+      supabaseStatus: analysis?.supabaseStatus || flowStatus.supabaseStatus || supabase.supabaseStatus,
+      tableAvailability: analysis?.tableAvailability || flowStatus.tableAvailability || supabase.tableAvailability,
+      maskingApplied: analysis?.maskingApplied ?? flowStatus.maskingApplied ?? supabase.maskingApplied,
+      lastReadAt: analysis?.lastReadAt || flowStatus.lastReadAt || supabase.lastReadAt,
       availableFlows: analysis?.availableFlows || flowStatus.availableFlows || [],
       summary: analysis?.summary || {
         flowsWithData: flowStatus.flowsWithEnoughData || [],

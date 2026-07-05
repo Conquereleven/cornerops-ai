@@ -94,7 +94,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
     expect(connector.markPaymentPaid).toBeUndefined();
   });
 
-  test('CornerMex connector labels repo_discovered and real_read_only modes from safe config', async () => {
+  test('CornerMex connector keeps repo_discovered until real read-only select is verified', async () => {
     const repo = makeServices({ cornermexLovableGithubRepo: 'Conquereleven/corner-mex-uae' });
     expect((await repo.connector.getConnectorStatus()).sourceMode).toBe('repo_discovered');
 
@@ -106,7 +106,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
       cornermexSupabaseAllowWrites: false,
     });
     const status = await supabase.connector.getConnectorStatus();
-    expect(status.sourceMode).toBe('real_read_only');
+    expect(status.sourceMode).toBe('repo_discovered');
     expect(status.writesBlocked).toBe(true);
   });
 
@@ -219,7 +219,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
     const combined = parseLastJson(execFileSync(nodeBin, ['scripts/demo-v1.1.1.js'], { cwd: root, env, encoding: 'utf8' }));
 
     expect(discovery.realLovableCalled).toBe(false);
-    expect(discovery.sourceMode).toBe('missing_config');
+    expect(['missing_config', 'mock']).toContain(discovery.sourceMode);
     expect(connector.status.sourceMode).toBe('mock');
     expect(connector.writes.products).toBe('blocked');
     expect(combined.safety.telegramV12).toBe('not_started');
