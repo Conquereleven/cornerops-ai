@@ -66,10 +66,20 @@ Sanitized `.env` inspection:
 
 No Supabase key, Railway secret, operator token, or raw PII was printed.
 
+Sanitized `~/.cornerops-secrets/supabase.env` inspection:
+
+- file: present
+- `CORNERMEX_SUPABASE_URL`: present, stored as a project ref rather than a full HTTP URL
+- `CORNERMEX_SUPABASE_ANON_KEY`: present
+- safe read-only flags: not stored in the file; supplied in-memory for checks
+
+The project ref was converted in memory to a Supabase project URL for verification. The derived URL was not printed or written to the repo.
+
 ## Railway Env Access
 
 - Railway CLI: not available locally
-- `RAILWAY_TOKEN`: missing
+- Railway CLI after retry: installed, version 5.23.3
+- Railway auth: unauthorized; local `RAILWAY_TOKEN` is invalid or lacks access
 - `RAILWAY_PROJECT_ID`: missing
 - `RAILWAY_SERVICE_ID`: missing
 - `RAILWAY_ENVIRONMENT_ID`: missing
@@ -103,6 +113,28 @@ node --env-file=.env scripts/cornermex-supabase-readonly-check.js
 ```
 
 Result remained blocked because URL/key are empty and `CORNERMEX_SUPABASE_ENABLED=false`.
+
+Command with values sourced from `~/.cornerops-secrets/supabase.env`, read-only flags supplied in-memory, and no values printed:
+
+```bash
+node scripts/cornermex-supabase-readonly-check.js
+```
+
+Result:
+
+- mode: `blocked_by_supabase_read_failure`
+- readFailureReason: `invalid_anon_key`
+- supabaseStatus: `error_sanitized`
+- tableAvailability: `error_sanitized` for all mapped entities
+- credentials: URL present, anon key present, anon key not printed, service-role-like key not suspected
+- writesBlocked: true
+- externalSendsBlocked: true
+- maskingApplied: true
+
+Interpretation:
+
+- The local secret file now provides values, but the current anon/publishable key is not accepted by Supabase for safe reads.
+- This must be fixed before any Railway deployment can honestly report `real_read_only` or `real_read_only_partial`.
 
 ## Tests
 
@@ -204,24 +236,28 @@ Lovable cannot honestly show `real_read_only` until Railway returns `real_read_o
 
 ## Final Status
 
-`blocked_by_railway_env_access`
+`blocked_by_supabase_read_failure`
 
 Secondary blocker:
 
-`blocked_by_missing_supabase_readonly_config`
+`blocked_by_railway_env_access`
 
 Reason:
 
 - Supabase project is active and contains relevant tables/data.
-- Local `.env` still lacks URL/key and has `CORNERMEX_SUPABASE_ENABLED=false`.
-- Railway env access is unavailable locally, so env vars cannot be configured from this run.
+- Local secret file contains URL/key, but the read-only check classifies the current key as `invalid_anon_key`.
+- Railway env access is unavailable locally because the token is unauthorized, so env vars cannot be configured from this run.
 - Railway live endpoints remain `mock`.
 
 ## Founder Next Steps
 
-1. Merge or deploy PR #37 to Railway, or ensure Railway builds the PR branch for testing.
-2. In Railway project/service `cornerops-ai`, open Variables.
-3. Add or confirm:
+1. Replace `CORNERMEX_SUPABASE_ANON_KEY` in `~/.cornerops-secrets/supabase.env` with an active anon/publishable key for the selected Supabase project.
+2. Keep using only anon/publishable credentials, never service role.
+3. Re-run the local check before touching Railway.
+4. Replace or re-authenticate the local Railway token so `railway whoami` and `railway status` work for service `cornerops-ai`.
+5. Merge or deploy PR #37 to Railway, or ensure Railway builds the PR branch for testing.
+6. In Railway project/service `cornerops-ai`, open Variables.
+7. Add or confirm:
 
 ```env
 CORNERMEX_SUPABASE_ENABLED=true
@@ -234,21 +270,21 @@ CORNERMEX_SUPABASE_MASK_PII=true
 CORNERMEX_SUPABASE_FAIL_CLOSED=true
 ```
 
-4. Keep `CONTROL_TOWER_FRONTEND_ALLOWED_ORIGINS` including:
+8. Keep `CONTROL_TOWER_FRONTEND_ALLOWED_ORIGINS` including:
 
 ```txt
 https://id-preview--de6bc54c-b2d7-4527-b464-adf97760ec25.lovable.app
 ```
 
-5. Redeploy Railway.
-6. Re-run:
+9. Redeploy Railway.
+10. Re-run:
 
 ```bash
 npm run cornermex:supabase-readonly-check
 npm run demo:v1.4
 ```
 
-7. Verify Railway endpoints return `real_read_only` or `real_read_only_partial`.
+11. Verify Railway endpoints return `real_read_only` or `real_read_only_partial`.
 
 ## Still Disabled
 

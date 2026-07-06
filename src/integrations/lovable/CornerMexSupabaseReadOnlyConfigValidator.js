@@ -49,6 +49,7 @@ class CornerMexSupabaseReadOnlyConfigValidator {
       },
       limits: { maxRows, queryTimeoutMs },
       secrets: {
+        urlPresent: Boolean(this.config.cornermexSupabaseUrl),
         anonKeyPresent: Boolean(this.config.cornermexSupabaseAnonKey),
         anonKeyPrinted: false,
         serviceRoleKeySuspected: serviceRoleLike(this.config.cornermexSupabaseAnonKey),

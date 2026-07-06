@@ -10,6 +10,7 @@ const {
 } = require('../src/integrations/cornermex');
 const { ControlTowerFrontendContract } = require('../src/api/contracts/controlTowerFrontendContract');
 const { assertNoSecretKeys } = require('../src/api/contracts/controlTowerFrontendSchemas');
+const { classifyReadFailure } = require('../scripts/cornermex-supabase-readonly-check');
 
 const root = path.resolve(__dirname, '..');
 const safeConfig = {
@@ -156,5 +157,14 @@ describe('CornerMex Supabase read-only v1.4', () => {
       maxBuffer: 8 * 1024 * 1024,
     });
     expect(assertNoSecretKeys(JSON.parse(demo))).toBe(true);
+  });
+
+  test('read failure classifier identifies invalid anon key safely', () => {
+    const reason = classifyReadFailure({
+      supabaseStatus: 'error_sanitized',
+      tableAvailability: { products: 'error_sanitized', orders: 'error_sanitized' },
+      warnings: ['Supabase read failed safely for products: Invalid API key'],
+    });
+    expect(reason).toBe('invalid_anon_key');
   });
 });
