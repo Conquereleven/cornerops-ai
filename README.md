@@ -59,6 +59,9 @@ CornerOps AI is the brain. OpenClaw is the gateway.
 - CornerMex Supabase Schema Discovery v1.1.3 con evidencia de migraciones del
   repo Lovable, modo `schema_discovered`, check Supabase read-only, deteccion de
   riesgo RPC/write y confidence de contratos sin credenciales live.
+- CornerMex Supabase Read-Only v1.4 con cliente `select`-only, tabla por tabla,
+  `real_read_only_partial`, masking PII, auditoria, checks/demos sin secretos y
+  bloqueo explicito cuando falta `CORNERMEX_SUPABASE_URL` o anon key.
 
 ## Inicio rápido
 

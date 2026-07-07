@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('./safe-cli-state-env');
 const data = require('../src/core/data');
 
 const main = async () => {

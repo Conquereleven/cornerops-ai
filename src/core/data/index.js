@@ -23,6 +23,11 @@ const {
   LovableSupabaseMigrationDiscoveryService,
   LovableSupabaseSchemaMapper,
 } = require('../../integrations/lovable');
+const {
+  CornerMexSupabaseReadOnlyClient,
+  CornerMexSupabaseReadOnlyConfig,
+  CornerMexSupabaseReadOnlyRepository,
+} = require('../../integrations/cornermex');
 const { DataNormalizer } = require('./DataNormalizer');
 const { DataSourceRegistry } = require('./DataSourceRegistry');
 const { DataAccessPolicy } = require('./DataAccessPolicy');
@@ -270,6 +275,7 @@ const lovableSupabaseMigrationDiscoveryService = new LovableSupabaseMigrationDis
   schemaMapper: lovableSupabaseSchemaMapper,
 });
 const cornerMexSupabaseReadOnlyConfigValidator = new CornerMexSupabaseReadOnlyConfigValidator({ config: env });
+const cornerMexSupabaseReadOnlyConfig = new CornerMexSupabaseReadOnlyConfig({ config: env });
 const cornerMexSupabaseClient = env.cornermexSupabaseEnabled
   && env.cornermexSupabaseUrl
   && env.cornermexSupabaseAnonKey
@@ -281,10 +287,19 @@ const cornerMexSupabaseClient = env.cornermexSupabaseEnabled
     auth: { autoRefreshToken: false, persistSession: false },
   })
   : null;
+const cornerMexSupabaseReadOnlyClient = new CornerMexSupabaseReadOnlyClient({
+  supabaseClient: cornerMexSupabaseClient,
+});
+const cornerMexSupabaseReadOnlyRepository = new CornerMexSupabaseReadOnlyRepository({
+  auditLogService,
+  client: cornerMexSupabaseReadOnlyClient,
+  configSummary: cornerMexSupabaseReadOnlyConfig,
+});
 const cornerMexSupabaseReadOnlyActivationService = new CornerMexSupabaseReadOnlyActivationService({
   auditLogService,
   config: env,
   migrationDiscoveryService: lovableSupabaseMigrationDiscoveryService,
+  repository: cornerMexSupabaseReadOnlyRepository,
   supabaseClient: cornerMexSupabaseClient,
   validator: cornerMexSupabaseReadOnlyConfigValidator,
 });
@@ -397,7 +412,10 @@ module.exports = {
   cornerMexLovableConfigValidator,
   cornerMexSchemaEvidenceService,
   cornerMexSupabaseReadOnlyActivationService,
+  cornerMexSupabaseReadOnlyClient,
+  cornerMexSupabaseReadOnlyConfig,
   cornerMexSupabaseReadOnlyConfigValidator,
+  cornerMexSupabaseReadOnlyRepository,
   databaseSafetyPolicy,
   dataAccessPolicy,
   dataHealthService,

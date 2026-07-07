@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('./safe-cli-state-env');
 const env = require('../src/config/env');
 const controlTower = require('../src/core/control-tower');
 const { createService: createFounderDailyService } = require('./founder-daily');

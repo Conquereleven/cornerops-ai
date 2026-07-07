@@ -4,6 +4,7 @@ const hasValue = (value) => String(value || '').trim().length > 0;
 
 const serviceRoleLike = (value = '') =>
   /service[_-]?role/i.test(String(value))
+  || /^sb_secret_/i.test(String(value))
   || /^eyJ/.test(String(value)) && /service_role/i.test(String(value));
 
 class CornerMexLovableConfigValidator {

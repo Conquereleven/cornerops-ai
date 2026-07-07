@@ -4,6 +4,7 @@ const LOVABLE_SOURCE_MODES = Object.freeze({
   REPO_DISCOVERED: 'repo_discovered',
   SCHEMA_DISCOVERED: 'schema_discovered',
   REAL_READ_ONLY: 'real_read_only',
+  REAL_READ_ONLY_PARTIAL: 'real_read_only_partial',
   BLOCKED_UNSAFE_CONFIG: 'blocked_unsafe_config',
 });
 

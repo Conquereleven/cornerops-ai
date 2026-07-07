@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('./safe-cli-state-env');
 const controlTower = require('../src/core/control-tower');
 const data = require('../src/core/data');
 const operator = require('../src/core/operator');

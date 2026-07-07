@@ -19,8 +19,11 @@ class CornerMexSupabaseReadOnlyConfigValidator {
       ...(this.config.cornermexSupabaseServiceRoleKeyBlocked === false ? ['CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED must be true.'] : []),
       ...(serviceRoleLike(this.config.cornermexSupabaseAnonKey) ? ['Service-role-like Supabase key detected; use anon/publishable read-only key only.'] : []),
     ];
-    const maxRows = Math.max(1, Math.min(Number(this.config.cornermexSupabaseMaxRows) || 100, 1000));
-    const queryTimeoutMs = Math.max(100, Math.min(Number(this.config.cornermexSupabaseQueryTimeoutMs) || 10000, 30000));
+    const maxRows = Math.max(1, Math.min(Number(this.config.cornermexSupabaseMaxRows) || 50, 1000));
+    const queryTimeoutMs = Math.max(100, Math.min(
+      Number(this.config.cornermexSupabaseRequestTimeoutMs || this.config.cornermexSupabaseQueryTimeoutMs) || 8000,
+      30000,
+    ));
     const realReady = Boolean(
       this.config.cornermexSupabaseEnabled
       && this.config.cornermexSupabaseUrl
@@ -46,6 +49,7 @@ class CornerMexSupabaseReadOnlyConfigValidator {
       },
       limits: { maxRows, queryTimeoutMs },
       secrets: {
+        urlPresent: Boolean(this.config.cornermexSupabaseUrl),
         anonKeyPresent: Boolean(this.config.cornermexSupabaseAnonKey),
         anonKeyPrinted: false,
         serviceRoleKeySuspected: serviceRoleLike(this.config.cornermexSupabaseAnonKey),

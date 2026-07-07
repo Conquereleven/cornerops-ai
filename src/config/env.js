@@ -706,7 +706,7 @@ const baseEnv = {
       : parseBoolean(process.env.CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED),
   cornermexSupabaseMaxRows: parseInteger(
     process.env.CORNERMEX_SUPABASE_MAX_ROWS,
-    100,
+    50,
     { min: 1, max: 1000 },
   ),
   cornermexSupabaseQueryTimeoutMs: parseInteger(
@@ -714,10 +714,31 @@ const baseEnv = {
     10000,
     { min: 100, max: 30000 },
   ),
+  cornermexSupabaseRequestTimeoutMs: parseInteger(
+    process.env.CORNERMEX_SUPABASE_REQUEST_TIMEOUT_MS || process.env.CORNERMEX_SUPABASE_QUERY_TIMEOUT_MS,
+    8000,
+    { min: 100, max: 30000 },
+  ),
+  cornermexSupabaseMaskPii:
+    process.env.CORNERMEX_SUPABASE_MASK_PII === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_MASK_PII),
+  cornermexSupabaseFailClosed:
+    process.env.CORNERMEX_SUPABASE_FAIL_CLOSED === undefined
+      ? true
+      : parseBoolean(process.env.CORNERMEX_SUPABASE_FAIL_CLOSED),
+  cornermexSupabaseTableMapJson: process.env.CORNERMEX_SUPABASE_TABLE_MAP_JSON || '',
+  cornermexSupabaseProductsTable: process.env.CORNERMEX_SUPABASE_PRODUCTS_TABLE || '',
+  cornermexSupabaseLeadsTable: process.env.CORNERMEX_SUPABASE_LEADS_TABLE || '',
+  cornermexSupabaseQuotesTable: process.env.CORNERMEX_SUPABASE_QUOTES_TABLE || '',
+  cornermexSupabaseOrdersTable: process.env.CORNERMEX_SUPABASE_ORDERS_TABLE || '',
+  cornermexSupabaseCustomersTable: process.env.CORNERMEX_SUPABASE_CUSTOMERS_TABLE || '',
+  cornermexSupabasePaymentsTable: process.env.CORNERMEX_SUPABASE_PAYMENTS_TABLE || '',
+  cornermexSupabaseFulfillmentTable: process.env.CORNERMEX_SUPABASE_FULFILLMENT_TABLE || '',
   corneropsCornermexConnectorEnabled: parseBoolean(process.env.CORNEROPS_CORNERMEX_CONNECTOR_ENABLED),
   corneropsCornermexConnectorMode: parseEnum(
     process.env.CORNEROPS_CORNERMEX_CONNECTOR_MODE,
-    ['mock', 'repo_discovered', 'schema_discovered', 'real_read_only', 'blocked_unsafe_config'],
+    ['mock', 'repo_discovered', 'schema_discovered', 'real_read_only', 'real_read_only_partial', 'blocked_unsafe_config'],
     'mock',
   ),
   corneropsCornermexConnectorAuditReads:

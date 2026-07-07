@@ -13,6 +13,11 @@ const {
   LovableSupabaseMigrationDiscoveryService,
   LovableSupabaseSchemaMapper,
 } = require('../src/integrations/lovable');
+const {
+  CornerMexSupabaseReadOnlyClient,
+  CornerMexSupabaseReadOnlyConfig,
+  CornerMexSupabaseReadOnlyRepository,
+} = require('../src/integrations/cornermex');
 
 const root = path.resolve(__dirname, '..');
 const nodeBin = process.execPath;
@@ -212,6 +217,11 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
       auditLogService: { record: async (event) => { auditEvents.push(event); return { id: 'audit-real-read', ...event }; } },
       config: stack.config,
       migrationDiscoveryService: stack.migrationDiscoveryService,
+      repository: new CornerMexSupabaseReadOnlyRepository({
+        auditLogService: { record: async (event) => { auditEvents.push(event); return { id: 'audit-real-read', ...event }; } },
+        client: new CornerMexSupabaseReadOnlyClient({ supabaseClient: mockSupabaseClient }),
+        configSummary: new CornerMexSupabaseReadOnlyConfig({ config: stack.config }),
+      }),
       supabaseClient: mockSupabaseClient,
       validator,
     });
@@ -247,8 +257,8 @@ describe('CornerMex Supabase Schema Discovery and Read-Only Onboarding v1.1.3', 
     const check = parseLastJson(execFileSync(nodeBin, ['scripts/cornermex-supabase-read-only-check.js'], { cwd: root, env, encoding: 'utf8' }));
     const schemaDemo = parseLastJson(execFileSync(nodeBin, ['scripts/demo-cornermex-schema-discovery.js'], { cwd: root, env, encoding: 'utf8' }));
     const v113 = parseLastJson(execFileSync(nodeBin, ['scripts/demo-v1.1.3.js'], { cwd: root, env, encoding: 'utf8' }));
-    expect(check.mode).toBe('repo_discovered');
-    expect(check.secrets.anonKeyPrinted).toBe(false);
+    expect(check.mode).toBe('blocked_by_missing_supabase_readonly_config');
+    expect(check.credentials.anonKeyPrinted).toBe(false);
     expect(schemaDemo.safety.migrations).toBe('not_executed');
     expect(v113.finalSafetySummary.telegramV12).toBe('not_started');
   });
