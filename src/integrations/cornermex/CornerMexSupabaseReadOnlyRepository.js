@@ -2,6 +2,7 @@ const { randomUUID } = require('crypto');
 const { sanitizeValue } = require('../../core/security/SecuritySanitizer');
 const { maskPii } = require('../lovable/LovableCornerMexConnector');
 const {
+  DEFAULT_READ_VIEW_TABLES,
   SOURCE_MODES,
   SUPABASE_STATUS,
   TABLE_AVAILABILITY,
@@ -143,9 +144,14 @@ class CornerMexSupabaseReadOnlyRepository {
     }
     const failures = [];
     let fallbackResult = null;
-    for (const table of tables) {
+    for (const [index, table] of tables.entries()) {
       const result = await this.tryReadTable(entity, table, limit, validation, context);
-      if (SUCCESSFUL_AVAILABILITY.includes(result.meta.availability)) return result;
+      if (SUCCESSFUL_AVAILABILITY.includes(result.meta.availability)) {
+        const shouldTryLegacyFallback = result.meta.availability === TABLE_AVAILABILITY.AVAILABLE_EMPTY
+          && table === DEFAULT_READ_VIEW_TABLES[entity]
+          && tables[index + 1];
+        if (!shouldTryLegacyFallback) return result;
+      }
       failures.push(...(result.meta.warnings || []));
       if (!fallbackResult || result.meta.availability !== TABLE_AVAILABILITY.MISSING_TABLE) fallbackResult = result;
     }
