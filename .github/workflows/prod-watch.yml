@@ -1,0 +1,23 @@
+name: CornerOps Prod Watch   # aparece en la pestaña “Actions”
+
+on:
+  schedule:                  # se ejecuta cada hora en punto (UTC)
+    - cron: '0 * * * *'
+  workflow_dispatch:         # botón “Run workflow” por si quieres lanzarlo a mano
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    env:
+      PROD_URL: https://cornerops-ai-production.up.railway.app
+      SUPABASE_URL: ${{ secrets.CORNERMEX_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.CORNERMEX_SUPABASE_ANON_KEY }}
+    steps:
+      - name: Check /health
+        run: curl -fsSL "$PROD_URL/health"
+
+      - name: Check /status
+        run: curl -fsSL "$PROD_URL/status"
+
+      - name: Supabase readonly check
+        run: npx -y cornermex-supabase-readonly-check
