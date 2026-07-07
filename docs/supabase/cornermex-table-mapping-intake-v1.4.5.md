@@ -23,7 +23,7 @@ Provide only non-secret schema information.
 
 ### Products
 
-- Base table name:
+- Base table name: products
 - Primary key column:
 - Available columns:
   - name:
@@ -40,7 +40,7 @@ Provide only non-secret schema information.
 
 ### B2B Leads
 
-- Base table name:
+- Base table name: b2b_leads
 - Primary key column:
 - Available columns:
   - company name:
@@ -56,7 +56,7 @@ Provide only non-secret schema information.
 
 ### Orders
 
-- Base table name:
+- Base table name: orders
 - Primary key column:
 - Available columns:
   - order number:
@@ -72,7 +72,7 @@ Provide only non-secret schema information.
 
 ### Customers
 
-- Base table name:
+- Base table name: customers
 - Primary key column:
 - Available columns:
   - customer name:
@@ -88,7 +88,7 @@ Provide only non-secret schema information.
 
 ### Payments
 
-- Base table name:
+- Base table name: payments
 - Primary key column:
 - Available columns:
   - order ID:
@@ -104,7 +104,7 @@ Provide only non-secret schema information.
 
 ### Fulfillment
 
-- Base table name:
+- Base table name: fulfillment
 - Primary key column:
 - Available columns:
   - order ID:
