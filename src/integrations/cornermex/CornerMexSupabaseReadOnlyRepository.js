@@ -8,6 +8,11 @@ const {
 } = require('./CornerMexSupabaseReadOnlyConfig');
 
 const ENTITY_NAMES = Object.freeze(['products', 'leads', 'quotes', 'orders', 'customers', 'payments', 'fulfillment']);
+const SUCCESSFUL_AVAILABILITY = Object.freeze([
+  TABLE_AVAILABILITY.AVAILABLE,
+  TABLE_AVAILABILITY.AVAILABLE_EMPTY,
+  TABLE_AVAILABILITY.AVAILABLE_MASKED,
+]);
 
 const nowIso = () => new Date().toISOString();
 const auditId = (prefix = 'audit-cornermex-supabase') => `${prefix}-${randomUUID().slice(0, 12)}`;
@@ -61,26 +66,29 @@ class CornerMexSupabaseReadOnlyRepository {
     const availability = Object.fromEntries(
       Object.entries(tableResults).map(([entity, result]) => [entity, result.meta.availability]),
     );
-    const successful = Object.values(availability).filter((status) => [
-      TABLE_AVAILABILITY.AVAILABLE,
-      TABLE_AVAILABILITY.AVAILABLE_EMPTY,
-      TABLE_AVAILABILITY.AVAILABLE_MASKED,
-    ].includes(status));
-    const failed = Object.values(availability).filter((status) => ![
-      TABLE_AVAILABILITY.AVAILABLE,
-      TABLE_AVAILABILITY.AVAILABLE_EMPTY,
-      TABLE_AVAILABILITY.AVAILABLE_MASKED,
-    ].includes(status));
+    const statuses = Object.values(availability);
+    const successful = statuses.filter((status) => SUCCESSFUL_AVAILABILITY.includes(status));
+    const failed = statuses.filter((status) => !SUCCESSFUL_AVAILABILITY.includes(status));
+    const missingPublicReadModel = statuses.length > 0
+      && statuses.every((status) => status === TABLE_AVAILABILITY.MISSING_TABLE);
     const sourceMode = successful.length && failed.length
       ? SOURCE_MODES.REAL_READ_ONLY_PARTIAL
       : successful.length ? SOURCE_MODES.REAL_READ_ONLY : SOURCE_MODES.REPO_DISCOVERED;
     const supabaseStatus = successful.length && failed.length
       ? SUPABASE_STATUS.PARTIAL
-      : successful.length ? SUPABASE_STATUS.CONNECTED : SUPABASE_STATUS.ERROR_SANITIZED;
+      : successful.length ? SUPABASE_STATUS.CONNECTED
+        : missingPublicReadModel ? SUPABASE_STATUS.CONNECTED_NO_PUBLIC_READ_MODEL
+          : SUPABASE_STATUS.ERROR_SANITIZED;
+    const readModelStatus = missingPublicReadModel
+      ? 'missing_public_read_model'
+      : successful.length ? 'available' : 'unavailable';
+    const actionRequired = missingPublicReadModel ? 'create_cornerops_readonly_views' : null;
     return {
       ...validation,
       sourceMode,
       supabaseStatus,
+      readModelStatus,
+      actionRequired,
       tableAvailability: availability,
       rowCounts: Object.fromEntries(Object.entries(tableResults).map(([entity, result]) => [entity, result.meta.rowCount])),
       maskingApplied: validation.readOnlyFlags.maskingApplied,
@@ -128,11 +136,31 @@ class CornerMexSupabaseReadOnlyRepository {
 
   async readTable(entity, filters = {}, context = {}) {
     const validation = this.configSummary.validate();
-    const table = validation.tableMappings[entity];
+    const tables = validation.tableMappingCandidates?.[entity] || [validation.tableMappings[entity]];
     const limit = Math.max(1, Math.min(Number(filters.limit) || validation.limits.maxRows, validation.limits.maxRows));
-    if (!table || !this.client) {
+    if (!tables.length || !this.client) {
       return { data: [], meta: this.meta(entity, validation, TABLE_AVAILABILITY.CONFIG_MISSING, 0, [`Missing table mapping for ${entity}.`]) };
     }
+    const failures = [];
+    let fallbackResult = null;
+    for (const table of tables) {
+      const result = await this.tryReadTable(entity, table, limit, validation, context);
+      if (SUCCESSFUL_AVAILABILITY.includes(result.meta.availability)) return result;
+      failures.push(...(result.meta.warnings || []));
+      if (!fallbackResult || result.meta.availability !== TABLE_AVAILABILITY.MISSING_TABLE) fallbackResult = result;
+    }
+    return {
+      data: [],
+      meta: {
+        ...(fallbackResult?.meta || this.meta(entity, validation, TABLE_AVAILABILITY.ERROR_SANITIZED, 0, [])),
+        table: tables[0],
+        attemptedTables: tables,
+        warnings: [...new Set(failures)],
+      },
+    };
+  }
+
+  async tryReadTable(entity, table, limit, validation, context = {}) {
     try {
       const response = await withTimeout(
         this.client.selectRows({ table, limit }),
@@ -163,7 +191,7 @@ class CornerMexSupabaseReadOnlyRepository {
   }
 
   meta(entity, status, availability, rowCount, warnings = []) {
-    const successful = [TABLE_AVAILABILITY.AVAILABLE, TABLE_AVAILABILITY.AVAILABLE_EMPTY, TABLE_AVAILABILITY.AVAILABLE_MASKED].includes(availability);
+    const successful = SUCCESSFUL_AVAILABILITY.includes(availability);
     return {
       source: successful ? SOURCE_MODES.REAL_READ_ONLY : status.sourceMode || SOURCE_MODES.REPO_DISCOVERED,
       dataSource: successful ? 'cornermex_supabase' : 'mock_fallback',

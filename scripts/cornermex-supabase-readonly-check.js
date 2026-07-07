@@ -11,9 +11,10 @@ const classifyReadFailure = ({ supabaseStatus, tableAvailability = {}, warnings 
   const statuses = Object.values(tableAvailability);
   if (/invalid api key|invalid_anon_key|jwt|apikey/.test(warningText)) return 'invalid_anon_key';
   if (/invalid.*url|supabaseurl/.test(warningText)) return 'invalid_url';
+  if (supabaseStatus === 'connected_no_public_read_model') return 'missing_public_read_model';
   if (statuses.length && statuses.every((status) => status === 'rls_blocked')) return 'rls_blocked';
-  if (statuses.length && statuses.every((status) => status === 'missing_table')) return 'missing_tables';
-  if (statuses.length && statuses.every((status) => status === 'timeout')) return 'timeout';
+  if (statuses.length && statuses.every((status) => status === 'missing_table')) return 'missing_table';
+  if (statuses.length && statuses.every((status) => status === 'timeout')) return 'network_timeout';
   if (/fetch failed|network/.test(warningText)) return 'network';
   if (supabaseStatus === 'error_sanitized') return 'unknown_sanitized';
   return null;
@@ -43,6 +44,8 @@ const main = async () => {
       ? activationStatus.mode
       : missing.length
         ? 'blocked_by_missing_supabase_readonly_config'
+        : activationStatus.readModelStatus === 'missing_public_read_model'
+          ? 'missing_public_read_model'
         : readFailureReason
           ? 'blocked_by_supabase_read_failure'
           : 'blocked_by_missing_supabase_readonly_config';
@@ -53,6 +56,8 @@ const main = async () => {
     connectorMode: connectorStatus.sourceMode,
     dataSource: connectorStatus.dataSource,
     supabaseStatus: activationStatus.supabaseStatus,
+    readModelStatus: activationStatus.readModelStatus || null,
+    actionRequired: activationStatus.actionRequired || null,
     tableAvailability,
     rowCounts: activationStatus.rowCounts || {},
     readOnly: true,
@@ -81,6 +86,12 @@ const main = async () => {
         'Keep CORNERMEX_SUPABASE_ALLOW_WRITES=false and CORNERMEX_SUPABASE_SERVICE_ROLE_KEY_BLOCKED=true.',
         'Rerun npm run cornermex:supabase-readonly-check.',
       ]
+      : mode === 'missing_public_read_model'
+        ? [
+          'Create reviewed CornerOps read-only views in Supabase, for example cornerops_products_v and related views.',
+          'Set CORNERMEX_SUPABASE_TABLE_MAP_JSON only if custom view/table names are used.',
+          'Keep write flags disabled and rerun npm run cornermex:supabase-readonly-check.',
+        ]
       : mode === 'blocked_by_supabase_read_failure'
         ? [
           `Fix Supabase read failure reason: ${readFailureReason || 'unknown_sanitized'}.`,

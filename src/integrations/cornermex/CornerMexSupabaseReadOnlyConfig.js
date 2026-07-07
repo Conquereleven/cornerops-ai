@@ -1,6 +1,6 @@
 const { serviceRoleLike } = require('../lovable/CornerMexLovableConfigValidator');
 
-const DEFAULT_ENTITY_TABLES = Object.freeze({
+const LEGACY_ENTITY_TABLES = Object.freeze({
   products: 'products',
   leads: 'b2b_leads',
   quotes: 'b2b_leads',
@@ -8,6 +8,38 @@ const DEFAULT_ENTITY_TABLES = Object.freeze({
   customers: 'profiles',
   payments: 'orders',
   fulfillment: 'orders',
+});
+
+const DEFAULT_READ_VIEW_TABLES = Object.freeze({
+  products: 'cornerops_products_v',
+  leads: 'cornerops_b2b_leads_v',
+  quotes: 'cornerops_b2b_leads_v',
+  orders: 'cornerops_orders_v',
+  customers: 'cornerops_customers_v',
+  payments: 'cornerops_payments_v',
+  fulfillment: 'cornerops_fulfillment_v',
+});
+
+const DEFAULT_ENTITY_TABLES = LEGACY_ENTITY_TABLES;
+
+const ENTITY_TABLE_MAP_KEYS = Object.freeze({
+  products: ['products'],
+  leads: ['leads', 'b2bLeads', 'b2b_leads'],
+  quotes: ['quotes'],
+  orders: ['orders'],
+  customers: ['customers'],
+  payments: ['payments'],
+  fulfillment: ['fulfillment'],
+});
+
+const ENTITY_SPECIFIC_CONFIG_KEYS = Object.freeze({
+  products: 'cornermexSupabaseProductsTable',
+  leads: 'cornermexSupabaseLeadsTable',
+  quotes: 'cornermexSupabaseQuotesTable',
+  orders: 'cornermexSupabaseOrdersTable',
+  customers: 'cornermexSupabaseCustomersTable',
+  payments: 'cornermexSupabasePaymentsTable',
+  fulfillment: 'cornermexSupabaseFulfillmentTable',
 });
 
 const SOURCE_MODES = Object.freeze({
@@ -20,6 +52,7 @@ const SOURCE_MODES = Object.freeze({
 
 const SUPABASE_STATUS = Object.freeze({
   CONNECTED: 'connected',
+  CONNECTED_NO_PUBLIC_READ_MODEL: 'connected_no_public_read_model',
   PARTIAL: 'partial',
   NOT_CONFIGURED: 'not_configured',
   BLOCKED: 'blocked',
@@ -40,16 +73,61 @@ const TABLE_AVAILABILITY = Object.freeze({
 const hasValue = (value) => String(value || '').trim().length > 0;
 const parseLimit = (value, fallback = 50) => Math.max(1, Math.min(Number(value) || fallback, 1000));
 const parseTimeout = (value, fallback = 8000) => Math.max(100, Math.min(Number(value) || fallback, 30000));
+const validTableIdentifier = (value) => /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/.test(String(value || ''));
+
+const parseTableMapJson = (value) => {
+  if (!hasValue(value)) return { map: {}, warnings: [] };
+  try {
+    const parsed = JSON.parse(String(value));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { map: {}, warnings: ['CORNERMEX_SUPABASE_TABLE_MAP_JSON must be a JSON object.'] };
+    }
+    const map = {};
+    const warnings = [];
+    Object.entries(parsed).forEach(([key, table]) => {
+      if (!hasValue(table)) return;
+      if (!validTableIdentifier(table)) {
+        warnings.push(`Ignoring invalid table/view identifier for ${key}.`);
+        return;
+      }
+      map[key] = String(table).trim();
+    });
+    return { map, warnings };
+  } catch (_error) {
+    return { map: {}, warnings: ['CORNERMEX_SUPABASE_TABLE_MAP_JSON is not valid JSON.'] };
+  }
+};
+
+const unique = (items) => [...new Set(items.filter(Boolean))];
+
+const explicitTableForEntity = (entity, config = {}, jsonMap = {}) => {
+  const jsonKeys = ENTITY_TABLE_MAP_KEYS[entity] || [entity];
+  const jsonMatch = jsonKeys.map((key) => jsonMap[key]).find(hasValue);
+  const specificMatch = config[ENTITY_SPECIFIC_CONFIG_KEYS[entity]];
+  return jsonMatch || specificMatch || '';
+};
 
 const tableMappingsFromConfig = (config = {}) => ({
-  products: config.cornermexSupabaseProductsTable || DEFAULT_ENTITY_TABLES.products,
-  leads: config.cornermexSupabaseLeadsTable || DEFAULT_ENTITY_TABLES.leads,
-  quotes: config.cornermexSupabaseQuotesTable || DEFAULT_ENTITY_TABLES.quotes,
-  orders: config.cornermexSupabaseOrdersTable || DEFAULT_ENTITY_TABLES.orders,
-  customers: config.cornermexSupabaseCustomersTable || DEFAULT_ENTITY_TABLES.customers,
-  payments: config.cornermexSupabasePaymentsTable || DEFAULT_ENTITY_TABLES.payments,
-  fulfillment: config.cornermexSupabaseFulfillmentTable || DEFAULT_ENTITY_TABLES.fulfillment,
+  products: tableMappingCandidatesFromConfig(config).products[0],
+  leads: tableMappingCandidatesFromConfig(config).leads[0],
+  quotes: tableMappingCandidatesFromConfig(config).quotes[0],
+  orders: tableMappingCandidatesFromConfig(config).orders[0],
+  customers: tableMappingCandidatesFromConfig(config).customers[0],
+  payments: tableMappingCandidatesFromConfig(config).payments[0],
+  fulfillment: tableMappingCandidatesFromConfig(config).fulfillment[0],
 });
+
+const tableMappingCandidatesFromConfig = (config = {}) => {
+  const { map } = parseTableMapJson(config.cornermexSupabaseTableMapJson);
+  return Object.fromEntries(Object.keys(LEGACY_ENTITY_TABLES).map((entity) => [
+    entity,
+    unique([
+      explicitTableForEntity(entity, config, map),
+      DEFAULT_READ_VIEW_TABLES[entity],
+      LEGACY_ENTITY_TABLES[entity],
+    ]),
+  ]));
+};
 
 class CornerMexSupabaseReadOnlyConfig {
   constructor({ config = {} } = {}) {
@@ -80,7 +158,11 @@ class CornerMexSupabaseReadOnlyConfig {
       !failClosed ? 'CORNERMEX_SUPABASE_FAIL_CLOSED must be true' : null,
       serviceRoleKeySuspected ? 'CORNERMEX_SUPABASE_ANON_KEY looks service-role-like; use anon/publishable key only' : null,
     ].filter(Boolean);
-    const tableMappings = tableMappingsFromConfig(config);
+    const { warnings: tableMapWarnings } = parseTableMapJson(config.cornermexSupabaseTableMapJson);
+    const tableMappingCandidates = tableMappingCandidatesFromConfig(config);
+    const tableMappings = Object.fromEntries(
+      Object.entries(tableMappingCandidates).map(([entity, candidates]) => [entity, candidates[0]]),
+    );
     return {
       enabled,
       safe: unsafe.length === 0,
@@ -115,12 +197,14 @@ class CornerMexSupabaseReadOnlyConfig {
         ),
       },
       tableMappings,
+      tableMappingCandidates,
       tableAvailability: Object.fromEntries(
         Object.keys(tableMappings).map((entity) => [entity, TABLE_AVAILABILITY.CONFIG_MISSING]),
       ),
       warnings: [
         ...missing.map((item) => `Missing ${item}.`),
         ...unsafe,
+        ...tableMapWarnings,
       ],
     };
   }
@@ -129,8 +213,12 @@ class CornerMexSupabaseReadOnlyConfig {
 module.exports = {
   CornerMexSupabaseReadOnlyConfig,
   DEFAULT_ENTITY_TABLES,
+  DEFAULT_READ_VIEW_TABLES,
+  LEGACY_ENTITY_TABLES,
   SOURCE_MODES,
   SUPABASE_STATUS,
   TABLE_AVAILABILITY,
+  parseTableMapJson,
+  tableMappingCandidatesFromConfig,
   tableMappingsFromConfig,
 };

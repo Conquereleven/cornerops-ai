@@ -727,6 +727,7 @@ const baseEnv = {
     process.env.CORNERMEX_SUPABASE_FAIL_CLOSED === undefined
       ? true
       : parseBoolean(process.env.CORNERMEX_SUPABASE_FAIL_CLOSED),
+  cornermexSupabaseTableMapJson: process.env.CORNERMEX_SUPABASE_TABLE_MAP_JSON || '',
   cornermexSupabaseProductsTable: process.env.CORNERMEX_SUPABASE_PRODUCTS_TABLE || '',
   cornermexSupabaseLeadsTable: process.env.CORNERMEX_SUPABASE_LEADS_TABLE || '',
   cornermexSupabaseQuotesTable: process.env.CORNERMEX_SUPABASE_QUOTES_TABLE || '',

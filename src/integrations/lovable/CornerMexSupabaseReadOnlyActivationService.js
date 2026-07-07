@@ -60,6 +60,8 @@ class CornerMexSupabaseReadOnlyActivationService {
       supabaseStatus: repositoryStatus?.supabaseStatus || (
         validation.unsafe.length ? SUPABASE_STATUS.BLOCKED : SUPABASE_STATUS.NOT_CONFIGURED
       ),
+      readModelStatus: repositoryStatus?.readModelStatus || 'unknown',
+      actionRequired: repositoryStatus?.actionRequired || null,
       tableAvailability: repositoryStatus?.tableAvailability || Object.fromEntries(
         Object.keys(ENTITY_TABLES).map((entity) => [entity, TABLE_AVAILABILITY.CONFIG_MISSING]),
       ),

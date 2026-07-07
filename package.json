@@ -65,6 +65,7 @@
     "demo:cornermex-connector": "node scripts/demo-cornermex-connector.js",
     "demo:v1.1.1": "node scripts/demo-v1.1.1.js",
     "cornermex:lovable-config-check": "node scripts/cornermex-lovable-config-check.js",
+    "supabase:key-compatibility-check": "node scripts/supabase-key-compatibility-check.js",
     "cornermex:supabase-readonly-check": "node scripts/cornermex-supabase-readonly-check.js",
     "cornermex:supabase-read-only-check": "node scripts/cornermex-supabase-read-only-check.js",
     "demo:cornermex-lovable-real-config": "node scripts/demo-cornermex-lovable-real-config.js",
