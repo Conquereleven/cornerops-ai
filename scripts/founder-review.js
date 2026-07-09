@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const data = require('../src/core/data');
+const env = require('../src/config/env');
 const { CornerMexFlowEngine } = require('../src/core/flows/cornermex');
 const { FounderReviewService, IntelligenceService } = require('../src/core/intelligence');
 
@@ -15,6 +16,8 @@ const createService = () => {
   });
   return new FounderReviewService({
     auditLogService: data.auditLogService,
+    config: env,
+    connector: data.lovableCornerMexConnector,
     intelligenceService,
   });
 };
@@ -22,9 +25,23 @@ const createService = () => {
 const summarize = (review) => ({
   status: review.status,
   generatedAt: review.generatedAt,
+  operatingStage: review.operatingStage,
+  launchDate: review.launchDate,
+  daysToLaunch: review.daysToLaunch,
   sourceMode: review.sourceMode,
   dataSource: review.dataSource,
   safetyPosture: review.safetyPosture,
+  launchReadinessStatus: review.launchReadinessStatus,
+  launchReadinessScore: review.launchReadinessScore,
+  catalogReadiness: review.catalogReadiness,
+  inventoryReadiness: review.inventoryReadiness,
+  paymentReadiness: review.paymentReadiness,
+  fulfillmentReadiness: review.fulfillmentReadiness,
+  complianceReadiness: review.complianceReadiness,
+  b2bReadiness: review.b2bReadiness,
+  marketingReadiness: review.marketingReadiness,
+  launchRisks: review.launchRisks,
+  launchActions: review.launchActions,
   dataQuality: review.dataQuality,
   executiveSummary: review.executiveSummary,
   urgentActions: review.urgentActions,

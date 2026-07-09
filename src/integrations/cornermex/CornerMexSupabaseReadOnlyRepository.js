@@ -67,6 +67,10 @@ class CornerMexSupabaseReadOnlyRepository {
     const availability = Object.fromEntries(
       Object.entries(tableResults).map(([entity, result]) => [entity, result.meta.availability]),
     );
+    const rowCounts = {};
+    for (const [entity, result] of Object.entries(tableResults)) {
+      rowCounts[entity] = await this.countTable(entity, result.meta.table, result.meta.rowCount, validation, context);
+    }
     const statuses = Object.values(availability);
     const successful = statuses.filter((status) => SUCCESSFUL_AVAILABILITY.includes(status));
     const failed = statuses.filter((status) => !SUCCESSFUL_AVAILABILITY.includes(status));
@@ -91,7 +95,7 @@ class CornerMexSupabaseReadOnlyRepository {
       readModelStatus,
       actionRequired,
       tableAvailability: availability,
-      rowCounts: Object.fromEntries(Object.entries(tableResults).map(([entity, result]) => [entity, result.meta.rowCount])),
+      rowCounts,
       maskingApplied: validation.readOnlyFlags.maskingApplied,
       lastReadAt: nowIso(),
       auditId: await this.audit(context, 'readiness', { sourceMode, supabaseStatus, tableAvailability: availability }),
@@ -164,6 +168,23 @@ class CornerMexSupabaseReadOnlyRepository {
         warnings: [...new Set(failures)],
       },
     };
+  }
+
+  async countTable(entity, table, fallbackCount, validation, context = {}) {
+    if (!table || !this.client?.countRows) return fallbackCount;
+    try {
+      const response = await withTimeout(
+        this.client.countRows({ table }),
+        validation.limits.requestTimeoutMs,
+      );
+      if (response.error) return fallbackCount;
+      const count = Number(response.count);
+      if (!Number.isFinite(count)) return fallbackCount;
+      await this.audit(context, `count_${entity}`, { table, rowCount: count });
+      return count;
+    } catch (_error) {
+      return fallbackCount;
+    }
   }
 
   async tryReadTable(entity, table, limit, validation, context = {}) {
