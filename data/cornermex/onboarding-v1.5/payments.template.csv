@@ -1,0 +1,2 @@
+payment_id,order_id,payment_method,payment_status,amount,currency,requires_manual_review,reviewed_at,created_at,updated_at
+pay_demo_1001,order_demo_1001,Bank Transfer,pending_review,230.00,AED,true,,2026-07-01T14:10:00Z,2026-07-02T10:00:00Z

@@ -1,0 +1,2 @@
+order_item_id,order_id,product_id,sku,name,quantity,unit_price,currency
+item_demo_1001_1,order_demo_1001,prod_demo_tajin,CMX-TAJIN-142,Tajin Clasico 142g,12,9.50,AED

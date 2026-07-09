@@ -1,0 +1,2 @@
+inventory_id,product_id,sku,stock,reorder_threshold,warehouse,updated_at
+inv_demo_tajin,prod_demo_tajin,CMX-TAJIN-142,48,24,Dubai sample warehouse,2026-07-01T10:00:00Z

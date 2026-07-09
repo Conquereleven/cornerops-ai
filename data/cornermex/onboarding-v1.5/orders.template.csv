@@ -1,0 +1,2 @@
+order_id,order_number,status,payment_method,payment_status,fulfillment_status,total_amount,currency,created_at,updated_at
+order_demo_1001,CMX-1001,processing,Bank Transfer,pending_review,pending_pack,230.00,AED,2026-07-01T14:00:00Z,2026-07-02T10:00:00Z
