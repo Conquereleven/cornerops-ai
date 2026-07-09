@@ -684,6 +684,11 @@ const baseEnv = {
     'live',
   ),
   cornermexLaunchDate: process.env.CORNERMEX_LAUNCH_DATE || '',
+  cornermexExpectedProductCount: parseInteger(
+    process.env.CORNERMEX_EXPECTED_PRODUCT_COUNT,
+    0,
+    { min: 0, max: 100000 },
+  ),
   cornermexSupabaseEnabled: parseBoolean(process.env.CORNERMEX_SUPABASE_ENABLED),
   cornermexSupabaseUrl: process.env.CORNERMEX_SUPABASE_URL || '',
   cornermexSupabaseAnonKey: process.env.CORNERMEX_SUPABASE_ANON_KEY || '',

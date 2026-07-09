@@ -1,0 +1,52 @@
+-- CornerMex Products Read Model Proposal v1.6.2
+-- Status: proposal_only_not_executed
+--
+-- Purpose:
+--   Document the shape of a future reviewed product read model if the founder/database
+--   owner confirms the real table containing the expected launch catalog.
+--
+-- Hard safety rules:
+--   - Do not execute this file automatically.
+--   - Do not use service-role credentials in CornerOps runtime.
+--   - Do not run destructive SQL.
+--   - Review RLS, grants, Data API exposure, and source table semantics manually first.
+--   - Replace placeholders only after the real CornerMex catalog source is confirmed.
+--
+-- Current v1.6.2 evidence:
+--   - public.cornerops_products_v exposes 9 rows.
+--   - public.products exposes 0 rows through anon/read-only access.
+--   - product_translations/product_variants/catalog import candidates are not visible.
+--   - Founder expectation is approximately 149 products.
+--
+-- Manual review checklist before adapting this proposal:
+--   1. Identify the real product source table or view.
+--   2. Confirm one row equals one launch product, not variants/translations/events.
+--   3. Confirm status/published/active filters.
+--   4. Confirm fields are safe for founder read-only display.
+--   5. Confirm anon/publishable key can SELECT only the reviewed view.
+--   6. Keep writes blocked.
+--
+-- Example shape only. Keep commented until manually reviewed.
+--
+-- create or replace view public.cornerops_products_v
+-- with (security_invoker = true)
+-- as
+-- select
+--   id,
+--   sku,
+--   name,
+--   category,
+--   price,
+--   currency,
+--   stock,
+--   status,
+--   updated_at
+-- from public.<confirmed_products_source_table>
+-- where <confirmed_launch_visibility_predicate>;
+--
+-- grant select on public.cornerops_products_v to anon, authenticated;
+--
+-- Notes:
+--   - If the source table is in public, ensure RLS is enabled and policies are reviewed.
+--   - If using Postgres versions or Supabase settings where security_invoker is unavailable,
+--     review view privileges carefully before exposing through the Data API.
