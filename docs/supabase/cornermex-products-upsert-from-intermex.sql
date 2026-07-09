@@ -3,6 +3,7 @@
 -- Source: https://intermexuae.com/products.json?limit=250&page=1
 -- Safety: no truncate, no delete, no privileged database key requirement.
 -- Import policy: active=false for every row until founder review.
+-- Staging model: transaction-local temp table, dropped automatically.
 
 begin;
 
@@ -14,7 +15,22 @@ alter table public.products add column if not exists supplier text;
 
 create unique index if not exists products_sku_unique on public.products (sku);
 
-with incoming(sku, name, category, price_aed, description, image_url, stock, supplier, active, b2b_available) as (
+create temp table cornerops_intermex_products_import (
+  sku text not null,
+  name text not null,
+  category text,
+  price_aed numeric,
+  description text,
+  image_url text,
+  stock integer not null,
+  supplier text,
+  active boolean not null,
+  b2b_available boolean not null
+) on commit drop;
+
+insert into cornerops_intermex_products_import (
+  sku, name, category, price_aed, description, image_url, stock, supplier, active, b2b_available
+)
 values
   ('CMX-ASSORTED-CANDY-BAG', 'Assorted Mexican Candy Bag', null, 25.00, 'Pocket price. Premium Flavours. Indulge with the genuine taste of Mexican tradition. Grab. Unwrap. Enjoy!', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/WhatsAppImage2026-07-01at17.07.44.jpg?v=1782911308', 50, 'Intermex UAE', false, false),
   ('CMX-MAYONESA-MACROMICK-LIME-390GM', 'Mayonesa Macromick (Lime) 390gm', null, 28.50, 'McCormick Mayonesa (Mayonnaise) with Lime Juice is Mexico''s top-selling mayonnaise brand , widely loved for its ultra-creamy texture and unique, tangy citrus twist.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/Screenshot2026-06-26114440.png?v=1782460393', 50, 'Intermex UAE', false, false),
@@ -205,24 +221,29 @@ values
   ('CMX-GUAJILLO-CHILI-POWDER-XATZE', 'Guajillo Chili Powder, Xatze', 'chiles', 42.50, 'Smooth, smoky, and slightly sweet, Xatze Ground Guajillo Chili adds authentic depth to your dishes. Made from dried guajillo peppers, this versatile chili powder enhances sauces, soups, stews, and marinades with a warm, rich flavor and gentle heat. 🌶️ Brand: Xatze 🌶️ 100% natural ground guajillo chiles 🌶️ Mild-to-medium heat with a subtle fruity taste 🌶️ Perfect for salsas, adobo sauces, moles, and slow-cooked meals 🌶️ 550 g bottle – great for home kitchens and professional use. Available from Corner Mex for delivery in Dubai, Abu Dhabi and across the UAE.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/ChiliGuajillo_1.png?v=1750231656', 50, 'My Store', false, false),
   ('CMX-ARBOL-CHILI-POWDER-XATZE', 'Árbol Chili Powder, Xatze', 'chiles', 42.50, 'Bring the heat with Xatze Ground Chile de Árbol , a bold and fiery chili powder made from dried árbol peppers. Known for their vibrant color and spicy kick, this finely ground chili is perfect for adding intense flavor to salsas, sauces, meat rubs, and more. 🌶️ Brand: Xatze 🌶️ 100% natural ground chile de árbol 🌶️ Hot and sharp flavor with a hint of nuttiness 🌶️ Great for spicy salsas, marinades, and dry rubs 🌶️ 550 g bottle, ideal for both home cooks and professional kitchens. Available from Corner Mex for delivery in Dubai, Abu Dhabi and across the UAE.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/ChiliArbol_1.png?v=1750231101', 50, 'My Store', false, false),
   ('CMX-ANCHO-CHILI-POWDER-XATZE', 'Ancho Chili Powder, Xatze', 'chiles', 42.50, 'Add a rich, smoky flavor to your favorite dishes with Xatze Ground Ancho Chili . Made from dried poblano peppers, this deep red powder brings mild heat and a subtle sweetness to everything from rubs and marinades to soups and stews. 🌶️ Brand: Xatze 🌶️ 100% natural ground ancho chiles (dried poblano peppers) 🌶️ Mild heat with a sweet, smoky flavor 🌶️ Ideal for spice blends, BBQ rubs, sauces, and slow-cooked meals 🌶️ 550g bottle, perfect for kitchens, restaurants, or food lovers. Available from Corner Mex for delivery in Dubai, Abu Dhabi and across the UAE.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/AnchoMolidoSquare.png?v=1750230378', 50, 'My Store', false, false),
-  ('CMX-CHILE-ANCHO-150G-WHOLE-DRIED-CHILIES', 'Chile Ancho 150G (Whole Dried Chilies), INTERMEX', 'chiles', 20.00, 'Deep, smoky, and slightly sweet, Whole Dried Ancho Chilies are a pantry essential for authentic Mexican cuisine. These dried poblano peppers bring complex flavor and mild heat to your sauces, stews, marinades, and moles. 🌶️ Brand: Intermex 🌶️ 100% whole dried ancho chiles (sun-dried poblanos) 🌶️ Rich, earthy flavor with a hint of sweetness 🌶️ Ideal for rehydrating and blending into traditional Mexican recipes 🌶️ 150 g. Available from Corner Mex for delivery in Dubai, Abu Dhabi and across the UAE.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/Screenshot_2026-04-18_100837.png?v=1776492582', 50, 'My Store', false, false)
-), checks as (
-  select
-    count(*) filter (where nullif(trim(sku), '') is null) as empty_sku_count,
-    count(*) filter (where nullif(trim(name), '') is null) as empty_name_count,
-    (select count(*) from (select sku from incoming group by sku having count(*) > 1) d) as duplicate_sku_count
-  from incoming
-)
-select * from checks;
+  ('CMX-CHILE-ANCHO-150G-WHOLE-DRIED-CHILIES', 'Chile Ancho 150G (Whole Dried Chilies), INTERMEX', 'chiles', 20.00, 'Deep, smoky, and slightly sweet, Whole Dried Ancho Chilies are a pantry essential for authentic Mexican cuisine. These dried poblano peppers bring complex flavor and mild heat to your sauces, stews, marinades, and moles. 🌶️ Brand: Intermex 🌶️ 100% whole dried ancho chiles (sun-dried poblanos) 🌶️ Rich, earthy flavor with a hint of sweetness 🌶️ Ideal for rehydrating and blending into traditional Mexican recipes 🌶️ 150 g. Available from Corner Mex for delivery in Dubai, Abu Dhabi and across the UAE.', 'https://cdn.shopify.com/s/files/1/0642/6725/5904/files/Screenshot_2026-04-18_100837.png?v=1776492582', 50, 'My Store', false, false);
 
--- Founder/operator must verify checks are all zero before running the upsert below.
+select
+  count(*) filter (where nullif(trim(sku), '') is null) as empty_sku_count,
+  count(*) filter (where nullif(trim(name), '') is null) as empty_name_count,
+  (select count(*) from (
+    select sku
+    from cornerops_intermex_products_import
+    group by sku
+    having count(*) > 1
+  ) d) as duplicate_sku_count,
+  count(*) filter (where active = true) as active_true_count,
+  count(*) filter (where stock <> 50) as non_50_stock_count
+from cornerops_intermex_products_import;
+
+-- Founder/operator must verify checks are all zero before replacing rollback with commit.
 
 insert into public.products (
   sku, name, category, price_aed, description, image_url, stock, supplier, active, b2b_available
 )
 select
   sku, name, category, price_aed, description, image_url, stock, supplier, active, b2b_available
-from incoming
+from cornerops_intermex_products_import
 where nullif(trim(sku), '') is not null
   and nullif(trim(name), '') is not null
 on conflict (sku) do update set
@@ -241,7 +262,9 @@ select count(*) as total_products from public.products;
 select count(*) as products_with_price from public.products where price_aed is not null;
 select count(*) as products_with_image from public.products where image_url is not null and trim(image_url) <> '';
 select count(*) as products_with_stock_50 from public.products where stock = 50;
+select count(*) as inactive_products from public.products where active = false;
+select count(*) as active_products from public.products where active = true;
 select sku, count(*) from public.products group by sku having count(*) > 1;
 
 rollback;
--- Replace rollback with commit only after founder review and successful preflight checks.
+-- Replace rollback with commit only after founder review and successful dry-run checks.
