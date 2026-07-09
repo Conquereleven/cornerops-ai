@@ -80,6 +80,7 @@
     "demo:v1.4": "node scripts/demo-v1.4.js",
     "founder:setup-check": "node scripts/founder-setup-check.js",
     "founder:daily": "node scripts/founder-daily.js",
+    "founder:review": "node scripts/founder-review.js",
     "state:backup": "node scripts/backup-local-state.js",
     "state:export-summary": "node scripts/export-local-state-summary.js",
     "acceptance:visual:v1.0": "node scripts/visual-local-acceptance-v1.js",

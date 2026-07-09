@@ -19,6 +19,7 @@ router.get('/clients', controller.clients);
 router.get('/signals', controller.signals);
 router.get('/anomalies', controller.anomalies);
 router.get('/cases', controller.cases);
+router.get('/founder-review', controller.founderReview);
 router.post('/cases/from-anomaly', controller.createCaseFromAnomaly);
 router.patch('/cases/:id/status', controller.updateCaseStatus);
 router.get('/playbooks', controller.playbooks);

@@ -74,7 +74,7 @@ class IntelligenceService {
         writesBlocked: true,
       },
     });
-    return { overview: { ...overview, auditId: audit?.id || overview.auditId }, clients, signals, anomalies, cases, playbooks, connectors };
+    return { overview: { ...overview, auditId: audit?.id || overview.auditId }, clients, signals, anomalies, cases, playbooks, connectors, flowAnalysis };
   }
 
   async getOverview(options = {}) { return (await this.buildState(options)).overview; }

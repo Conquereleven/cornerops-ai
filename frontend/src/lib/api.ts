@@ -15,6 +15,7 @@ import type {
   ControlTowerV08Report,
   OperatorAskResponse,
   IntelligenceOverview,
+  FounderReview,
   ClientSummary,
   SignalSummary,
   AnomalySummary,
@@ -155,6 +156,8 @@ const intelligenceRequest = <T>(path: string, token = '', options?: RequestInit)
 
 export const getIntelligenceOverview = (token = '') =>
   intelligenceRequest<IntelligenceOverview>('/api/intelligence/overview', token);
+export const getFounderReview = (token = '') =>
+  intelligenceRequest<FounderReview>('/api/intelligence/founder-review', token);
 export const getIntelligenceClients = (token = '') =>
   intelligenceRequest<ClientSummary[]>('/api/intelligence/clients', token);
 export const getIntelligenceSignals = (token = '') =>
