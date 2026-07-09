@@ -1,0 +1,2 @@
+product_id,sku,name,category,price,currency,stock,image_url,description,status,updated_at
+prod_demo_tajin,CMX-TAJIN-142,Tajin Clasico 142g,seasoning,9.50,AED,48,https://example.test/tajin.jpg,Chili lime seasoning for retail and B2B,active,2026-07-01T10:00:00Z

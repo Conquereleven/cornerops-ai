@@ -1,0 +1,2 @@
+lead_id,company_name,lead_type,status,interest_summary,requested_products,last_contacted_at,next_follow_up_at,created_at,updated_at
+lead_demo_restaurant,Dubai Taco Kitchen,restaurant,warm,Interested in Tajin and Valentina,"Tajin; Valentina",2026-07-01T12:00:00Z,2026-07-08T12:00:00Z,2026-06-28T09:00:00Z,2026-07-01T12:00:00Z

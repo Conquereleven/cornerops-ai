@@ -14,6 +14,13 @@ import type {
   ApprovalCenterResponse,
   ControlTowerV08Report,
   OperatorAskResponse,
+  IntelligenceOverview,
+  ClientSummary,
+  SignalSummary,
+  AnomalySummary,
+  CaseSummary,
+  PlaybookSummary,
+  ConnectorSummary,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -137,4 +144,39 @@ export const askControlTower = (text: string, token = '') =>
     method: 'POST',
     body: JSON.stringify({ text, operatorId: 'founder-web-console' }),
   });
+
+const intelligenceRequest = <T>(path: string, token = '', options?: RequestInit) => request<T>(path, {
+  ...options,
+  headers: {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options?.headers,
+  },
+});
+
+export const getIntelligenceOverview = (token = '') =>
+  intelligenceRequest<IntelligenceOverview>('/api/intelligence/overview', token);
+export const getIntelligenceClients = (token = '') =>
+  intelligenceRequest<ClientSummary[]>('/api/intelligence/clients', token);
+export const getIntelligenceSignals = (token = '') =>
+  intelligenceRequest<SignalSummary[]>('/api/intelligence/signals', token);
+export const getIntelligenceAnomalies = (token = '') =>
+  intelligenceRequest<AnomalySummary[]>('/api/intelligence/anomalies', token);
+export const getIntelligenceCases = (token = '') =>
+  intelligenceRequest<CaseSummary[]>('/api/intelligence/cases', token);
+export const createCaseFromAnomaly = (anomaly: Partial<AnomalySummary>, token = '') =>
+  intelligenceRequest<{ status: string; caseDraft: CaseSummary; auditId?: string; warnings: string[] }>(
+    '/api/intelligence/cases/from-anomaly',
+    token,
+    { method: 'POST', body: JSON.stringify(anomaly) },
+  );
+export const updateIntelligenceCaseStatus = (caseId: string, status: string, token = '') =>
+  intelligenceRequest<{ status: string; caseDraft: Partial<CaseSummary>; auditId?: string; warnings: string[] }>(
+    `/api/intelligence/cases/${encodeURIComponent(caseId)}/status`,
+    token,
+    { method: 'PATCH', body: JSON.stringify({ status }) },
+  );
+export const getIntelligencePlaybooks = (token = '') =>
+  intelligenceRequest<PlaybookSummary[]>('/api/intelligence/playbooks', token);
+export const getIntelligenceConnectors = (token = '') =>
+  intelligenceRequest<ConnectorSummary[]>('/api/intelligence/connectors', token);
 export { API_BASE_URL };

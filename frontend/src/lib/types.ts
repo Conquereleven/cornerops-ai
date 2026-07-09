@@ -191,6 +191,124 @@ export interface WorkspaceSettings {
   operatorName: string;
 }
 
+export interface ClientSummary {
+  id: string;
+  slug: string;
+  name: string;
+  pilot?: boolean;
+  sourceMode: string;
+  dataSource: string;
+  readOnly: boolean;
+  writesBlocked: boolean;
+}
+
+export interface SignalSummary {
+  id: string;
+  clientSlug: string;
+  type: string;
+  title: string;
+  source: string;
+  sourceMode: string;
+  entityId?: string;
+  readOnly: boolean;
+}
+
+export interface AnomalySummary {
+  id: string;
+  anomalyKey: string;
+  clientSlug: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: string;
+  title: string;
+  description?: string;
+  evidence: unknown[];
+  hypotheses: string[];
+  suggestedAction: string;
+  confidenceScore: number;
+  sourceMode: string;
+  readOnly: boolean;
+  writesBlocked: boolean;
+}
+
+export interface CaseSummary {
+  id: string;
+  anomalyKey: string;
+  clientSlug: string;
+  title: string;
+  status: string;
+  severity: string;
+  confidenceScore: number;
+  ruleScore: number;
+  recommendedAction: string;
+  playbookId: string;
+  sourceMode: string;
+  readOnly: boolean;
+  writesBlocked: boolean;
+  dryRun: boolean;
+  externalSendsBlocked: boolean;
+}
+
+export interface PlaybookSummary {
+  id: string;
+  name: string;
+  anomalyTypes: string[];
+  steps: string[];
+  writesBlocked: boolean;
+}
+
+export interface ConnectorSummary {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+  dataSource: string;
+  readOnly: boolean;
+  writesBlocked: boolean;
+}
+
+export interface IntelligenceOverview {
+  status: string;
+  sourceMode: string;
+  dataSource: string;
+  readOnly: boolean;
+  dryRun: boolean;
+  writesBlocked: boolean;
+  externalSendsBlocked: boolean;
+  piiMasked: boolean;
+  generatedAt: string;
+  auditId?: string;
+  clients: ClientSummary[];
+  counts: {
+    productsCount: number;
+    activeProducts: number;
+    lowStockProducts: number;
+    b2bLeadCount: number;
+    warmLeads: number;
+    pendingPaymentReviewCount: number;
+    fulfillmentDelayedCount: number;
+    anomalyCandidateCount: number;
+    trackedAnomalyCaseCount: number;
+  };
+  topOperationalAlerts: Array<{
+    id: string;
+    title: string;
+    severity: string;
+    recommendedAction: string;
+  }>;
+  recommendedFounderActions: string[];
+  dataFreshness: {
+    lastReadAt: string | null;
+    tableAvailability: Record<string, string>;
+  };
+  signals: SignalSummary[];
+  anomalies: AnomalySummary[];
+  cases: CaseSummary[];
+  playbooks: PlaybookSummary[];
+  connectors: ConnectorSummary[];
+  warnings: string[];
+}
+
 export interface ControlTowerAuditEvent {
   timestamp?: string;
   eventType: string;

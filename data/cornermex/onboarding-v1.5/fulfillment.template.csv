@@ -1,0 +1,2 @@
+fulfillment_id,order_id,fulfillment_status,carrier,tracking_status,requires_attention,created_at,updated_at
+ful_demo_1001,order_demo_1001,pending_pack,,missing_tracking,true,2026-07-01T14:20:00Z,2026-07-02T10:00:00Z
