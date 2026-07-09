@@ -1,6 +1,6 @@
 const data = require('../core/data');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
-const { IntelligenceService } = require('../core/intelligence');
+const { FounderReviewService, IntelligenceService } = require('../core/intelligence');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -11,6 +11,10 @@ const intelligenceService = new IntelligenceService({
   auditLogService: data.auditLogService,
   connector: data.lovableCornerMexConnector,
   flowEngine,
+});
+const founderReviewService = new FounderReviewService({
+  auditLogService: data.auditLogService,
+  intelligenceService,
 });
 
 const requestId = (req, fallback) => req.get('x-request-id') || fallback;
@@ -91,12 +95,25 @@ const connectors = async (req, res, next) => {
   }
 };
 
+const founderReview = async (req, res, next) => {
+  try {
+    return res.json(await founderReviewService.buildFounderReview({
+      requestId: requestId(req, 'founder-review-api-v1.6'),
+      userId: 'founder-review-api',
+      channel: 'api',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   anomalies,
   cases,
   clients,
   connectors,
   createCaseFromAnomaly,
+  founderReview,
   overview,
   playbooks,
   signals,

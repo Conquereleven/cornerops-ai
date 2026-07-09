@@ -285,6 +285,13 @@ export interface IntelligenceOverview {
     lowStockProducts: number;
     b2bLeadCount: number;
     warmLeads: number;
+    quoteCount: number;
+    quoteFollowUpCount: number;
+    orderCount: number;
+    orderAttentionCount: number;
+    customerCount: number;
+    paymentCount: number;
+    fulfillmentCount: number;
     pendingPaymentReviewCount: number;
     fulfillmentDelayedCount: number;
     anomalyCandidateCount: number;
@@ -306,6 +313,62 @@ export interface IntelligenceOverview {
   cases: CaseSummary[];
   playbooks: PlaybookSummary[];
   connectors: ConnectorSummary[];
+  warnings: string[];
+}
+
+export interface FounderReview {
+  status: string;
+  generatedAt: string;
+  sourceMode: string;
+  dataSource: string;
+  safetyPosture: {
+    readOnly: boolean;
+    dryRun: boolean;
+    writesBlocked: boolean;
+    externalSendsBlocked: boolean;
+    runtimeSupabaseWritesBlocked: boolean;
+    whatsappSendsBlocked: boolean;
+    emailSendsBlocked: boolean;
+    customerChannelsDisabled: boolean;
+    piiMasked: boolean;
+  };
+  dataQuality: {
+    status: string;
+    sourceMode: string;
+    dataSource: string;
+    piiMasked: boolean;
+    availableTables: string[];
+    tableAvailability: Record<string, string>;
+    flowsWithData: string[];
+    flowsMissingData: string[];
+    missingDataCount: number;
+    warnings: string[];
+  };
+  executiveSummary: string;
+  urgentActions: Array<{
+    id: string;
+    title: string;
+    severity: string;
+    recommendedAction: string;
+    approvalRequired: boolean;
+    writesBlocked: boolean;
+  }>;
+  operationalMetrics: Record<string, number>;
+  inventoryRisks: AnomalySummary[];
+  paymentRisks: AnomalySummary[];
+  fulfillmentRisks: AnomalySummary[];
+  leadFollowUps: SignalSummary[];
+  anomalyCandidates: AnomalySummary[];
+  caseDrafts: CaseSummary[];
+  recommendedActions: string[];
+  missingData: Array<{
+    id: string;
+    label: string;
+    reason: string;
+    requiredForFounderLoop: boolean;
+  }>;
+  nextFounderStep: string;
+  auditId?: string;
   warnings: string[];
 }
 
