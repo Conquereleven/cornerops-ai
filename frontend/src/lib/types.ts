@@ -319,6 +319,9 @@ export interface IntelligenceOverview {
 export interface FounderReview {
   status: string;
   generatedAt: string;
+  operatingStage?: 'pre_launch' | 'soft_launch' | 'live' | 'paused' | string;
+  launchDate?: string | null;
+  daysToLaunch?: number | null;
   sourceMode: string;
   dataSource: string;
   safetyPosture: {
@@ -354,6 +357,19 @@ export interface FounderReview {
     writesBlocked: boolean;
   }>;
   operationalMetrics: Record<string, number>;
+  launchReadinessStatus?: string;
+  launchReadinessScore?: number;
+  launchReadinessConfidence?: string;
+  catalogReadiness?: Record<string, unknown>;
+  inventoryReadiness?: Record<string, unknown>;
+  paymentReadiness?: Record<string, unknown>;
+  fulfillmentReadiness?: Record<string, unknown>;
+  complianceReadiness?: Record<string, unknown>;
+  b2bReadiness?: Record<string, unknown>;
+  marketingReadiness?: Record<string, unknown>;
+  launchRisks?: Array<Record<string, unknown>>;
+  launchActions?: Array<Record<string, unknown>>;
+  launchContext?: Record<string, unknown>;
   inventoryRisks: AnomalySummary[];
   paymentRisks: AnomalySummary[];
   fulfillmentRisks: AnomalySummary[];
@@ -366,6 +382,8 @@ export interface FounderReview {
     label: string;
     reason: string;
     requiredForFounderLoop: boolean;
+    priority?: string;
+    preLaunchExpected?: boolean;
   }>;
   nextFounderStep: string;
   auditId?: string;

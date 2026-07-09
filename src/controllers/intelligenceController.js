@@ -1,4 +1,5 @@
 const data = require('../core/data');
+const env = require('../config/env');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
 const { FounderReviewService, IntelligenceService } = require('../core/intelligence');
 
@@ -14,6 +15,8 @@ const intelligenceService = new IntelligenceService({
 });
 const founderReviewService = new FounderReviewService({
   auditLogService: data.auditLogService,
+  config: env,
+  connector: data.lovableCornerMexConnector,
   intelligenceService,
 });
 

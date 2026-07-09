@@ -13,6 +13,17 @@ class CornerMexSupabaseReadOnlyClient {
     }
     return query;
   }
+
+  async countRows({ table, signal }) {
+    if (!this.supabaseClient) {
+      return { count: 0, error: { message: 'Supabase client is not configured.' } };
+    }
+    let query = this.supabaseClient.from(table).select('*', { count: 'exact', head: true });
+    if (signal && typeof query.abortSignal === 'function') {
+      query = query.abortSignal(signal);
+    }
+    return query;
+  }
 }
 
 module.exports = { CornerMexSupabaseReadOnlyClient };

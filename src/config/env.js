@@ -678,6 +678,12 @@ const baseEnv = {
   cornermexLovableProjectName: process.env.CORNERMEX_LOVABLE_PROJECT_NAME || '',
   cornermexLovableGithubRepo: process.env.CORNERMEX_LOVABLE_GITHUB_REPO || '',
   cornermexLovableDeploymentUrl: process.env.CORNERMEX_LOVABLE_DEPLOYMENT_URL || '',
+  cornermexOperatingStage: parseEnum(
+    process.env.CORNERMEX_OPERATING_STAGE,
+    ['pre_launch', 'soft_launch', 'live', 'paused'],
+    'live',
+  ),
+  cornermexLaunchDate: process.env.CORNERMEX_LAUNCH_DATE || '',
   cornermexSupabaseEnabled: parseBoolean(process.env.CORNERMEX_SUPABASE_ENABLED),
   cornermexSupabaseUrl: process.env.CORNERMEX_SUPABASE_URL || '',
   cornermexSupabaseAnonKey: process.env.CORNERMEX_SUPABASE_ANON_KEY || '',
