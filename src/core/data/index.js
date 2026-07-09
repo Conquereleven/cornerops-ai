@@ -24,6 +24,7 @@ const {
   LovableSupabaseSchemaMapper,
 } = require('../../integrations/lovable');
 const {
+  CornerMexCatalogReadModelReportService,
   CornerMexSupabaseReadOnlyClient,
   CornerMexSupabaseReadOnlyConfig,
   CornerMexSupabaseReadOnlyRepository,
@@ -295,6 +296,13 @@ const cornerMexSupabaseReadOnlyRepository = new CornerMexSupabaseReadOnlyReposit
   client: cornerMexSupabaseReadOnlyClient,
   configSummary: cornerMexSupabaseReadOnlyConfig,
 });
+const cornerMexCatalogReadModelReportService = new CornerMexCatalogReadModelReportService({
+  auditLogService,
+  client: cornerMexSupabaseReadOnlyClient,
+  config: env,
+  configSummary: cornerMexSupabaseReadOnlyConfig,
+  repository: cornerMexSupabaseReadOnlyRepository,
+});
 const cornerMexSupabaseReadOnlyActivationService = new CornerMexSupabaseReadOnlyActivationService({
   auditLogService,
   config: env,
@@ -407,6 +415,7 @@ module.exports = {
   businessDataContractRegistry,
   businessDataReadinessService,
   businessDataService,
+  cornerMexCatalogReadModelReportService,
   cornerMexDataContractRegistry,
   cornerMexLovableConfigIntakeService,
   cornerMexLovableConfigValidator,

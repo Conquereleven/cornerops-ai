@@ -11,6 +11,10 @@ const {
 } = require('./CornerMexSupabaseReadOnlyConfig');
 const { CornerMexSupabaseReadOnlyClient } = require('./CornerMexSupabaseReadOnlyClient');
 const {
+  CornerMexCatalogReadModelReportService,
+  DEFAULT_CATALOG_CANDIDATE_SOURCES,
+} = require('./CornerMexCatalogReadModelReportService');
+const {
   CornerMexSupabaseReadOnlyRepository,
   ENTITY_NAMES,
   classifyError,
@@ -18,9 +22,11 @@ const {
 } = require('./CornerMexSupabaseReadOnlyRepository');
 
 module.exports = {
+  CornerMexCatalogReadModelReportService,
   CornerMexSupabaseReadOnlyClient,
   CornerMexSupabaseReadOnlyConfig,
   CornerMexSupabaseReadOnlyRepository,
+  DEFAULT_CATALOG_CANDIDATE_SOURCES,
   DEFAULT_ENTITY_TABLES,
   DEFAULT_READ_VIEW_TABLES,
   ENTITY_NAMES,

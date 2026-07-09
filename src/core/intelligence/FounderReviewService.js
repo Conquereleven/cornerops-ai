@@ -48,6 +48,7 @@ class FounderReviewService {
     this.config = {
       operatingStage: config.cornermexOperatingStage || config.operatingStage || 'live',
       launchDate: config.cornermexLaunchDate || config.launchDate || '',
+      expectedProductCount: Number(config.cornermexExpectedProductCount || config.expectedProductCount || 0) || 0,
     };
     this.connector = connector;
     this.intelligenceService = intelligenceService || new IntelligenceService({
@@ -78,8 +79,16 @@ class FounderReviewService {
     const productSample = operatingStage === 'pre_launch'
       ? await this.loadProductSample({ requestId, userId: options.userId, channel: options.channel })
       : { data: [], meta: {} };
+    const expectedProductCount = Number(options.expectedProductCount || this.config.expectedProductCount || 0) || 0;
     const preLaunch = operatingStage === 'pre_launch'
-      ? this.buildPreLaunchReadiness({ counts, overview, productSample, launchDate, daysToLaunch })
+      ? this.buildPreLaunchReadiness({
+        counts,
+        overview,
+        productSample,
+        launchDate,
+        daysToLaunch,
+        expectedProductCount,
+      })
       : null;
     const missingData = this.buildMissingDataChecklist({ counts, overview, flowSummary, operatingStage, preLaunch });
     const dataQuality = this.buildDataQuality({ overview, counts, flowSummary, missingData, operatingStage });
@@ -216,10 +225,10 @@ class FounderReviewService {
     return Math.ceil((launch.getTime() - now.getTime()) / 86400000);
   }
 
-  buildPreLaunchReadiness({ counts, overview, productSample, launchDate, daysToLaunch }) {
+  buildPreLaunchReadiness({ counts, overview, productSample, launchDate, daysToLaunch, expectedProductCount = 0 }) {
     const products = asArray(productSample.data);
     const productCount = Number(counts.productsCount || products.length || 0);
-    const catalogReadiness = this.catalogReadiness({ products, productCount });
+    const catalogReadiness = this.catalogReadiness({ products, productCount, expectedProductCount });
     const inventoryReadiness = this.inventoryReadiness({ products, productCount, lowStockProducts: counts.lowStockProducts });
     const paymentReadiness = this.readinessCategory({
       id: 'paymentReadiness',
@@ -285,6 +294,7 @@ class FounderReviewService {
       marketingReadiness,
       daysToLaunch,
       productCount,
+      expectedProductCount,
     });
     return {
       launchReadinessStatus,
@@ -298,7 +308,7 @@ class FounderReviewService {
       b2bReadiness,
       marketingReadiness,
       launchRisks,
-      launchActions: this.launchActions({ productCount, catalogReadiness, daysToLaunch }),
+      launchActions: this.launchActions({ productCount, catalogReadiness, daysToLaunch, expectedProductCount }),
       launchContext: {
         launchDate: launchDate || null,
         daysToLaunch,
@@ -307,6 +317,9 @@ class FounderReviewService {
         missingLivePaymentsExpected: true,
         missingLiveFulfillmentExpected: true,
         sourceMode: overview.sourceMode || 'mock',
+        expectedFounderProductCount: expectedProductCount || null,
+        readableProductCount: productCount,
+        productCountMismatch: catalogReadiness.productCountMismatch,
       },
     };
   }
@@ -322,7 +335,7 @@ class FounderReviewService {
     };
   }
 
-  catalogReadiness({ products, productCount }) {
+  catalogReadiness({ products, productCount, expectedProductCount = 0 }) {
     const fields = {
       sku: ['sku', 'SKU'],
       category: ['category', 'categoryName', 'category_name'],
@@ -357,6 +370,10 @@ class FounderReviewService {
       ? Math.max(0, 1 - (missingCount / possibleChecks))
       : 0;
     const score = productCount > 0 ? Math.min(0.95, completeness * 0.85 + 0.1) : 0;
+    const productCountMismatch = Boolean(expectedProductCount && productCount !== expectedProductCount);
+    const productCountMismatchWarning = productCountMismatch
+      ? `Expected founder product count is ${expectedProductCount}, but readable product rows are ${productCount}.`
+      : null;
     return {
       ...this.readinessCategory({
       id: 'catalogReadiness',
@@ -365,14 +382,21 @@ class FounderReviewService {
       confidence: productCount > 0 ? products.length ? 'medium' : 'low' : 'low',
       evidence: [
         `${productCount} product row(s) readable.`,
+        expectedProductCount ? `${expectedProductCount} expected founder product(s) configured as reconciliation context.` : null,
         products.length ? `${products.length} product row(s) sampled for field quality.` : 'No product sample available for field quality checks.',
-      ],
+      ].filter(Boolean),
       warnings: [
+        productCountMismatchWarning,
         ...unavailableFields.map((field) => `${field} field unavailable in readable product data.`),
         suspiciousPriceCount ? `${suspiciousPriceCount} sampled product(s) have missing/suspicious price.` : null,
         zeroOrLowStockCount ? `${zeroOrLowStockCount} sampled product(s) have zero or low stock.` : null,
       ].filter(Boolean),
       }),
+      expectedFounderProductCount: expectedProductCount || null,
+      readableProductCount: productCount,
+      productCountMismatch,
+      productCountMismatchWarning,
+      catalogReadModelStatus: productCountMismatch ? 'partial' : expectedProductCount ? 'reconciled' : 'expectation_not_configured',
       productCount,
       sampledProductCount: products.length,
       missingFields: missing,
@@ -427,6 +451,7 @@ class FounderReviewService {
   launchRisks(categories) {
     const risks = [];
     if (!categories.productCount) risks.push({ id: 'no_products_readable', severity: 'high', title: 'No readable products for launch catalog.' });
+    if (categories.catalogReadiness.productCountMismatch) risks.push({ id: 'catalog_count_mismatch', severity: 'high', title: 'Readable catalog count does not match founder expectation.' });
     if (categories.catalogReadiness.warnings.length) risks.push({ id: 'catalog_gaps', severity: 'medium', title: 'Catalog fields need launch review.' });
     if (categories.paymentReadiness.status === 'unknown') risks.push({ id: 'payment_unknown', severity: categories.daysToLaunch !== null && categories.daysToLaunch <= 45 ? 'high' : 'medium', title: 'Payment test readiness is unknown.' });
     if (categories.fulfillmentReadiness.status === 'unknown') risks.push({ id: 'fulfillment_unknown', severity: categories.daysToLaunch !== null && categories.daysToLaunch <= 45 ? 'high' : 'medium', title: 'Fulfillment rehearsal readiness is unknown.' });
@@ -435,9 +460,10 @@ class FounderReviewService {
     return risks;
   }
 
-  launchActions({ productCount, catalogReadiness, daysToLaunch }) {
+  launchActions({ productCount, catalogReadiness, daysToLaunch, expectedProductCount = 0 }) {
     return unique([
       productCount ? `Complete product data quality review for ${productCount} readable product(s).` : 'Load or expose readable product catalog before launch review.',
+      catalogReadiness.productCountMismatch ? `Reconcile readable product count (${productCount}) against expected founder product count (${expectedProductCount}) before treating launch readiness as final.` : null,
       'Identify top 20 launch products.',
       'Confirm stock and supplier availability.',
       'Confirm price and margin for launch products.',
@@ -488,6 +514,7 @@ class FounderReviewService {
   recommendLaunchActionForRisk(riskId) {
     const actions = {
       no_products_readable: 'Expose or import readable product catalog before launch review.',
+      catalog_count_mismatch: 'Run catalog read model reconciliation and verify where expected products live before final launch readiness.',
       catalog_gaps: 'Complete product data quality review for launch products.',
       payment_unknown: 'Run and record an internal payment method test.',
       fulfillment_unknown: 'Run and record an internal fulfillment rehearsal.',
@@ -532,7 +559,10 @@ class FounderReviewService {
     const source = overview.sourceMode || 'mock';
     if (operatingStage === 'pre_launch') {
       const productCount = preLaunch?.catalogReadiness?.productCount || counts.productsCount || 0;
-      return `Pre-launch founder review for CornerMex generated in ${source} mode with ${productCount} readable product row(s), launch readiness ${preLaunch?.launchReadinessStatus || 'unknown'} (${preLaunch?.launchReadinessScore ?? 'unknown'}), and ${missingData.length} launch data gap(s).`;
+      const mismatch = preLaunch?.catalogReadiness?.productCountMismatch
+        ? ` Catalog read model is partial because founder expectation is ${preLaunch.catalogReadiness.expectedFounderProductCount} and readable rows are ${productCount}.`
+        : '';
+      return `Pre-launch founder review for CornerMex generated in ${source} mode with ${productCount} readable product row(s), launch readiness ${preLaunch?.launchReadinessStatus || 'unknown'} (${preLaunch?.launchReadinessScore ?? 'unknown'}), and ${missingData.length} launch data gap(s).${mismatch}`;
     }
     const totalRows = [
       counts.productsCount,
