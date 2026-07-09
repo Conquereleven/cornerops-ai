@@ -1,0 +1,20 @@
+{
+  "sourceCsv": "docs/data/cornermex-products-import-v1.csv",
+  "intermexSourceMethod": "https://intermexuae.com/products.json?limit=250&page=1",
+  "inputRows": 150,
+  "intermexProducts": 190,
+  "outputRows": 190,
+  "matchedRows": 190,
+  "exactHighConfidenceMatches": 190,
+  "mediumConfidenceMatches": 0,
+  "lowUnmatchedRows": 43,
+  "originalCsvMatchedRows": 149,
+  "originalCsvLowUnmatchedRows": 1,
+  "rowsWithPrice": 190,
+  "rowsWithImage": 189,
+  "rowsWithStockSetTo50": 190,
+  "activeRows": 0,
+  "enrichedCsv": "docs/data/cornermex-products-master-enriched-from-intermex.csv",
+  "unmatchedReviewCsv": "docs/data/cornermex-products-unmatched-review.csv",
+  "supabaseSql": "docs/supabase/cornermex-products-upsert-from-intermex.sql"
+}
