@@ -1,7 +1,17 @@
 const data = require('../core/data');
 const env = require('../config/env');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
-const { FounderReviewService, IntelligenceService } = require('../core/intelligence');
+const {
+  ActionEngineService,
+  CatalogCohortService,
+  CapabilityMatrixService,
+  EnvironmentDoctorService,
+  FounderReviewService,
+  IntelligenceService,
+  LiveControlTowerStatusService,
+  OperatingStageEngine,
+  ProductActivationEngine,
+} = require('../core/intelligence');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -18,6 +28,32 @@ const founderReviewService = new FounderReviewService({
   config: env,
   connector: data.lovableCornerMexConnector,
   intelligenceService,
+});
+const catalogCohortService = new CatalogCohortService({
+  auditLogService: data.auditLogService,
+  client: data.cornerMexSupabaseReadOnlyClient,
+  config: env,
+  connector: data.lovableCornerMexConnector,
+});
+const actionEngineService = new ActionEngineService({
+  auditLogService: data.auditLogService,
+  catalogCohortService,
+  flowEngine,
+  founderReviewService,
+});
+const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
+const environmentDoctorService = new EnvironmentDoctorService({ config: env });
+const operatingStageEngine = new OperatingStageEngine({ config: env });
+const capabilityMatrixService = new CapabilityMatrixService();
+const liveControlTowerStatusService = new LiveControlTowerStatusService({
+  actionEngine: actionEngineService,
+  capabilityMatrixService,
+  catalogCohortService,
+  environmentDoctorService,
+  founderReviewService,
+  operatingStageEngine,
+  productActivationEngine,
+  config: env,
 });
 
 const requestId = (req, fallback) => req.get('x-request-id') || fallback;
@@ -110,15 +146,76 @@ const founderReview = async (req, res, next) => {
   }
 };
 
+const controlTowerStatus = async (req, res, next) => {
+  try {
+    return res.json(await liveControlTowerStatusService.build({
+      requestId: requestId(req, 'live-control-tower-status-api-v1.8'),
+      userId: 'control-tower-api',
+      channel: 'api',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const actionEngine = async (req, res, next) => {
+  try {
+    return res.json(await actionEngineService.build({
+      requestId: requestId(req, 'action-engine-api-v1.8'),
+      userId: 'control-tower-api',
+      channel: 'api',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const actionEngineDrafts = async (req, res, next) => {
+  try {
+    return res.status(202).json(await actionEngineService.createDrafts({
+      requestId: requestId(req, 'action-engine-drafts-api-v1.8'),
+      userId: req.get('x-operator-id') || 'control-tower-api',
+      channel: 'api',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const productActivation = async (req, res, next) => {
+  try {
+    return res.json(await productActivationEngine.buildPlan({
+      requestId: requestId(req, 'product-activation-api-v1.8'),
+      userId: 'control-tower-api',
+      channel: 'api',
+    }));
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const environmentDoctor = async (_req, res, next) => {
+  try {
+    return res.json(environmentDoctorService.check());
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
+  actionEngine,
+  actionEngineDrafts,
   anomalies,
   cases,
   clients,
   connectors,
+  controlTowerStatus,
   createCaseFromAnomaly,
+  environmentDoctor,
   founderReview,
   overview,
   playbooks,
+  productActivation,
   signals,
   updateCaseStatus,
 };

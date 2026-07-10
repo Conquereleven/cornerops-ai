@@ -1,3 +1,8 @@
+process.env.TELEGRAM_OPERATOR_ENABLED = 'false';
+process.env.CORNEROPS_TELEGRAM_REAL_MODE = 'false';
+process.env.CORNEROPS_TELEGRAM_ALLOW_POLLING = 'false';
+process.env.CORNEROPS_TELEGRAM_ALLOW_REAL_REPLY = 'false';
+
 const request = require('supertest');
 const app = require('../src/app');
 const { controlTowerService } = require('../src/core/control-tower');

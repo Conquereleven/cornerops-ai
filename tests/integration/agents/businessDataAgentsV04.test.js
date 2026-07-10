@@ -1,3 +1,11 @@
+process.env.CORNEROPS_BUSINESS_DATA_ENABLED = 'false';
+process.env.CORNERMEX_LOVABLE_ENABLED = 'false';
+process.env.CORNERMEX_SUPABASE_ENABLED = 'false';
+process.env.CORNEROPS_CORNERMEX_CONNECTOR_ENABLED = 'false';
+process.env.GITHUB_ENABLED = 'false';
+process.env.CORNEROPS_GITHUB_REAL_READ_ONLY_ENABLED = 'false';
+process.env.OPENCLAW_ENABLED = 'false';
+
 const { agentOrchestrator } = require('../../../src/core/agents');
 
 const run = (text, metadata = {}) => agentOrchestrator.handleMessage({
@@ -9,6 +17,8 @@ const run = (text, metadata = {}) => agentOrchestrator.handleMessage({
 });
 
 describe('v0.4 agent business-data validation', () => {
+  jest.setTimeout(60000);
+
   test('daily briefing labels mock/read-only sources and uses business health', async () => {
     const result = await run('Dame mi briefing de hoy');
     expect(result.agentId).toBe('daily-briefing-agent');

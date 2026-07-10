@@ -15,6 +15,11 @@ router.use(
 );
 
 router.get('/overview', controller.overview);
+router.get('/control-tower-status', controller.controlTowerStatus);
+router.get('/action-engine', controller.actionEngine);
+router.post('/action-engine/drafts', controller.actionEngineDrafts);
+router.get('/product-activation', controller.productActivation);
+router.get('/environment-doctor', controller.environmentDoctor);
 router.get('/clients', controller.clients);
 router.get('/signals', controller.signals);
 router.get('/anomalies', controller.anomalies);

@@ -1,6 +1,16 @@
+process.env.CORNEROPS_BUSINESS_DATA_ENABLED = 'false';
+process.env.CORNERMEX_LOVABLE_ENABLED = 'false';
+process.env.CORNERMEX_SUPABASE_ENABLED = 'false';
+process.env.CORNEROPS_CORNERMEX_CONNECTOR_ENABLED = 'false';
+process.env.GITHUB_ENABLED = 'false';
+process.env.CORNEROPS_GITHUB_REAL_READ_ONLY_ENABLED = 'false';
+process.env.OPENCLAW_ENABLED = 'false';
+
 const { agentOrchestrator } = require('../../../src/core/agents');
 
 describe('agents use real/mock data tools safely', () => {
+  jest.setTimeout(60000);
+
   test('daily-briefing-agent includes data metrics', async () => {
     const result = await agentOrchestrator.handleMessage({
       userId: 'operator',

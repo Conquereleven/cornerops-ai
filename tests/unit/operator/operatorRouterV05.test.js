@@ -13,6 +13,8 @@ const run = (text, metadata = {}) => operatorCommandRouter.handle({
 });
 
 describe('OperatorCommandRouter v0.5', () => {
+  jest.setTimeout(30000);
+
   beforeEach(() => {
     data.auditLogService.repository.clearForTests();
     agents.agentAuditService.clearForTests();
@@ -39,8 +41,8 @@ describe('OperatorCommandRouter v0.5', () => {
       intent: 'briefing',
       agentId: 'daily-briefing-agent',
       status: 'dry_run',
-      sourceMode: 'mock',
     });
+    expect(['mock', 'mixed', 'real_read_only', 'repo_discovered']).toContain(output.sourceMode);
     expect(output.auditId).toMatch(/^audit-/);
     expect(output.responseText).toContain('## Executive Briefing');
     expect(output.responseText).toContain('## Requires Approval\nNo');

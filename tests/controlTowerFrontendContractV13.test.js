@@ -131,7 +131,8 @@ describe('Control Tower Frontend Contract v1.3', () => {
     expect(telegram.data.allowedUsersCount).toBe(1);
     expect(drafts.approvalRequired).toBe(true);
     expect(drafts.data.sendStatus).toBe('not_sendable_in_current_version');
-    expect(drafts.data.sampleDraft.sendStatus).toBe('not_sendable_in_v1.2');
+    expect(drafts.data.persistence).toBe('not_configured');
+    expect(drafts.data.recommendedDraftSources).toEqual([]);
   });
 
   test('approvals and actions stay approval-gated and dry-run', async () => {
@@ -183,6 +184,10 @@ describe('Control Tower Frontend Contract v1.3', () => {
     });
     const parsed = JSON.parse(output);
     expect(parsed.sections.status.writesBlocked).toBe(true);
+    expect(parsed.sections.status.data.fallbackActive).toBe(false);
+    expect(parsed.sections.status.data.catalog.importedIntermexDraftProducts).toBe(190);
+    expect(parsed.sections.status.data.catalog.expectedImportedProductCount).toBe(190);
+    expect(parsed.sections.cornermex.data.catalog.importedIntermexDraftProducts).toBe(190);
     expect(parsed.sections.telegram.data.mode).toBeTruthy();
     expect(assertNoSecretKeys(parsed)).toBe(true);
   });

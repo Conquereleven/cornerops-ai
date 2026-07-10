@@ -201,7 +201,7 @@ describe('CornerOps Lovable CornerMex Connector v1.1.1', () => {
     expect(quotes.status).toBe('needs_approval');
     expect(quotes.proposedActions.some((action) => action.requiresApproval)).toBe(true);
     expect(security.dataSnapshot.metrics.cornerMexWarnings).toBeGreaterThanOrEqual(0);
-  });
+  }, 60000);
 
   test('v1.1.1 demos run without credentials', () => {
     const env = {

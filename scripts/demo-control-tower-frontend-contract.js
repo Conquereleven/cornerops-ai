@@ -1,5 +1,126 @@
 const { ControlTowerFrontendContract } = require('../src/api/contracts/controlTowerFrontendContract');
 const { assertNoSecretKeys } = require('../src/api/contracts/controlTowerFrontendSchemas');
+const {
+  ActionEngineService,
+  CapabilityMatrixService,
+  CatalogCohortService,
+  EnvironmentDoctorService,
+  LiveControlTowerStatusService,
+  OperatingStageEngine,
+  ProductActivationEngine,
+} = require('../src/core/intelligence');
+
+const sampleProducts = [
+  ...Array.from({ length: 9 }, (_, index) => ({
+    id: `active-${index + 1}`,
+    sku: `ACTIVE-${index + 1}`,
+    name: `Existing active product ${index + 1}`,
+    category: 'existing',
+    price_aed: 12 + index,
+    stock: 25,
+    status: 'active',
+  })),
+  ...Array.from({ length: 190 }, (_, index) => ({
+    id: `intermex-${index + 1}`,
+    sku: `IMX-${String(index + 1).padStart(3, '0')}`,
+    name: `Intermex imported draft product ${index + 1}`,
+    category: index % 5 === 0 ? null : 'snacks',
+    price_aed: 8 + (index % 12),
+    stock: 50,
+    status: 'inactive',
+  })),
+];
+
+const createLiveServices = () => {
+  const auditLogService = {
+    record: async ({ eventType }) => ({ id: `audit-demo-${eventType}-${Date.now()}` }),
+  };
+  const readOnlyClient = {
+    countRows: async ({ table }) => ({ count: table === 'cornerops_products_v' ? sampleProducts.length : 0 }),
+    selectRows: async ({ table, limit }) => ({
+      data: table === 'cornerops_products_v' ? sampleProducts.slice(0, limit || 1000) : [],
+    }),
+  };
+  const catalogCohortService = new CatalogCohortService({
+    auditLogService,
+    client: readOnlyClient,
+    config: { cornermexExpectedProductCount: 190 },
+  });
+  const founderReviewService = {
+    buildFounderReview: async () => ({
+      operatingStage: 'pre_launch',
+      launchReadinessStatus: 'needs_work',
+      launchReadinessScore: 57,
+      catalogReadiness: {
+        expectedFounderProductCount: 190,
+        readableProductCount: 199,
+        productCountMismatch: false,
+      },
+      launchActions: [
+        { id: 'launch-action-demo-1', title: 'Validate 190 imported draft products.' },
+        { id: 'launch-action-demo-2', title: 'Select first launch-ready products.' },
+      ],
+      warnings: [],
+      auditId: 'audit-demo-founder-review-v18',
+    }),
+  };
+  const flowEngine = {
+    analyzeFlows: async () => ({
+      sourceMode: 'real_read_only',
+      dataSource: 'cornermex_supabase',
+      auditId: 'audit-demo-flow-v18',
+      flows: [],
+      warnings: [],
+    }),
+  };
+  const operatingStageEngine = new OperatingStageEngine({
+    config: {
+      cornermexOperatingStage: 'pre_launch',
+      cornermexLaunchDate: '2026-08-17',
+    },
+  });
+  const actionEngineService = new ActionEngineService({
+    auditLogService,
+    catalogCohortService,
+    flowEngine,
+    founderReviewService,
+  });
+  const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
+  const environmentDoctorService = new EnvironmentDoctorService({
+    config: {
+      cornermexExpectedProductCount: 190,
+      cornermexSupabaseReadOnly: true,
+      cornermexSupabaseAllowWrites: false,
+      cornermexSupabaseBlockMutations: true,
+      runtimeSupabaseWritesEnabled: false,
+      whatsappSendEnabled: false,
+      emailSendEnabled: false,
+      openclawEnabled: false,
+      controlTowerFrontendOperatorTokenHash: 'configured',
+    },
+  });
+  return {
+    actionEngineService,
+    productActivationEngine,
+    liveControlTowerStatusService: new LiveControlTowerStatusService({
+      actionEngine: actionEngineService,
+      capabilityMatrixService: new CapabilityMatrixService({
+        config: {
+          cornermexSupabaseReadOnly: true,
+          cornermexSupabaseAllowWrites: false,
+          whatsappSendEnabled: false,
+          emailSendEnabled: false,
+          openclawEnabled: false,
+        },
+      }),
+      catalogCohortService,
+      environmentDoctorService,
+      founderReviewService,
+      operatingStageEngine,
+      productActivationEngine,
+    }),
+  };
+};
 
 const sampleReport = {
   generatedAt: new Date().toISOString(),
@@ -50,6 +171,7 @@ const sampleReport = {
 };
 
 async function run() {
+  const liveServices = createLiveServices();
   const contract = new ControlTowerFrontendContract({
     approvalCenterService: {
       list: async () => ({
@@ -86,6 +208,7 @@ async function run() {
         warnings: [],
       }),
     },
+    ...liveServices,
     messageDraftService: {
       createDraft: async () => ({
         auditId: 'audit-demo-draft-v13',

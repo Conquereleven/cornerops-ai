@@ -5,7 +5,10 @@ const { createControlTowerFrontendAuth, sha256 } = require('../src/api/middlewar
 const { createControlTowerFrontendCors } = require('../src/api/middleware/controlTowerFrontendCors');
 const { createControlTowerFrontendRateLimit } = require('../src/api/middleware/controlTowerFrontendRateLimit');
 const { createControlTowerFrontendSanitizer } = require('../src/api/middleware/controlTowerFrontendSanitizer');
-const { assertNoSecretKeys } = require('../src/api/contracts/controlTowerFrontendSchemas');
+const {
+  CONTROL_TOWER_FRONTEND_VERSION,
+  assertNoSecretKeys,
+} = require('../src/api/contracts/controlTowerFrontendSchemas');
 
 const baseConfig = () => ({
   controlTowerFrontendApiEnabled: true,
@@ -113,7 +116,7 @@ describe('Control Tower backend bridge v1.3.3', () => {
       externalSendsBlocked: true,
     });
     expect(res.body.auditId).toBeTruthy();
-    expect(res.body.data.apiVersion).toBe('v1.3.3');
+    expect(res.body.data.apiVersion).toBe(CONTROL_TOWER_FRONTEND_VERSION);
     expect(res.body.data.authMode).toBe('operator_token');
     expect(assertNoSecretKeys(res.body)).toBe(true);
   });
