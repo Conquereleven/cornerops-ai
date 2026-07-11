@@ -1,5 +1,7 @@
 const PRODUCT_READ_MODEL = 'cornerops_products_v';
 const BASE_PRODUCTS_TABLE = 'products';
+const COHORT_CACHE_TTL_MS = 15000;
+const INTERACTIVE_READ_TIMEOUT_MS = 2500;
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 const lower = (value) => String(value || '').toLowerCase();
@@ -9,6 +11,18 @@ const firstPresentKey = (row, keys) => keys.find((key) => Object.prototype.hasOw
 const fieldValue = (row, keys) => {
   const key = firstPresentKey(row, keys);
   return key ? row[key] : undefined;
+};
+
+const withTimeout = async (promise, timeoutMs) => {
+  let timeout;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(Object.assign(new Error('catalog_read_timeout'), { code: 'CATALOG_READ_TIMEOUT' })), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeout);
+  }
 };
 
 const isActive = (row) => {
@@ -29,15 +43,35 @@ class CatalogCohortService {
     this.client = client;
     this.config = config;
     this.connector = connector;
+    this.cohortCache = null;
+    this.cohortCacheExpiresAt = 0;
+    this.cohortPromise = null;
   }
 
   async buildCohort(context = {}) {
+    if (this.cohortCache && Date.now() < this.cohortCacheExpiresAt) return this.cohortCache;
+    if (this.cohortPromise) return this.cohortPromise;
+    this.cohortPromise = this.buildFreshCohort(context)
+      .then((cohort) => {
+        this.cohortCache = cohort;
+        this.cohortCacheExpiresAt = Date.now() + COHORT_CACHE_TTL_MS;
+        return cohort;
+      })
+      .finally(() => {
+        this.cohortPromise = null;
+      });
+    return this.cohortPromise;
+  }
+
+  async buildFreshCohort(context = {}) {
     const expectedImportedProductCount = Number(this.config.cornermexExpectedProductCount || 190) || 190;
-    const readModel = await this.readTable(PRODUCT_READ_MODEL, 1000);
-    const baseProducts = await this.readTable(BASE_PRODUCTS_TABLE, 1000);
-    const connectorStatus = this.connector?.getConnectorStatus
-      ? await this.connector.getConnectorStatus(context)
-      : null;
+    const [readModel, baseProducts, connectorStatus] = await Promise.all([
+      this.readTable(PRODUCT_READ_MODEL, 1000),
+      this.readTable(BASE_PRODUCTS_TABLE, 1000),
+      this.connector?.getConnectorStatus
+        ? this.connector.getConnectorStatus(context)
+        : Promise.resolve(null),
+    ]);
     const rows = readModel.rows.length ? readModel.rows : asArray((await this.connector?.listProducts?.({ limit: 1000 }, context))?.data);
     const fieldAvailability = this.fieldAvailability(rows);
     const totalReadableProducts = readModel.count ?? connectorStatus?.rowCounts?.products ?? rows.length;
@@ -110,10 +144,27 @@ class CatalogCohortService {
     if (!this.client?.selectRows) {
       return { rows: [], count: null, available: false, warning: 'Supabase read-only client is not configured.' };
     }
-    const [countResult, rowsResult] = await Promise.all([
-      this.client.countRows ? this.client.countRows({ table }) : Promise.resolve({ count: null }),
-      this.client.selectRows({ table, limit }),
-    ]);
+    const timeoutMs = Math.min(
+      Number(this.config.cornermexSupabaseRequestTimeoutMs) || INTERACTIVE_READ_TIMEOUT_MS,
+      INTERACTIVE_READ_TIMEOUT_MS,
+    );
+    let countResult;
+    let rowsResult;
+    try {
+      [countResult, rowsResult] = await Promise.all([
+        this.client.countRows
+          ? withTimeout(this.client.countRows({ table }), timeoutMs)
+          : Promise.resolve({ count: null }),
+        withTimeout(this.client.selectRows({ table, limit }), timeoutMs),
+      ]);
+    } catch (_error) {
+      return {
+        rows: [],
+        count: null,
+        available: false,
+        warning: `Read model ${table} timed out safely.`,
+      };
+    }
     if (rowsResult?.error) {
       return {
         rows: [],

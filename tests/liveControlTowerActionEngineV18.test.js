@@ -107,6 +107,34 @@ describe('Live Control Tower + Action Engine v1.8', () => {
     expect(cohort.safety.writesBlocked).toBe(true);
   });
 
+  test('catalog cohort deduplicates concurrent reads and times out safely', async () => {
+    const selectRows = jest.fn(() => new Promise(() => {}));
+    const countRows = jest.fn(() => new Promise(() => {}));
+    const catalog = new CatalogCohortService({
+      auditLogService,
+      client: { countRows, selectRows },
+      config: {
+        cornermexExpectedProductCount: 190,
+        cornermexSupabaseRequestTimeoutMs: 25,
+      },
+      connector,
+    });
+    const startedAt = Date.now();
+    const [first, second, third] = await Promise.all([
+      catalog.buildCohort({ requestId: 'timeout-a' }),
+      catalog.buildCohort({ requestId: 'timeout-b' }),
+      catalog.buildCohort({ requestId: 'timeout-c' }),
+    ]);
+    expect(Date.now() - startedAt).toBeLessThan(500);
+    expect(first).toBe(second);
+    expect(second).toBe(third);
+    expect(selectRows).toHaveBeenCalledTimes(2);
+    expect(countRows).toHaveBeenCalledTimes(2);
+    expect(first.totalReadableProducts).toBe(199);
+    expect(first.warnings.join(' ')).toContain('timed out safely');
+    expect(first.safety.writesBlocked).toBe(true);
+  });
+
   test('action engine activates product quality and treats unavailable flows as no_data_yet', async () => {
     const actionEngine = await createActionEngine().build({ requestId: 'test-action-v18' });
     const productFlow = actionEngine.flows.find((flow) => flow.id === 'product_quality_flow');

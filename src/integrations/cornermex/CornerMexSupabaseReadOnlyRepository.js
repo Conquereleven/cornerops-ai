@@ -17,6 +17,8 @@ const SUCCESSFUL_AVAILABILITY = Object.freeze([
 
 const nowIso = () => new Date().toISOString();
 const auditId = (prefix = 'audit-cornermex-supabase') => `${prefix}-${randomUUID().slice(0, 12)}`;
+const READINESS_CACHE_TTL_MS = 15000;
+const READINESS_PROBE_TIMEOUT_MS = 1500;
 
 const sanitizeErrorMessage = (error) => String(error?.message || error?.code || 'unknown_error')
   .replace(/https:\/\/[^\s)]+/g, '[redacted-url]')
@@ -52,25 +54,57 @@ class CornerMexSupabaseReadOnlyRepository {
     this.auditLogService = auditLogService;
     this.client = client;
     this.configSummary = configSummary;
+    this.readinessCache = null;
+    this.readinessCacheExpiresAt = 0;
+    this.readinessPromise = null;
   }
 
   async checkReadiness(context = {}) {
+    if (this.readinessCache && Date.now() < this.readinessCacheExpiresAt) {
+      return this.readinessCache;
+    }
+    if (this.readinessPromise) return this.readinessPromise;
+    this.readinessPromise = this.buildReadiness(context)
+      .then((status) => {
+        this.readinessCache = status;
+        this.readinessCacheExpiresAt = Date.now() + READINESS_CACHE_TTL_MS;
+        return status;
+      })
+      .finally(() => {
+        this.readinessPromise = null;
+      });
+    return this.readinessPromise;
+  }
+
+  async buildReadiness(context = {}) {
     const validation = this.configSummary.validate();
     if (validation.unsafe.length) return this.statusFromValidation(validation, SUPABASE_STATUS.BLOCKED, SOURCE_MODES.BLOCKED_UNSAFE_CONFIG);
     if (!validation.activationCandidate || !this.client) {
       return this.statusFromValidation(validation, SUPABASE_STATUS.NOT_CONFIGURED, SOURCE_MODES.REPO_DISCOVERED);
     }
-    const tableResults = {};
-    for (const entity of ENTITY_NAMES) {
-      tableResults[entity] = await this.readTable(entity, { limit: 1 }, context);
-    }
+    const probeTimeoutMs = Math.min(validation.limits.requestTimeoutMs, READINESS_PROBE_TIMEOUT_MS);
+    const tableResults = Object.fromEntries(await Promise.all(
+      ENTITY_NAMES.map(async (entity) => [
+        entity,
+        await this.readTable(entity, { limit: 1 }, context, { timeoutMs: probeTimeoutMs }),
+      ]),
+    ));
     const availability = Object.fromEntries(
       Object.entries(tableResults).map(([entity, result]) => [entity, result.meta.availability]),
     );
-    const rowCounts = {};
-    for (const [entity, result] of Object.entries(tableResults)) {
-      rowCounts[entity] = await this.countTable(entity, result.meta.table, result.meta.rowCount, validation, context);
-    }
+    const rowCounts = Object.fromEntries(await Promise.all(
+      Object.entries(tableResults).map(async ([entity, result]) => [
+        entity,
+        await this.countTable(
+          entity,
+          result.meta.table,
+          result.meta.rowCount,
+          validation,
+          context,
+          probeTimeoutMs,
+        ),
+      ]),
+    ));
     const statuses = Object.values(availability);
     const successful = statuses.filter((status) => SUCCESSFUL_AVAILABILITY.includes(status));
     const failed = statuses.filter((status) => !SUCCESSFUL_AVAILABILITY.includes(status));
@@ -139,7 +173,7 @@ class CornerMexSupabaseReadOnlyRepository {
     };
   }
 
-  async readTable(entity, filters = {}, context = {}) {
+  async readTable(entity, filters = {}, context = {}, options = {}) {
     const validation = this.configSummary.validate();
     const tables = validation.tableMappingCandidates?.[entity] || [validation.tableMappings[entity]];
     const limit = Math.max(1, Math.min(Number(filters.limit) || validation.limits.maxRows, validation.limits.maxRows));
@@ -149,7 +183,7 @@ class CornerMexSupabaseReadOnlyRepository {
     const failures = [];
     let fallbackResult = null;
     for (const [index, table] of tables.entries()) {
-      const result = await this.tryReadTable(entity, table, limit, validation, context);
+      const result = await this.tryReadTable(entity, table, limit, validation, context, options.timeoutMs);
       if (SUCCESSFUL_AVAILABILITY.includes(result.meta.availability)) {
         const shouldTryLegacyFallback = result.meta.availability === TABLE_AVAILABILITY.AVAILABLE_EMPTY
           && table === DEFAULT_READ_VIEW_TABLES[entity]
@@ -170,12 +204,12 @@ class CornerMexSupabaseReadOnlyRepository {
     };
   }
 
-  async countTable(entity, table, fallbackCount, validation, context = {}) {
+  async countTable(entity, table, fallbackCount, validation, context = {}, timeoutMs) {
     if (!table || !this.client?.countRows) return fallbackCount;
     try {
       const response = await withTimeout(
         this.client.countRows({ table }),
-        validation.limits.requestTimeoutMs,
+        timeoutMs || validation.limits.requestTimeoutMs,
       );
       if (response.error) return fallbackCount;
       const count = Number(response.count);
@@ -187,11 +221,11 @@ class CornerMexSupabaseReadOnlyRepository {
     }
   }
 
-  async tryReadTable(entity, table, limit, validation, context = {}) {
+  async tryReadTable(entity, table, limit, validation, context = {}, timeoutMs) {
     try {
       const response = await withTimeout(
         this.client.selectRows({ table, limit }),
-        validation.limits.requestTimeoutMs,
+        timeoutMs || validation.limits.requestTimeoutMs,
       );
       if (response.error) {
         const availability = classifyError(response.error);
