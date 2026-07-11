@@ -128,3 +128,23 @@ Paste-ready update prompt:
 - `docs/lovable/prompts/control-tower-v1.8-live-action-engine.md`
 
 The Lovable UI must show `199` as total readable products and `190` as imported Intermex draft products. These values are intentionally separate.
+
+### Applied Build Evidence
+
+- Project: `CornerOps Dashboard`
+- Project ID: `de6bc54c-b2d7-4527-b464-adf97760ec25`
+- Preview: `https://id-preview--de6bc54c-b2d7-4527-b464-adf97760ec25.lovable.app`
+- Raw v1.8 adapter alignment: `4335715aa17aa897481c919d8cdb184415e37e27`
+- Final contract correctness patch: `03d272cae4ff02bb213b82747378612ca5d1c863`
+
+Verified in Lovable:
+
+- Catalog cards preserve `199 total = 190 imported Intermex drafts + 9 existing active`.
+- Action Engine reads `status`, `dataState`, and `capabilityState` from the backend contract.
+- Empty flows render as `no_data_yet`, not as failures.
+- Product activation and external sends remain disabled.
+- Image counts are explicitly marked unavailable when the read model does not expose image fields.
+- Environment Doctor renders `usable_with_warnings` as a warning state.
+- No application-breaking browser console errors were observed. Remaining warnings are Lovable Meta Pixel filtering and React Router future-flag notices.
+
+Live visual verification is pending an operator token in the active browser profile and deployment of the v1.8 backend endpoints. Until then, the UI honestly labels the fallback as `operator token required` and does not present mock values as live data.
