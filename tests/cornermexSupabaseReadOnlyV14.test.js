@@ -86,6 +86,26 @@ describe('CornerMex Supabase read-only v1.4', () => {
     expect(products.meta.writesBlocked).toBe(true);
   });
 
+  test('readiness probes run concurrently and cache the safe result', async () => {
+    const delay = (value) => new Promise((resolve) => setTimeout(() => resolve(value), 25));
+    const client = {
+      selectRows: jest.fn(() => delay({ data: [] })),
+      countRows: jest.fn(() => delay({ count: 0 })),
+    };
+    const repository = repo(safeConfig, client);
+    const startedAt = Date.now();
+    const first = await repository.checkReadiness({ requestId: 'concurrent-readiness' });
+    const elapsedMs = Date.now() - startedAt;
+    const selectCalls = client.selectRows.mock.calls.length;
+    const countCalls = client.countRows.mock.calls.length;
+    const second = await repository.checkReadiness({ requestId: 'cached-readiness' });
+    expect(elapsedMs).toBeLessThan(250);
+    expect(first.sourceMode).toBe(SOURCE_MODES.REAL_READ_ONLY);
+    expect(second).toBe(first);
+    expect(client.selectRows).toHaveBeenCalledTimes(selectCalls);
+    expect(client.countRows).toHaveBeenCalledTimes(countCalls);
+  });
+
   test('partial table failures produce real_read_only_partial and sanitized availability', async () => {
     const client = {
       selectRows: jest.fn(async ({ table }) => {
