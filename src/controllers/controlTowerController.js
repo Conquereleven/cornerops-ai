@@ -11,6 +11,18 @@ const actions = require('../core/actions');
 const data = require('../core/data');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
 const { CornerMexMessageDraftService } = require('../core/drafts');
+const env = require('../config/env');
+const {
+  ActionEngineService,
+  CatalogCohortService,
+  CapabilityMatrixService,
+  EnvironmentDoctorService,
+  FounderReviewService,
+  IntelligenceService,
+  LiveControlTowerStatusService,
+  OperatingStageEngine,
+  ProductActivationEngine,
+} = require('../core/intelligence');
 const operatorChannel = require('../core/operator-channel');
 const { ControlTowerFrontendContract } = require('../api/contracts/controlTowerFrontendContract');
 
@@ -21,6 +33,43 @@ const controlTowerFrontendFlowEngine = new CornerMexFlowEngine({
 const controlTowerFrontendDraftService = new CornerMexMessageDraftService({
   auditLogService: data.auditLogService,
 });
+const controlTowerFrontendIntelligenceService = new IntelligenceService({
+  auditLogService: data.auditLogService,
+  connector: data.lovableCornerMexConnector,
+  flowEngine: controlTowerFrontendFlowEngine,
+});
+const controlTowerFrontendFounderReviewService = new FounderReviewService({
+  auditLogService: data.auditLogService,
+  config: env,
+  connector: data.lovableCornerMexConnector,
+  intelligenceService: controlTowerFrontendIntelligenceService,
+});
+const controlTowerFrontendCatalogCohortService = new CatalogCohortService({
+  auditLogService: data.auditLogService,
+  client: data.cornerMexSupabaseReadOnlyClient,
+  config: env,
+  connector: data.lovableCornerMexConnector,
+});
+const controlTowerFrontendActionEngineService = new ActionEngineService({
+  auditLogService: data.auditLogService,
+  catalogCohortService: controlTowerFrontendCatalogCohortService,
+  flowEngine: controlTowerFrontendFlowEngine,
+  founderReviewService: controlTowerFrontendFounderReviewService,
+});
+const controlTowerFrontendProductActivationEngine = new ProductActivationEngine({
+  catalogCohortService: controlTowerFrontendCatalogCohortService,
+});
+const controlTowerFrontendEnvironmentDoctorService = new EnvironmentDoctorService({ config: env });
+const controlTowerFrontendLiveStatusService = new LiveControlTowerStatusService({
+  actionEngine: controlTowerFrontendActionEngineService,
+  capabilityMatrixService: new CapabilityMatrixService(),
+  catalogCohortService: controlTowerFrontendCatalogCohortService,
+  environmentDoctorService: controlTowerFrontendEnvironmentDoctorService,
+  founderReviewService: controlTowerFrontendFounderReviewService,
+  operatingStageEngine: new OperatingStageEngine({ config: env }),
+  productActivationEngine: controlTowerFrontendProductActivationEngine,
+  config: env,
+});
 
 const controlTowerFrontendContract = new ControlTowerFrontendContract({
   approvalCenterService,
@@ -28,6 +77,9 @@ const controlTowerFrontendContract = new ControlTowerFrontendContract({
   controlTowerReportService: controlTowerV11ReportService,
   controlledActionExecutor: actions.controlledActionExecutor,
   flowEngine: controlTowerFrontendFlowEngine,
+  liveControlTowerStatusService: controlTowerFrontendLiveStatusService,
+  actionEngineService: controlTowerFrontendActionEngineService,
+  productActivationEngine: controlTowerFrontendProductActivationEngine,
   messageDraftService: controlTowerFrontendDraftService,
 });
 

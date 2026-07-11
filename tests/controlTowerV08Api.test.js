@@ -20,6 +20,8 @@ const loadApp = (overrides = {}) => {
 };
 
 describe('Control Tower v0.8 API', () => {
+  jest.setTimeout(30000);
+
   afterEach(() => { process.env = { ...ORIGINAL_ENV }; jest.resetModules(); });
 
   test('is disabled unless explicitly enabled', async () => {

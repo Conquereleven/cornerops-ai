@@ -29,6 +29,9 @@ class ControlTowerFrontendContract {
     controlTowerReportService,
     controlledActionExecutor,
     flowEngine,
+    liveControlTowerStatusService,
+    actionEngineService,
+    productActivationEngine,
     messageDraftService,
   } = {}) {
     this.approvalCenterService = approvalCenterService;
@@ -36,6 +39,9 @@ class ControlTowerFrontendContract {
     this.controlTowerReportService = controlTowerReportService;
     this.controlledActionExecutor = controlledActionExecutor;
     this.flowEngine = flowEngine;
+    this.liveControlTowerStatusService = liveControlTowerStatusService;
+    this.actionEngineService = actionEngineService;
+    this.productActivationEngine = productActivationEngine;
     this.messageDraftService = messageDraftService;
   }
 
@@ -176,7 +182,46 @@ class ControlTowerFrontendContract {
     });
   }
 
-  status(report) {
+  async liveStatus() {
+    if (!this.liveControlTowerStatusService?.build) return null;
+    try {
+      return await this.liveControlTowerStatusService.build({
+        requestId: 'control-tower-frontend-contract-v1.8',
+        userId: 'lovable-control-tower',
+        channel: 'api',
+      });
+    } catch (error) {
+      return { error: `Live Control Tower status failed safely: ${error.message}` };
+    }
+  }
+
+  async status(report) {
+    const live = await this.liveStatus();
+    if (live && !live.error) {
+      return this.envelope('status', report, {
+        service: 'cornerops-ai',
+        appName: 'CornerOps Control Tower',
+        backendRole: 'brain',
+        lovableFrontendRole: 'cockpit',
+        cornerMexLovableRole: 'marketplace',
+        generatedAt: live.generatedAt,
+        mode: live.mode,
+        sourceMode: live.mode,
+        dataSource: live.source,
+        fallbackActive: live.fallbackActive,
+        connectors: live.connectors,
+        catalog: live.catalog,
+        founderReview: live.founderReview,
+        capabilityMatrix: live.capabilityMatrix,
+        operatingStage: live.operatingStage,
+        workflowCoverage: live.workflowCoverage,
+        environmentDoctor: live.environmentDoctor,
+        safety: live.safety,
+      }, {
+        sourceMode: live.mode,
+        warnings: live.warnings || [],
+      });
+    }
     const supabase = supabaseSummary(report);
     return this.envelope('status', report, {
       service: 'cornerops-ai',
@@ -186,6 +231,7 @@ class ControlTowerFrontendContract {
       cornerMexLovableRole: 'marketplace',
       generatedAt: report.generatedAt,
       sourceMode: pickSourceMode(report.realSourceExpansion?.sourceModeSummary, 'local_internal'),
+      fallbackActive: true,
       dataSource: supabase.dataSource,
       supabaseStatus: supabase.supabaseStatus,
       tableAvailability: supabase.tableAvailability,
@@ -219,7 +265,23 @@ class ControlTowerFrontendContract {
     });
   }
 
-  cornerMex(report) {
+  async cornerMex(report) {
+    const live = await this.liveStatus();
+    if (live && !live.error) {
+      return this.envelope('cornermex', report, {
+        sourceMode: live.mode,
+        currentMode: live.mode,
+        dataSource: live.source,
+        catalog: live.catalog,
+        productActivation: live.productActivation,
+        stageWorkflows: live.stageWorkflows,
+        fallbackActive: live.fallbackActive,
+        writesBlocked: true,
+      }, {
+        sourceMode: live.mode,
+        warnings: live.catalog?.warnings || live.warnings || [],
+      });
+    }
     const connector = report.cornerMexLovableConnector || {};
     const supabase = supabaseSummary(report);
     return this.envelope('cornermex', report, {
@@ -245,6 +307,13 @@ class ControlTowerFrontendContract {
 
   async flows(report) {
     const supabase = supabaseSummary(report);
+    const actionEngine = this.actionEngineService?.build
+      ? await this.actionEngineService.build({
+        requestId: 'control-tower-frontend-flows-v1.8',
+        userId: 'lovable-control-tower',
+        channel: 'api',
+      }).catch((error) => ({ warnings: [`Action Engine failed safely: ${error.message}`] }))
+      : null;
     let analysis = null;
     if (this.flowEngine?.analyzeFlows) {
       try {
@@ -269,16 +338,21 @@ class ControlTowerFrontendContract {
         flowsWithData: flowStatus.flowsWithEnoughData || [],
         flowsMissingData: flowStatus.flowsMissingData || [],
       },
-      flows: analysis?.flows || [],
-      draftSendingDisabled: true,
+      flows: actionEngine?.flows || analysis?.flows || [],
+      actionEngine: actionEngine ? {
+        recommendedActionCount: actionEngine.recommendedActions?.length || 0,
+        approvalQueueCount: actionEngine.approvalQueue?.length || 0,
+      } : null,
+      draftSendingDisabled: false,
+      draftStatus: 'internal_draft_enabled_or_approval_required',
       whatsappDisabled: true,
       emailSendingDisabled: true,
       writesBlocked: true,
-      auditId: analysis?.auditId,
+      auditId: actionEngine?.auditId || analysis?.auditId,
     }, {
-      sourceMode: analysis?.sourceMode || flowStatus.sourceMode || 'repo_discovered',
-      auditId: analysis?.auditId,
-      warnings: analysis?.warnings || flowStatus.warnings || [],
+      sourceMode: actionEngine?.sourceMode || analysis?.sourceMode || flowStatus.sourceMode || 'repo_discovered',
+      auditId: actionEngine?.auditId || analysis?.auditId,
+      warnings: actionEngine?.warnings || analysis?.warnings || flowStatus.warnings || [],
     });
   }
 
@@ -342,17 +416,15 @@ class ControlTowerFrontendContract {
   }
 
   async drafts(report) {
-    const draft = this.messageDraftService?.createDraft
-      ? await this.messageDraftService.createDraft({
-        channel: 'whatsapp',
-        text: 'sample quote follow-up for Lovable UI preview',
-        sourceMode: 'local_internal',
-        requestId: 'control-tower-frontend-draft-preview',
-        operatorId: 'lovable-control-tower',
-      })
-      : null;
+    const actionState = this.actionEngineService?.build
+      ? await this.actionEngineService.build({
+        requestId: 'control-tower-frontend-drafts-v1.8',
+        userId: 'lovable-control-tower',
+        channel: 'api',
+      }).catch((error) => ({ warnings: [`Action Engine drafts preview failed safely: ${error.message}`], recommendedActions: [] }))
+      : { recommendedActions: [] };
     return this.envelope('drafts', report, {
-      sourceMode: 'local_internal',
+      sourceMode: actionState.sourceMode || 'local_internal',
       draftTypes: [
         'whatsapp_follow_up_draft',
         'email_follow_up_draft',
@@ -362,29 +434,47 @@ class ControlTowerFrontendContract {
       ],
       sendStatus: 'not_sendable_in_current_version',
       localOnly: true,
-      sampleDraft: draft?.draft || null,
+      recommendedDraftSources: (actionState.recommendedActions || []).slice(0, 10).map((action) => ({
+        id: action.id,
+        type: action.type,
+        title: action.title,
+        approvalRequired: action.approvalRequired !== false,
+      })),
+      persistence: 'not_configured',
       whatsappSendsDisabled: true,
       emailSendsDisabled: true,
     }, {
-      sourceMode: 'local_internal',
-      auditId: draft?.auditId,
-      warnings: draft?.warnings || [],
+      sourceMode: actionState.sourceMode || 'local_internal',
+      auditId: actionState.auditId,
+      warnings: actionState.warnings || [],
       approvalRequired: true,
     });
   }
 
-  actions(report) {
+  async actions(report) {
     const status = this.controlledActionExecutor?.status
       ? this.controlledActionExecutor.status()
       : { enabled: false, dryRun: true, realExecutionAllowed: false, actions: [] };
+    const actionEngine = this.actionEngineService?.build
+      ? await this.actionEngineService.build({
+        requestId: 'control-tower-frontend-actions-v1.8',
+        userId: 'lovable-control-tower',
+        channel: 'api',
+      }).catch((error) => ({ warnings: [`Action Engine failed safely: ${error.message}`], recommendedActions: [] }))
+      : null;
     return this.envelope('actions', report, {
-      sourceMode: 'local_internal',
+      sourceMode: actionEngine?.sourceMode || 'local_internal',
       controlledActions: status,
+      actionEngine: actionEngine ? {
+        flows: actionEngine.flows,
+        recommendedActions: actionEngine.recommendedActions,
+        approvalQueue: actionEngine.approvalQueue,
+      } : null,
       riskyActionsRequireApproval: true,
       realExecutionBlocked: status.realExecutionAllowed !== true,
       dryRunOnly: status.dryRun !== false,
       externalSendsBlocked: true,
-    }, { sourceMode: 'local_internal', approvalRequired: true });
+    }, { sourceMode: actionEngine?.sourceMode || 'local_internal', approvalRequired: true, warnings: actionEngine?.warnings || [] });
   }
 
   safetySummary(report) {
