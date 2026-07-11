@@ -14,6 +14,7 @@ const actionRoutes = require('./routes/actions');
 const requestLogger = require('./middleware/requestLogger');
 const errorHandler = require('./middleware/errorHandler');
 const env = require('./config/env');
+const { usesControlTowerFrontendCors } = require('./api/middleware/controlTowerFrontendRouteScope');
 const fs = require('fs');
 const path = require('path');
 const { getDataSourceStatus } = require('./data/supabase/supabaseClient');
@@ -22,7 +23,7 @@ const app = express();
 
 app.disable('x-powered-by');
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/control-tower/frontend/v1')) return next();
+  if (usesControlTowerFrontendCors(req.path)) return next();
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',
