@@ -34,6 +34,15 @@ For this project the verified IPv4-compatible endpoint is the Supabase Session P
 5. Restart the service and verify the same IDs and versions remain.
 6. Run CornerMex read-only checks and Prod Watch twice.
 
+## Production evidence
+
+- Current deployment: `b53f4a16-b2f7-4798-bf23-3cac380aef65`
+- Health and authenticated Work Queue status: HTTP 200
+- Persistence: `postgres`, durable, healthy
+- Internal approval: approved, `executed=false`; conflicting second decision rejected with HTTP 409
+- Restart verification: same work item, approval, version 2, and audit IDs survived redeploy
+- CornerMex: read-only checks pass; writes and external sends remain blocked
+
 ## Rollback
 
 1. Set `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED=false`.

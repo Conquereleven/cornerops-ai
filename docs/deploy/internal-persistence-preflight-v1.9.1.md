@@ -7,11 +7,15 @@
 - `cornerops_internal` before activation: absent
 - Existing migration history: `20260707174603_create_cornerops_readonly_views_v146`
 - Public table count before activation: 17
-- Public business row-count baseline: products 199; customers, orders, order items, B2B leads, conversations, messages, worker runs, and worker events 0
+- Public business aggregate observed after activation: products 199, orders 5, customers 4, and B2B leads 0. Earlier compact table metadata reported estimated zero counts for orders/customers; those estimates were not treated as an exact baseline.
 - Raw business rows were not read.
 - Railway production baseline: service `cornerops-ai` online; all v1.9 persistence and founder-action variables are absent.
 - Existing CornerMex Supabase read-only variable names remain present and were not changed or printed.
 - Restricted URL staged in Railway through the Session Pooler; deployment `2926ebdd-affa-4654-b020-d2122a2af26a` is online with `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED=false`.
 - Railway direct-login privilege probe: passed; all probe writes rolled back.
+- Activated deployment: `c30a9a5c-1982-48f3-a3eb-b07696038ff8`, health HTTP 200, Work Queue `ready`/`postgres`/durable.
+- Auth separation and two-sync idempotency gates pass. Optimistic locking and audit pass.
+- Approval verification passed with `executed=false`, blocked external/business actions, conflicting decision HTTP 409, and three persisted audit events.
+- Persistence restarts passed on deployments `c3d87cac-0445-4fa9-982c-733c73e2cd73` and `b53f4a16-b2f7-4798-bf23-3cac380aef65`; the approved decision, work item version 2, and audit IDs remained unchanged. Authenticated Prod Watch remains pending.
 - Recovery: disable `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED`, redeploy, and preserve the schema and audit evidence.
 - Known security advisory: historical backup table `public.products_backup_pre_intermex_import` has RLS disabled. It is outside this activation and remains unchanged.
