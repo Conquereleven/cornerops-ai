@@ -11,5 +11,7 @@
 - Raw business rows were not read.
 - Railway production baseline: service `cornerops-ai` online; all v1.9 persistence and founder-action variables are absent.
 - Existing CornerMex Supabase read-only variable names remain present and were not changed or printed.
+- Restricted URL staged in Railway through the Session Pooler; deployment `2926ebdd-affa-4654-b020-d2122a2af26a` is online with `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED=false`.
+- Railway direct-login privilege probe: passed; all probe writes rolled back.
 - Recovery: disable `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED`, redeploy, and preserve the schema and audit evidence.
 - Known security advisory: historical backup table `public.products_backup_pre_intermex_import` has RLS disabled. It is outside this activation and remains unchanged.

@@ -8,9 +8,12 @@
 - Migration checksum: `20e2f52e1e0735b110f6c480d960d256d2fdebaf71b81149e087caee553aa1f9`
 - Migration: applied as `20260712001957_cornerops_internal_work_queue_v19`
 - Internal schema: 3 tables, 11 indexes, 8 runtime grants
-- Restricted login: provisioned; catalog permission matrix passes
-- Railway activation: pending explicit production-change authorization
-- Railway baseline: v1.9 persistence and founder-action variables absent; existing read-only configuration untouched
+- Restricted login: provisioned; catalog and live Railway permission matrices pass
+- Railway restricted URL: configured through verified Session Pooler
+- Railway deployment: online with persistence kill switch explicitly disabled
+- Founder-action token: generated locally, hash verified, mode `0600`, distinct from operator credential
+- Railway activation: application persistence remains disabled pending the next production gate
+- Railway baseline: existing read-only configuration untouched
 - Final status: pending
 
 ## Supabase advisors
@@ -19,8 +22,6 @@ No new critical finding was reported for `cornerops_internal`. New internal inde
 
 ## Gates still required
 
-- Direct restricted-login permission probes from Railway
-- Founder-action token generation and hash verification
 - Railway feature variables and deployment
 - Production auth matrix
 - Two syncs proving idempotency

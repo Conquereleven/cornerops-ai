@@ -23,6 +23,8 @@ Configure names only through secret-safe CLI input:
 
 Never use a service-role, publishable, anon, or PostgreSQL administrator credential for internal persistence.
 
+For this project the verified IPv4-compatible endpoint is the Supabase Session Pooler at `aws-1-ap-south-1.pooler.supabase.com:5432`. The direct database endpoint is IPv6-only and Railway production cannot route to it. Do not substitute an inferred `aws-0` pooler host.
+
 ## Verification order
 
 1. Deploy with the persistence kill switch disabled and prove restricted connectivity.
