@@ -16,6 +16,6 @@
 - Activated deployment: `c30a9a5c-1982-48f3-a3eb-b07696038ff8`, health HTTP 200, Work Queue `ready`/`postgres`/durable.
 - Auth separation and two-sync idempotency gates pass. Optimistic locking and audit pass.
 - Approval verification passed with `executed=false`, blocked external/business actions, conflicting decision HTTP 409, and three persisted audit events.
-- Persistence restarts passed on deployments `c3d87cac-0445-4fa9-982c-733c73e2cd73` and `b53f4a16-b2f7-4798-bf23-3cac380aef65`; the approved decision, work item version 2, and audit IDs remained unchanged. Authenticated Prod Watch remains pending.
+- Persistence restarts passed on deployments `c3d87cac-0445-4fa9-982c-733c73e2cd73` and `b53f4a16-b2f7-4798-bf23-3cac380aef65`; the approved decision, work item version 2, and audit IDs remained unchanged. Authenticated Prod Watch runs `29210416852` and `29210433180` passed consecutively.
 - Recovery: disable `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED`, redeploy, and preserve the schema and audit evidence.
 - Known security advisory: historical backup table `public.products_backup_pre_intermex_import` has RLS disabled. It is outside this activation and remains unchanged.

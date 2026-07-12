@@ -42,6 +42,7 @@ For this project the verified IPv4-compatible endpoint is the Supabase Session P
 - Internal approval: approved, `executed=false`; conflicting second decision rejected with HTTP 409
 - Restart verification: same work item, approval, version 2, and audit IDs survived redeploy
 - CornerMex: read-only checks pass; writes and external sends remain blocked
+- Prod Watch: authenticated runs `29210416852` and `29210433180` passed consecutively
 
 ## Rollback
 

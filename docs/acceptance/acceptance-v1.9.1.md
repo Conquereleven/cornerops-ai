@@ -21,15 +21,15 @@
 - Internal approval: approved with the required reason; `executed=false`, external sends and production mutations blocked; conflicting decision rejected with HTTP 409; three related audit events persisted
 - Persistence after redeploy: passed first on deployment `c3d87cac-0445-4fa9-982c-733c73e2cd73` and again after the approval decision on `b53f4a16-b2f7-4798-bf23-3cac380aef65`; the same work item, approval, version 2, and audit IDs remained present; provider `postgres`, durable and healthy; no memory/file fallback
 - Railway baseline: existing read-only configuration untouched
-- Final status: `blocked_by_prod_watch`
+- Final status: `v1_9_1_live_internal_persistence`
 
 ## Supabase advisors
 
 No new critical finding was reported for `cornerops_internal`. New internal indexes are unused because the schema was just created. Preexisting public-schema findings remain unchanged, including security-definer read views and disabled RLS on `products_backup_pre_intermex_import`. They are not silently remediated in this sprint.
 
-## Gate still required
+## Acceptance gates
 
-- Authenticated Prod Watch and two consecutive successful runs
+- All production activation gates passed.
 
 ## Safety state
 
@@ -37,4 +37,4 @@ The production persistence flag is enabled only for `cornerops_internal`. The re
 
 ## Prod Watch
 
-Run `29208896968` passed public health and the repository Supabase read-only check. The authenticated Work Queue step was skipped because `CONTROL_TOWER_OPERATOR_TOKEN` is not configured as a GitHub Actions secret. Storing that credential in GitHub requires separate explicit authorization. Two authenticated consecutive runs therefore remain unproven, and the release cannot be declared complete.
+The encrypted GitHub Actions secret `CONTROL_TOWER_OPERATOR_TOKEN` is configured without exposing its value. Consecutive manual runs `29210416852` and `29210433180` passed public health, authenticated Work Queue status, and the repository Supabase read-only check. The authenticated step executed in both runs.
