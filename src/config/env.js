@@ -444,6 +444,17 @@ const baseEnv = {
     'operator_token',
   ),
   controlTowerFrontendTokenHash: process.env.CONTROL_TOWER_FRONTEND_TOKEN_HASH || '',
+  controlTowerFounderActionTokenHash:
+    process.env.CONTROL_TOWER_FOUNDER_ACTION_TOKEN_HASH || '',
+  controlTowerFounderActionAuthRequired:
+    process.env.CONTROL_TOWER_FOUNDER_ACTION_AUTH_REQUIRED === undefined
+      ? true
+      : parseBoolean(process.env.CONTROL_TOWER_FOUNDER_ACTION_AUTH_REQUIRED),
+  controlTowerFounderActionRateLimitPerMinute: parseInteger(
+    process.env.CONTROL_TOWER_FOUNDER_ACTION_RATE_LIMIT_PER_MINUTE,
+    10,
+    { min: 1, max: 120 },
+  ),
   controlTowerFrontendAllowedOrigins: parseCsv(process.env.CONTROL_TOWER_FRONTEND_ALLOWED_ORIGINS),
   controlTowerFrontendAllowLocalhost:
     process.env.CONTROL_TOWER_FRONTEND_ALLOW_LOCALHOST === undefined
@@ -630,6 +641,25 @@ const baseEnv = {
     { min: 1, max: 1440 },
   ),
   corneropsDatabaseProvider: process.env.CORNEROPS_DATABASE_PROVIDER || '',
+  corneropsInternalPersistenceEnabled: parseBoolean(
+    process.env.CORNEROPS_INTERNAL_PERSISTENCE_ENABLED,
+  ),
+  corneropsInternalPersistenceProvider: parseEnum(
+    process.env.CORNEROPS_INTERNAL_PERSISTENCE_PROVIDER,
+    ['postgres'],
+    'postgres',
+  ),
+  corneropsInternalDatabaseUrl: process.env.CORNEROPS_INTERNAL_DATABASE_URL || '',
+  corneropsInternalSchema: parseEnum(
+    process.env.CORNEROPS_INTERNAL_SCHEMA,
+    ['cornerops_internal'],
+    'cornerops_internal',
+  ),
+  corneropsInternalStatementTimeoutMs: parseInteger(
+    process.env.CORNEROPS_INTERNAL_STATEMENT_TIMEOUT_MS,
+    8000,
+    { min: 500, max: 30000 },
+  ),
   databaseUrl: process.env.DATABASE_URL || '',
   readOnlyDatabaseUrl: process.env.READONLY_DATABASE_URL || '',
   supabaseReadonlyKey: process.env.SUPABASE_READONLY_KEY || '',

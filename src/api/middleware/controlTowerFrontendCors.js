@@ -38,9 +38,9 @@ const createControlTowerFrontendCors = (config = env) => (req, res, next) => {
   }
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-CornerOps-Frontend-Token, X-Request-Id, X-Correlation-Id',
+    'Content-Type, Authorization, X-CornerOps-Frontend-Token, X-CornerOps-Founder-Action-Token, X-Operator-Id, X-Request-Id, X-Correlation-Id',
   );
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Max-Age', '600');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   return next();
