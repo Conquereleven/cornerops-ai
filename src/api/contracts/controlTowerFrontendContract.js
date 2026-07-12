@@ -33,6 +33,8 @@ class ControlTowerFrontendContract {
     actionEngineService,
     productActivationEngine,
     messageDraftService,
+    workQueueService,
+    approvalEngineService,
   } = {}) {
     this.approvalCenterService = approvalCenterService;
     this.auditViewerService = auditViewerService;
@@ -43,6 +45,8 @@ class ControlTowerFrontendContract {
     this.actionEngineService = actionEngineService;
     this.productActivationEngine = productActivationEngine;
     this.messageDraftService = messageDraftService;
+    this.workQueueService = workQueueService;
+    this.approvalEngineService = approvalEngineService;
   }
 
   async getSection(section) {
@@ -67,6 +71,7 @@ class ControlTowerFrontendContract {
       security: () => this.security(report),
       status: () => this.status(report),
       telegram: () => this.telegram(report),
+      'work-queue': () => this.workQueue(report),
     };
     return builders[section]();
   }
@@ -197,6 +202,7 @@ class ControlTowerFrontendContract {
 
   async status(report) {
     const live = await this.liveStatus();
+    const workQueue = await this.workQueueService?.status?.().catch(() => null);
     if (live && !live.error) {
       return this.envelope('status', report, {
         service: 'cornerops-ai',
@@ -217,6 +223,7 @@ class ControlTowerFrontendContract {
         workflowCoverage: live.workflowCoverage,
         environmentDoctor: live.environmentDoctor,
         safety: live.safety,
+        workQueue,
       }, {
         sourceMode: live.mode,
         warnings: live.warnings || [],
@@ -357,27 +364,39 @@ class ControlTowerFrontendContract {
   }
 
   async approvals(report) {
-    const list = this.approvalCenterService?.list
+    const persistent = this.approvalEngineService?.list
+      ? await this.approvalEngineService.list({ limit: 100 })
+      : null;
+    const legacy = !persistent && this.approvalCenterService?.list
       ? await this.approvalCenterService.list({ limit: 25 })
       : { approvals: [], pendingCount: 0 };
+    const approvals = persistent || legacy.approvals || legacy.items || [];
     return this.envelope('approvals', report, {
       sourceMode: 'local_internal',
-      pending: list.approvals || list.items || [],
-      pendingCount: list.pendingCount || (list.approvals || list.items || []).filter((item) => item.status === 'pending').length,
+      items: approvals,
+      pending: approvals.filter((item) => item.status === 'pending'),
+      approved: approvals.filter((item) => item.status === 'approved'),
+      rejected: approvals.filter((item) => item.status === 'rejected'),
+      pendingCount: approvals.filter((item) => item.status === 'pending').length,
       approvalRequiredForRiskyActions: true,
       externalSendsBlocked: true,
-      dryRunActionsOnly: true,
+      approvalSemantics: 'internal_decision_only',
+      executionStatus: 'not_available_in_current_version',
     }, { sourceMode: 'local_internal', approvalRequired: true });
   }
 
   async audit(report) {
-    const events = this.auditViewerService?.getEvents
+    const persistent = this.workQueueService?.listAudit
+      ? await this.workQueueService.listAudit({ limit: 100 })
+      : null;
+    const legacy = !persistent && this.auditViewerService?.getEvents
       ? await this.auditViewerService.getEvents({ limit: 20 })
       : { events: [] };
     return this.envelope('audit', report, {
       sourceMode: 'local_internal',
       sanitized: true,
-      events: events.events || events.items || [],
+      appendOnly: true,
+      events: persistent || legacy.events || legacy.items || [],
       filters: ['source', 'action', 'status', 'date'],
     }, { sourceMode: 'local_internal' });
   }
@@ -416,6 +435,12 @@ class ControlTowerFrontendContract {
   }
 
   async drafts(report) {
+    const persistentDrafts = this.workQueueService?.listDrafts
+      ? await this.workQueueService.listDrafts({ limit: 100 })
+      : [];
+    const workQueueStatus = this.workQueueService?.status
+      ? await this.workQueueService.status().catch(() => null)
+      : null;
     const actionState = this.actionEngineService?.build
       ? await this.actionEngineService.build({
         requestId: 'control-tower-frontend-drafts-v1.8',
@@ -434,13 +459,15 @@ class ControlTowerFrontendContract {
       ],
       sendStatus: 'not_sendable_in_current_version',
       localOnly: true,
+      items: persistentDrafts,
       recommendedDraftSources: (actionState.recommendedActions || []).slice(0, 10).map((action) => ({
         id: action.id,
         type: action.type,
         title: action.title,
         approvalRequired: action.approvalRequired !== false,
       })),
-      persistence: 'not_configured',
+      persistence: workQueueStatus?.persistence?.provider || 'not_configured',
+      persistenceStatus: workQueueStatus?.persistence || { status: 'configuration_required' },
       whatsappSendsDisabled: true,
       emailSendsDisabled: true,
     }, {
@@ -448,6 +475,32 @@ class ControlTowerFrontendContract {
       auditId: actionState.auditId,
       warnings: actionState.warnings || [],
       approvalRequired: true,
+    });
+  }
+
+  async workQueue(report) {
+    const [status, items, metrics] = await Promise.all([
+      this.workQueueService?.status?.() || Promise.resolve({ status: 'configuration_required' }),
+      this.workQueueService?.list?.({ limit: 100 }) || Promise.resolve([]),
+      this.workQueueService?.metrics?.() || Promise.resolve({}),
+    ]);
+    return this.envelope('work-queue', report, {
+      sourceMode: 'local_internal',
+      status: status.status,
+      persistence: status.persistence,
+      internalSchema: status.internalSchema || 'cornerops_internal',
+      items,
+      metrics,
+      filters: ['priority', 'status', 'sourceFlow', 'approvalRequired', 'operatingStage'],
+      syncEndpoint: '/api/intelligence/work-queue/sync',
+      syncRequiresFounderActionAuth: true,
+      optimisticConcurrency: true,
+      productionMutationsBlocked: true,
+      externalSendsBlocked: true,
+    }, {
+      sourceMode: 'local_internal',
+      approvalRequired: true,
+      warnings: status.status === 'ready' ? [] : ['Durable internal persistence requires reviewed production configuration.'],
     });
   }
 

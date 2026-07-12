@@ -64,5 +64,6 @@ router.get('/frontend/v1/security', controller.frontendSecurity);
 router.get('/frontend/v1/telegram', controller.frontendTelegram);
 router.get('/frontend/v1/drafts', controller.frontendDrafts);
 router.get('/frontend/v1/actions', controller.frontendActions);
+router.get('/frontend/v1/work-queue', controller.frontendWorkQueue);
 
 module.exports = router;

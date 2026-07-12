@@ -39,6 +39,7 @@
     "demo:telegram-founder-real-reply": "node scripts/demo-telegram-founder-real-reply.js",
     "demo:control-tower-frontend-contract": "node scripts/demo-control-tower-frontend-contract.js",
     "control-tower:frontend-token-hash": "node scripts/control-tower-frontend-token-hash.js",
+    "control-tower:founder-action-token-hash": "node scripts/control-tower-founder-action-token-hash.js",
     "control-tower:frontend-api-check": "node scripts/control-tower-frontend-api-check.js",
     "demo:control-tower-backend-bridge": "node scripts/demo-control-tower-backend-bridge.js",
     "demo:v1.3.3": "node scripts/demo-v1.3.3.js",
@@ -117,7 +118,8 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "openai": "^4.77.0"
+    "openai": "^4.77.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "jest": "^29.7.0",

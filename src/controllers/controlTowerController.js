@@ -25,6 +25,7 @@ const {
 } = require('../core/intelligence');
 const operatorChannel = require('../core/operator-channel');
 const { ControlTowerFrontendContract } = require('../api/contracts/controlTowerFrontendContract');
+const intelligenceController = require('./intelligenceController');
 
 const controlTowerFrontendFlowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -81,6 +82,8 @@ const controlTowerFrontendContract = new ControlTowerFrontendContract({
   actionEngineService: controlTowerFrontendActionEngineService,
   productActivationEngine: controlTowerFrontendProductActivationEngine,
   messageDraftService: controlTowerFrontendDraftService,
+  workQueueService: intelligenceController.workQueueService,
+  approvalEngineService: intelligenceController.approvalEngineService,
 });
 
 const status = async (req, res, next) => {
@@ -300,6 +303,7 @@ module.exports = {
   frontendSecurity: frontendSection('security'),
   frontendStatus: frontendSection('status'),
   frontendTelegram: frontendSection('telegram'),
+  frontendWorkQueue: frontendSection('work-queue'),
   rateLimits,
   rejections,
   rejectDryRun: approvalDecision('reject'),

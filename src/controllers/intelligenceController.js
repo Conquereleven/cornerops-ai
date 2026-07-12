@@ -12,6 +12,11 @@ const {
   OperatingStageEngine,
   ProductActivationEngine,
 } = require('../core/intelligence');
+const {
+  ApprovalEngineService,
+  WorkQueueService,
+  createInternalOperationsStore,
+} = require('../core/work-queue');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -41,6 +46,13 @@ const actionEngineService = new ActionEngineService({
   flowEngine,
   founderReviewService,
 });
+const internalOperationsStore = createInternalOperationsStore(env);
+const workQueueService = new WorkQueueService({
+  actionEngineService,
+  config: env,
+  store: internalOperationsStore,
+});
+const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
 const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
 const environmentDoctorService = new EnvironmentDoctorService({ config: env });
 const operatingStageEngine = new OperatingStageEngine({ config: env });
@@ -202,9 +214,114 @@ const environmentDoctor = async (_req, res, next) => {
   }
 };
 
+const actorContext = (req) => ({
+  actorType: 'founder',
+  actorId: req.founderActionAuth?.actorId || 'founder',
+  correlationId: req.get('x-correlation-id') || requestId(req, `work-queue-${Date.now()}`),
+});
+
+const parseWorkQueueFilters = (query = {}) => ({
+  status: query.status,
+  priority: query.priority,
+  sourceFlow: query.sourceFlow,
+  actionType: query.actionType,
+  approvalRequired: query.approvalRequired === undefined
+    ? undefined : String(query.approvalRequired) === 'true',
+  operatingStage: query.operatingStage,
+  owner: query.owner,
+  limit: query.limit,
+  cursor: query.cursor,
+});
+
+const workQueueStatus = async (_req, res, next) => {
+  try { return res.json(await workQueueService.status()); } catch (error) { return next(error); }
+};
+
+const listWorkQueue = async (req, res, next) => {
+  try {
+    const [items, status] = await Promise.all([
+      workQueueService.list(parseWorkQueueFilters(req.query)),
+      workQueueService.status(),
+    ]);
+    return res.json({ ...status, items });
+  } catch (error) { return next(error); }
+};
+
+const getWorkItem = async (req, res, next) => {
+  try {
+    const item = await workQueueService.get(req.params.id);
+    return item ? res.json({ item, writesBlocked: true, externalSendsBlocked: true })
+      : res.status(404).json({ code: 'WORK_ITEM_NOT_FOUND', message: 'Work item not found.' });
+  } catch (error) { return next(error); }
+};
+
+const syncWorkQueue = async (req, res, next) => {
+  try {
+    const context = actorContext(req);
+    const result = await workQueueService.sync({ ...context, requestId: requestId(req, 'work-queue-sync-v1.9') });
+    return res.status(202).json({
+      status: 'success',
+      ...result,
+      executedExternalAction: false,
+      productionMutationsBlocked: true,
+      externalSendsBlocked: true,
+    });
+  } catch (error) { return next(error); }
+};
+
+const updateWorkItem = async (req, res, next) => {
+  try {
+    const item = await workQueueService.update(req.params.id, req.body || {}, actorContext(req));
+    return item ? res.json({ item, productionMutationsBlocked: true, externalSendsBlocked: true })
+      : res.status(404).json({ code: 'WORK_ITEM_NOT_FOUND', message: 'Work item not found.' });
+  } catch (error) { return next(error); }
+};
+
+const listPersistentApprovals = async (req, res, next) => {
+  try {
+    const approvals = await approvalEngineService.list({ status: req.query.status, limit: req.query.limit });
+    return res.json({ approvals, executed: false, executionStatus: 'not_available_in_current_version' });
+  } catch (error) { return next(error); }
+};
+
+const getPersistentApproval = async (req, res, next) => {
+  try {
+    const approval = await approvalEngineService.get(req.params.id);
+    return approval ? res.json({ approval, executed: false })
+      : res.status(404).json({ code: 'APPROVAL_NOT_FOUND', message: 'Approval not found.' });
+  } catch (error) { return next(error); }
+};
+
+const decidePersistentApproval = (decision) => async (req, res, next) => {
+  try {
+    const result = await approvalEngineService.decide(req.params.id, decision, {
+      ...actorContext(req), reason: req.body?.reason,
+    });
+    return result ? res.json(result)
+      : res.status(404).json({ code: 'APPROVAL_NOT_FOUND', message: 'Approval not found.' });
+  } catch (error) { return next(error); }
+};
+
+const listPersistentAudit = async (req, res, next) => {
+  try {
+    const events = await workQueueService.listAudit({ eventType: req.query.eventType, limit: req.query.limit });
+    return res.json({ events, appendOnly: true });
+  } catch (error) { return next(error); }
+};
+
+const listPersistentDrafts = async (req, res, next) => {
+  try {
+    const drafts = await workQueueService.listDrafts({ limit: req.query.limit });
+    return res.json({ drafts, externalSendsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const recordFounderActionAuthFailure = (event) => internalOperationsStore.recordAuditEvent(event);
+
 module.exports = {
   actionEngine,
   actionEngineDrafts,
+  approvalEngineService,
   anomalies,
   cases,
   clients,
@@ -213,9 +330,23 @@ module.exports = {
   createCaseFromAnomaly,
   environmentDoctor,
   founderReview,
+  getPersistentApproval,
+  getWorkItem,
+  listPersistentApprovals,
+  listPersistentAudit,
+  listPersistentDrafts,
+  listWorkQueue,
   overview,
   playbooks,
   productActivation,
+  recordFounderActionAuthFailure,
+  rejectPersistentApproval: decidePersistentApproval('rejected'),
+  cancelPersistentApproval: decidePersistentApproval('cancelled'),
+  approvePersistentApproval: decidePersistentApproval('approved'),
   signals,
+  syncWorkQueue,
   updateCaseStatus,
+  updateWorkItem,
+  workQueueService,
+  workQueueStatus,
 };
