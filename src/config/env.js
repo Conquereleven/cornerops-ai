@@ -650,6 +650,7 @@ const baseEnv = {
     'postgres',
   ),
   corneropsInternalDatabaseUrl: process.env.CORNEROPS_INTERNAL_DATABASE_URL || '',
+  corneropsInternalDatabaseCaPath: process.env.CORNEROPS_INTERNAL_DATABASE_CA_PATH || '',
   corneropsInternalSchema: parseEnum(
     process.env.CORNEROPS_INTERNAL_SCHEMA,
     ['cornerops_internal'],

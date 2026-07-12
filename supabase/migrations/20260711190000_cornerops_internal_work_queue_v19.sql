@@ -6,7 +6,8 @@ revoke all on schema cornerops_internal from public, anon, authenticated;
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'cornerops_internal_runtime') then
-    create role cornerops_internal_runtime nologin nosuperuser nocreatedb nocreaterole noinherit;
+    create role cornerops_internal_runtime
+      nologin nosuperuser nocreatedb nocreaterole noreplication nobypassrls noinherit;
   end if;
 end
 $$;
@@ -73,6 +74,8 @@ create table if not exists cornerops_internal.audit_events (
 
 create unique index if not exists approval_requests_one_pending_per_work_item
   on cornerops_internal.approval_requests(work_item_id) where status = 'pending';
+create index if not exists approval_requests_work_item_idx
+  on cornerops_internal.approval_requests(work_item_id);
 create index if not exists work_items_queue_idx
   on cornerops_internal.work_items(status, priority, created_at desc);
 create index if not exists work_items_source_flow_idx
