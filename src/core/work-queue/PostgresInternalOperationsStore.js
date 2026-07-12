@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const fs = require('fs');
 const { InternalWriteBoundary } = require('./InternalWriteBoundary');
 const {
   OPEN_WORK_ITEM_STATUSES,
@@ -10,9 +11,22 @@ const camel = (row) => Object.fromEntries(Object.entries(row || {}).map(([key, v
   key.replace(/_([a-z])/g, (_match, letter) => letter.toUpperCase()), value,
 ]));
 const json = (value) => JSON.stringify(value || {});
+const readDatabaseCa = (caPath) => {
+  if (!caPath) return undefined;
+  const certificate = fs.readFileSync(caPath, 'utf8');
+  if (!certificate.includes('-----BEGIN CERTIFICATE-----')
+    || !certificate.includes('-----END CERTIFICATE-----')) {
+    throw createWorkQueueError(
+      'CornerOps internal database CA certificate is invalid.',
+      'INTERNAL_PERSISTENCE_CA_INVALID',
+      503,
+    );
+  }
+  return certificate;
+};
 
 class PostgresInternalOperationsStore {
-  constructor({ connectionString, pool, schema = 'cornerops_internal', statementTimeoutMs = 8000 } = {}) {
+  constructor({ connectionString, pool, schema = 'cornerops_internal', statementTimeoutMs = 8000, caPath } = {}) {
     if (!connectionString && !pool) {
       throw createWorkQueueError(
         'CornerOps internal database connection is not configured.',
@@ -21,13 +35,14 @@ class PostgresInternalOperationsStore {
       );
     }
     this.boundary = new InternalWriteBoundary({ schema });
+    const ca = readDatabaseCa(caPath);
     this.pool = pool || new Pool({
       connectionString,
       max: 5,
       connectionTimeoutMillis: statementTimeoutMs,
       statement_timeout: statementTimeoutMs,
       application_name: 'cornerops-internal-v1.9',
-      ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: true },
+      ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
     });
   }
 
@@ -367,4 +382,4 @@ class PostgresInternalOperationsStore {
   async close() { await this.pool.end(); }
 }
 
-module.exports = { PostgresInternalOperationsStore, camel };
+module.exports = { PostgresInternalOperationsStore, camel, readDatabaseCa };

@@ -14,6 +14,7 @@ const createInternalOperationsStore = (config = {}, options = {}) => {
     connectionString: config.corneropsInternalDatabaseUrl,
     schema: config.corneropsInternalSchema,
     statementTimeoutMs: config.corneropsInternalStatementTimeoutMs,
+    caPath: config.corneropsInternalDatabaseCaPath,
   });
 };
 
