@@ -25,8 +25,10 @@
 | Use `auth` schema | denied | yes |
 | Create roles/databases or bypass RLS | denied | yes |
 
-The grants were inspected against PostgreSQL catalogs after migration. An allowed write probe through the administrative connector could not impersonate the login because that connector itself cannot `SET ROLE`. The mandatory direct-login, rolled-back write probe remains pending from Railway, where IPv6 direct database connectivity can be exercised without administrative credentials.
+The grants were inspected against PostgreSQL catalogs after migration. The runtime login then connected from the Railway production container through the exact Supabase Session Pooler host `aws-1-ap-south-1.pooler.supabase.com:5432` with certificate verification enabled.
+
+The direct-login probe proved select/insert/update on work items and approvals plus select/insert on audit events. Fourteen forbidden probes were denied with PostgreSQL `42501`, including deletes, audit mutation, schema/object creation, public business-table access, role creation, and auth administration. The complete transaction was rolled back and a follow-up query confirmed zero probe rows persisted.
 
 ## Activation gate
 
-Do not set `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED=true` until all direct-login probes pass. If any forbidden operation succeeds, stop with `blocked_by_runtime_role_privilege_leak`.
+Direct-login probes pass. Enabling application persistence remains a separate production gate. If a future forbidden operation succeeds, stop with `blocked_by_runtime_role_privilege_leak`.
