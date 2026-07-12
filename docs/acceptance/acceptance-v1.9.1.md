@@ -10,6 +10,7 @@
 - Internal schema: 3 tables, 11 indexes, 8 runtime grants
 - Restricted login: provisioned; catalog permission matrix passes
 - Railway activation: pending explicit production-change authorization
+- Railway baseline: v1.9 persistence and founder-action variables absent; existing read-only configuration untouched
 - Final status: pending
 
 ## Supabase advisors

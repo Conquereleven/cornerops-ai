@@ -9,5 +9,7 @@
 - Public table count before activation: 17
 - Public business row-count baseline: products 199; customers, orders, order items, B2B leads, conversations, messages, worker runs, and worker events 0
 - Raw business rows were not read.
+- Railway production baseline: service `cornerops-ai` online; all v1.9 persistence and founder-action variables are absent.
+- Existing CornerMex Supabase read-only variable names remain present and were not changed or printed.
 - Recovery: disable `CORNEROPS_INTERNAL_PERSISTENCE_ENABLED`, redeploy, and preserve the schema and audit evidence.
 - Known security advisory: historical backup table `public.products_backup_pre_intermex_import` has RLS disabled. It is outside this activation and remains unchanged.
