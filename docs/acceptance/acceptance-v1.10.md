@@ -10,6 +10,7 @@
 - Migration checksum: `bc9f1968fe7fc2883f2353a0b2b5a8f5b64ea0a2badfcf4ac8ff9f6c6f9fdcec`
 - Safety: CornerMex writes, activation, external actions, outreach, purchasing and OpenClaw blocked
 - Current status: implementation_validation_in_progress
+- Advisor remediation: redundant canonical lookup index removal prepared; no table/data changes
 
 ## Initial capability matrix
 
