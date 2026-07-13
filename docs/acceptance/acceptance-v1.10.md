@@ -51,6 +51,8 @@
 - CI: PRs #50, #51 and #52 green
 - Secret scan: passed; no local credentials tracked
 - Lovable credits/actions: 0
+- Rollback kill switch: verified locally with all SupplyGraph flags false; status became
+  `configuration_required`, sync and demand intake failed closed with HTTP 503, and zero writes occurred
 - Final status: `supplygraph_v1_10_live`
 
 No secrets, raw business rows, supplier recommendation, external action or product activation occurred.
