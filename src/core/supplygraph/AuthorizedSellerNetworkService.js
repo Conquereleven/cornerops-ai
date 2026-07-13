@@ -8,7 +8,7 @@ const { SellerSnapshotValidator } = require('./SellerSnapshotValidator');
 const { WAVE1_SELLERS } = require('./wave1SellerRegistry');
 
 class AuthorizedSellerNetworkService {
-  constructor({ config = {}, store } = {}) { this.config=config; this.store=store; this.packages=[]; this.applications=[]; this.inventory=new Map(); }
+  constructor({ config = {}, store } = {}) { this.config=config; this.store=store; this.packages=[]; this.applications=[]; }
   assertEnabled(capability) {
     if (!this.config.supplyGraphAuthorizedSellersEnabled) throw createSupplyGraphError('Authorized seller network is disabled.','SUPPLYGRAPH_AUTHORIZED_SELLERS_DISABLED',503);
     if (capability==='onboarding'&&!this.config.supplyGraphSellerOnboardingEnabled) throw createSupplyGraphError('Seller onboarding is disabled.','SUPPLYGRAPH_SELLER_ONBOARDING_DISABLED',503);
