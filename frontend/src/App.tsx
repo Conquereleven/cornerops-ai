@@ -10,7 +10,8 @@ import { Products } from './routes/Products';
 import { Settings } from './routes/Settings';
 import { WorkerSettings } from './routes/WorkerSettings';
 import { ControlTower } from './routes/ControlTower';
+import { AuthorizedSellers } from './routes/AuthorizedSellers';
 
 export default function App() {
-  return <BrowserRouter><Routes><Route element={<AppShell />}><Route path="/" element={<Dashboard />} /><Route path="/control-tower" element={<ControlTower />} /><Route path="/chat" element={<ChatCenter />} /><Route path="/conversations" element={<Conversations />} /><Route path="/orders" element={<Orders />} /><Route path="/products" element={<Products />} /><Route path="/leads" element={<Leads />} /><Route path="/worker-settings" element={<WorkerSettings />} /><Route path="/integrations" element={<Integrations />} /><Route path="/settings" element={<Settings />} /></Route></Routes></BrowserRouter>;
+  return <BrowserRouter><Routes><Route element={<AppShell />}><Route path="/" element={<Dashboard />} /><Route path="/control-tower" element={<ControlTower />} /><Route path="/authorized-sellers" element={<AuthorizedSellers />} /><Route path="/chat" element={<ChatCenter />} /><Route path="/conversations" element={<Conversations />} /><Route path="/orders" element={<Orders />} /><Route path="/products" element={<Products />} /><Route path="/leads" element={<Leads />} /><Route path="/worker-settings" element={<WorkerSettings />} /><Route path="/integrations" element={<Integrations />} /><Route path="/settings" element={<Settings />} /></Route></Routes></BrowserRouter>;
 }

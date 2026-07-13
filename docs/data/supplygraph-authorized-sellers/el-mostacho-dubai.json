@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "el-mostacho-dubai",
+    "canonicalName": "El Mostacho",
+    "pipelineScore": 82,
+    "pipelinePriority": "A",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "independent Mexican restaurant",
+    "onboardingModel": "Kitchen Brand + Marketplace Seller",
+    "targetChannel": "B2C and small restaurants",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.instagram.com/el_mostacho_dubai/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "independent Mexican restaurant",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.instagram.com/el_mostacho_dubai/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "664f6406349b8c35a823cd1688caf76352abd11b9f9ee76f8dd35b17865026b6",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

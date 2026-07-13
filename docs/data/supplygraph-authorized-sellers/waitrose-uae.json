@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "waitrose-uae",
+    "canonicalName": "Waitrose UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "retailer",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "premium_supermarket",
+    "geography": "UAE",
+    "officialSourceUrl": "https://www.waitrose.ae/en/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "retailer",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.waitrose.ae/en/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "b85e53d48be8842cb72481c99ea19a82d8ba05897cca9e51606575b68d7a76bf",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

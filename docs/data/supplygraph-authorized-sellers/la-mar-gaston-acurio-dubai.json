@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "la-mar-gaston-acurio-dubai",
+    "canonicalName": "La Mar by Gaston Acurio Dubai",
+    "pipelineScore": 67,
+    "pipelinePriority": "B",
+    "pipelineWave": "Wave 2",
+    "sellerSegment": "premium Peruvian restaurant",
+    "onboardingModel": "Premium Collaboration",
+    "targetChannel": "hotels, gifting and premium HORECA",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.atlantis.com/atlantis-the-royal/dining/la-mar-by-gaston-acurio",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "premium Peruvian restaurant",
+    "sourceStatus": "unavailable",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_UNAVAILABLE"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.atlantis.com/atlantis-the-royal/dining/la-mar-by-gaston-acurio",
+    "officialSourceVerified": false,
+    "sourceChecksum": "5d7211e03071a57f6831323af4869d0076ce81d24232fe46b122b8d807d3b6c1",
+    "sourceStatus": "unavailable"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

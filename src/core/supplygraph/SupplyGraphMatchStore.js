@@ -1,6 +1,7 @@
 const { randomUUID } = require('crypto');
 const { createSupplyGraphError, sanitizeMetadata } = require('./supplyGraphTypes');
 const { safeCamel } = require('./SupplyGraphStore');
+const { RULESETS, VERSIONS } = require('./authorizedSellerRules');
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const now = () => new Date().toISOString();
@@ -97,6 +98,7 @@ class SupplyGraphMatchStore {
       demandItemId: items[index].demandItemId, ...clone(candidate), createdAt,
     })));
     this.state.matchCandidates.push(...candidates);
+    this.state.supplierCoverageResults.push(...(assessment.coverageResults||[]).map((row)=>({id:randomUUID(),matchRunId:run.id,...clone(row),createdAt})));
     const recommendation = { id: randomUUID(), matchRunId: run.id, ...clone(assessment.recommendation), createdAt };
     this.state.sourcingRecommendations.push(recommendation);
     await this.supplyGraphStore.appendAudit(null, { eventType: 'supplygraph_match_run_created', entityType: 'sourcing_match_run', entityId: run.id, ...context, metadata: { inputFingerprint: run.inputFingerprint.slice(0, 12), coverageStatus: run.coverageStatus } });
@@ -117,14 +119,17 @@ class SupplyGraphMatchStore {
         comparison_scope,supplier_count_evaluated,market_comparison_performed,best_supplier_claim,
         overall_match_score,overall_confidence_score,coverage_status,fulfillment_readiness,
         matched_item_count,ambiguous_item_count,unmatched_item_count,active_item_count,catalog_coverage_ratio,
-        result_summary,created_by) values
-       ($1,$2,$3,$4,$5,$6,$7,$8,false,false,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18::jsonb,$19)
+        result_summary,created_by,comparison_policy_version,comparison_ruleset_checksum,supplier_comparison_performed,
+        market_completeness_claim,preferred_within_verified_scope,tie_detected,single_supplier_full_coverage_available,split_sourcing_may_be_required) values
+       ($1,$2,$3,$4,$5,$6,$7,$8,false,false,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18::jsonb,$19,$20,$21,$22,false,false,false,$23,$24)
        on conflict (input_fingerprint) do nothing returning *`,
       [r.demandRequestId, r.demandVersion, r.engineVersion, r.rulesetChecksum, r.sourceWatermark,
         r.inputFingerprint, r.comparisonScope, r.supplierCountEvaluated, r.overallMatchScore,
         r.overallConfidenceScore, r.coverageStatus, r.fulfillmentReadiness, r.matchedItemCount,
         r.ambiguousItemCount, r.unmatchedItemCount, r.activeItemCount, r.catalogCoverageRatio,
-        json(r.resultSummary), r.createdBy],
+        json(r.resultSummary), r.createdBy, r.resultSummary.supplierComparisonPerformed?VERSIONS?.comparison: null,
+        r.resultSummary.supplierComparisonPerformed?RULESETS?.comparison?.checksum:null,Boolean(r.resultSummary.supplierComparisonPerformed),
+        r.coverageStatus==='catalog_coverage_complete',Boolean(r.resultSummary.splitSourcingPotential)],
     );
     if (!inserted.rows[0]) {
       const concurrent = await client.query(`select id from ${this.table('sourcing_match_runs')} where input_fingerprint=$1`, [r.inputFingerprint]);
@@ -149,16 +154,17 @@ class SupplyGraphMatchStore {
         await client.query(
           `insert into ${this.table('sourcing_match_candidates')}
            (match_run_id,item_result_id,demand_item_id,supplier_id,supplier_catalog_item_id,
-            supplier_offer_snapshot_id,rank,match_score,confidence_score,score_breakdown,reason_codes,
+            supplier_offer_snapshot_id,rank,candidate_tier,match_score,confidence_score,score_breakdown,reason_codes,
             disqualifiers,evidence_snapshot) values
-           ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb,$12::jsonb,$13::jsonb)`,
+           ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb,$14::jsonb)`,
           [run.id, item.rows[0].id, result.demandItemId, candidate.supplierId,
             candidate.supplierCatalogItemId, candidate.supplierOfferSnapshotId, candidate.rank,
-            candidate.matchScore, candidate.confidenceScore, json(candidate.scoreBreakdown),
+            candidate.candidateTier, candidate.matchScore, candidate.confidenceScore, json(candidate.scoreBreakdown),
             json(candidate.reasonCodes), json(candidate.disqualifiers), json(candidate.evidenceSnapshot)],
         );
       }
     }
+    for(const coverage of assessment.coverageResults||[]){await client.query(`insert into ${this.table('sourcing_supplier_coverage_results')}(match_run_id,supplier_id,comparison_policy_version,comparison_ruleset_checksum,active_item_count,matched_item_count,ambiguous_item_count,unmatched_item_count,coverage_ratio,average_match_score,average_confidence_score,full_catalog_coverage,operational_inventory_coverage,commercially_verified_coverage,price_comparable_item_count,available_inventory_item_count,verified_stock_item_count,moq_compatible_item_count,lead_time_compatible_item_count,unknown_facts,reason_codes) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,false,false,0,0,0,0,0,$13::jsonb,$14::jsonb)`,[run.id,coverage.supplierId,coverage.comparisonPolicyVersion,coverage.comparisonRulesetChecksum,coverage.activeItemCount,coverage.matchedItemCount,coverage.ambiguousItemCount,coverage.unmatchedItemCount,coverage.coverageRatio,coverage.averageMatchScore,coverage.averageConfidenceScore,coverage.fullCatalogCoverage,json(coverage.unknownFacts),json(coverage.reasonCodes)]);}
     const rec = assessment.recommendation;
     await client.query(
       `insert into ${this.table('sourcing_recommendations')}
@@ -173,15 +179,16 @@ class SupplyGraphMatchStore {
   }
 
   async getWithClient(client, id) {
-    const [run, items, candidates, recommendation] = await Promise.all([
+    const [run, items, candidates, recommendation,coverage] = await Promise.all([
       client.query(`select * from ${this.table('sourcing_match_runs')} where id=$1`, [id]),
       client.query(`select * from ${this.table('sourcing_match_item_results')} where match_run_id=$1 order by created_at,id`, [id]),
       client.query(`select * from ${this.table('sourcing_match_candidates')} where match_run_id=$1 order by demand_item_id,rank`, [id]),
       client.query(`select * from ${this.table('sourcing_recommendations')} where match_run_id=$1`, [id]),
+      client.query(`select * from ${this.table('sourcing_supplier_coverage_results')} where match_run_id=$1 order by coverage_ratio desc,supplier_id`,[id]),
     ]);
     if (!run.rows[0]) return null;
     const candidateRows = candidates.rows.map(safeCamel);
-    return { matchRun: safeCamel(run.rows[0]), items: items.rows.map(safeCamel).map((item) => ({ ...item, candidates: candidateRows.filter((candidate) => candidate.itemResultId === item.id) })), recommendation: recommendation.rows[0] ? safeCamel(recommendation.rows[0]) : null };
+    return { matchRun: safeCamel(run.rows[0]), items: items.rows.map(safeCamel).map((item) => ({ ...item, candidates: candidateRows.filter((candidate) => candidate.itemResultId === item.id) })), recommendation: recommendation.rows[0] ? safeCamel(recommendation.rows[0]) : null,supplierCoverage:coverage.rows.map(safeCamel) };
   }
 
   async get(id) {
@@ -189,7 +196,7 @@ class SupplyGraphMatchStore {
       const run = this.state.matchRuns.find((item) => item.id === id);
       if (!run) return null;
       const items = this.state.matchItemResults.filter((item) => item.matchRunId === id).map((item) => ({ ...clone(item), candidates: clone(this.state.matchCandidates.filter((candidate) => candidate.itemResultId === item.id)) }));
-      return { matchRun: clone(run), items, recommendation: clone(this.state.sourcingRecommendations.find((item) => item.matchRunId === id) || null) };
+      return { matchRun: clone(run), items, recommendation: clone(this.state.sourcingRecommendations.find((item) => item.matchRunId === id) || null),supplierCoverage:clone(this.state.supplierCoverageResults.filter((item)=>item.matchRunId===id)) };
     }
     return this.getWithClient(this.internalStore.pool, id);
   }

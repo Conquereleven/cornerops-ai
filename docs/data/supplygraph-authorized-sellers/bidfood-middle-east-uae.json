@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "bidfood-middle-east-uae",
+    "canonicalName": "Bidfood Middle East UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "foodservice_distributor",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "horeca_distribution",
+    "geography": "UAE",
+    "officialSourceUrl": "https://www.bidfoodme.com/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "foodservice_distributor",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.bidfoodme.com/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "861d1641b157031a5eb35f3912004f79a2d0a2eef1e3f30f83231a4f6af3e11e",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

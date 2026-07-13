@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "lila-molino-cafe-lila-taqueria",
+    "canonicalName": "Lila Molino + Cafe / Lila Taqueria",
+    "pipelineScore": 87,
+    "pipelinePriority": "A+",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "Mexican kitchen brand",
+    "onboardingModel": "Kitchen Brand + Fulfilled by CornerMex",
+    "targetChannel": "HORECA and B2C",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.lilamolino.com/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "Mexican kitchen brand",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.lilamolino.com/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "979422416f939ccc6eb6664be5e78e352c344a62f2c02b81200f53fa170b3ed6",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "kibsons",
+    "canonicalName": "Kibsons",
+    "pipelineScore": 65,
+    "pipelinePriority": "B",
+    "pipelineWave": "Wave 2",
+    "sellerSegment": "grocery importer and ecommerce",
+    "onboardingModel": "Supplier / Catalog Partner",
+    "targetChannel": "HORECA and B2C",
+    "geography": "UAE",
+    "officialSourceUrl": "https://www.kibsons.com/en",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "grocery importer and ecommerce",
+    "sourceStatus": "blocked_access",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_BLOCKED_ACCESS"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.kibsons.com/en",
+    "officialSourceVerified": false,
+    "sourceChecksum": "08dde7f759640e3c043a415367fa439923e2d5f91bd8c13e405a73045a50b974",
+    "sourceStatus": "blocked_access"
+  },
+  "catalog": {
+    "captureStatus": "blocked_auth_or_access",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

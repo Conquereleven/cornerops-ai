@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-07-13T00:00:00.000Z",
+  "totalSellers": 32,
+  "successfulCatalogCaptures": 1,
+  "reusedCatalogs": 1,
+  "blockedOrPendingCaptures": 31,
+  "totalProducts": 190,
+  "result": "live_partial_seller_catalogs",
+  "notes": [
+    "Intermex canonical 190-item catalog is reused.",
+    "No product was invented from commercial hypotheses.",
+    "Sources needing login, CAPTCHA, ambiguous identity or unresolved official ownership remain blocked."
+  ]
+}

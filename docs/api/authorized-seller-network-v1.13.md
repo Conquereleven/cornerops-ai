@@ -1,0 +1,5 @@
+# Authorized Seller Network API v1.13
+
+Operator reads under `/api/intelligence/supplygraph`: `/authorized-sellers`, `/authorized-sellers/:sellerKey`, `/sellers`, `/sellers/:id`, `/sellers/:id/catalog`, `/sellers/:id/inventory`, `/sellers/:id/media-status`, `/seller-readiness`, `/seller-catalog-gaps`, `/products/:id`, `/products/:id/inventory`, `/products/:id/media`, `/seller-onboarding-packages`, `/seller-onboarding-packages/:id`, `/seller-onboarding-packages/:id/preview`, `/match-runs/:id/supplier-coverage`, and `/demand-requests/:id/supplier-coverage`.
+
+Founder-action mutations: `POST /authorized-sellers/:sellerKey/onboarding-packages`, `POST /seller-onboarding-packages`, `POST /seller-onboarding-packages/from-snapshot`, `POST /seller-onboarding-packages/:id/apply`, and `POST /seller-onboarding-packages/:id/cancel`. Existing operator auth, Founder Action auth, exact origin, JSON and rate limiting apply. Lists are bounded to 100. Responses expose checksums and bounded evidence, never notes, PII, credentials, private storage paths, SQL or raw HTML. Kill switches return 503 without writes.
