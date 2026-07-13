@@ -11,3 +11,13 @@
 
 Rollback: set `SUPPLYGRAPH_MATCHING_ENABLED=false` and redeploy. Match POST must return 503; historical
 reads and v1.10 SupplyGraph remain available. Never drop matching tables.
+
+## Verified production posture
+
+- Runtime role: `SELECT, INSERT`; no update, delete, truncate, or schema create.
+- External database roles: no access to `cornerops_internal` matching tables.
+- Current scope: one verified supplier and 190 checksum-pinned catalog observations.
+- Fulfillment facts remain unknown until supplier evidence exists.
+- Supplier/customer contact, quotes, purchasing, activation, CornerMex writes, WhatsApp, email, and OpenClaw
+  remain blocked.
+- Lovable remains optional presentation only; backend operation is not dependent on it.
