@@ -50,6 +50,12 @@ describe('SupplyGraph Wave 1 v1.14',()=>{
     expect(recommendations.every((item)=>item.safePayload.externalActionAllowed===false)).toBe(true);
   });
   test('media coverage never labels source references as managed imports',async()=>{const service=new AuthorizedSellerNetworkService();service.wave1Activation=jest.fn(async()=>({sellers:[{productCount:3,imageCount:2,managedMediaCount:0}]}));await expect(service.mediaCoverage()).resolves.toMatchObject({productCount:3,officialImageReferenceCount:2,productsWithManagedMedia:0,productsWithoutManagedMedia:3});});
+  test('seller detail inventory remains callable and scoped to the requested seller',async()=>{
+    const query=jest.fn(async()=>({rows:[{seller_id:'seller-1',supplier_catalog_item_id:'product-1',on_hand_quantity:'100'}]}));
+    const service=new AuthorizedSellerNetworkService({store:{internalStore:{pool:{query},withTransaction:jest.fn(),table:(name)=>`cornerops_internal.${name}`}}});
+    await expect(service.inventory({sellerId:'seller-1',limit:100})).resolves.toEqual([{sellerId:'seller-1',supplierCatalogItemId:'product-1',onHandQuantity:'100'}]);
+    expect(query).toHaveBeenCalledWith(expect.stringContaining('where b.seller_id=$1'),['seller-1',100]);
+  });
   test('Wave 1 application kill switch blocks extension apply but leaves reads available',async()=>{
     const service=new AuthorizedSellerNetworkService({config:{supplyGraphAuthorizedSellersEnabled:true,supplyGraphSellerOnboardingEnabled:true,supplyGraphSellerOnboardingApplicationEnabled:true,supplyGraphWave1CatalogActivationEnabled:false}});
     const checksum=crypto.createHash('sha256').update('official').digest('hex');const created=await service.createFromSnapshot({schemaVersion:VERSIONS.snapshot,sellerCanonicalKey:'maiz-tacos-dubai',products:[{productType:'restaurant_menu_item',displayName:'Taco',productPageUrl:'https://www.maiztacos.com/menu#taco',publicPrice:20,currency:'AED',priceType:'public_menu_price',observedAt:'2026-07-13T00:00:00Z',sourceChecksum:checksum}]});
