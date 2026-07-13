@@ -12,13 +12,13 @@ const supabaseSummary = (report = {}) => {
   return {
     dataSource: connector.dataSource || (connector.sourceMode === 'real_read_only' || connector.sourceMode === 'real_read_only_partial'
       ? 'cornermex_supabase'
-      : connector.sourceMode === 'repo_discovered' ? 'lovable_repo_discovery' : 'mock_fallback'),
+      : connector.sourceMode === 'repo_discovered' ? 'lovable_repo_discovery' : 'unavailable'),
     supabaseStatus: connector.supabaseStatus || 'not_configured',
     tableAvailability: connector.tableAvailability || {},
     maskingApplied: connector.maskingApplied !== false,
     lastReadAt: connector.lastReadAt || null,
     auditId: connector.auditId || null,
-    sourceMode: connector.sourceMode || 'repo_discovered',
+    sourceMode: connector.sourceMode || 'unavailable',
   };
 };
 
@@ -141,17 +141,17 @@ class ControlTowerFrontendContract {
 
   async safeReport() {
     const fallback = {
-      status: 'ready',
-      version: 'v1.3',
+      status: 'unavailable',
+      version: 'v1.15',
       generatedAt: new Date().toISOString(),
       safety: {
         externalSendsBlocked: true,
         whatsappDisabled: true,
-        warnings: ['Control Tower backend report unavailable; using frontend-safe fallback.'],
+        warnings: ['Control Tower backend report unavailable; no substitute operational records are returned.'],
       },
-      cornerMexLovableConnector: { sourceMode: 'repo_discovered', writesBlocked: true, warnings: [] },
-      cornerMexFlowEngine: { enabled: true, sourceMode: 'repo_discovered', availableFlows: [], warnings: [] },
-      telegramOperator: { operatorMode: 'polling', founderPollingStatus: 'missing_config', warnings: [] },
+      cornerMexLovableConnector: { sourceMode: 'unavailable', writesBlocked: true, warnings: [] },
+      cornerMexFlowEngine: { enabled: false, sourceMode: 'unavailable', availableFlows: [], warnings: [] },
+      telegramOperator: { operatorMode: 'unavailable', founderPollingStatus: 'unavailable', warnings: [] },
     };
     if (!this.controlTowerReportService?.getReport) return fallback;
     try {

@@ -1,37 +1,21 @@
-import { Activity, Boxes, Database, Handshake, MessageSquareText, PackageSearch, Users } from 'lucide-react';
-import { ChatPanel } from '../components/chat/ChatPanel';
-import { EventStream } from '../components/dashboard/EventStream';
+import { useCallback, useEffect, useState } from 'react';
+import { Boxes, Database, PackageCheck, RefreshCw, ShieldCheck, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { MetricCard } from '../components/dashboard/MetricCard';
-import { WorkerPanel } from '../components/dashboard/WorkerPanel';
-import { HandoffQueue } from '../components/dashboard/HandoffQueue';
-import { useDashboard } from '../hooks/useDashboard';
-import { updateHandoff } from '../lib/api';
-import { useState } from 'react';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { getControlTowerFrontend, getInventoryInitializationStatus, getWave1Activation, type FrontendEnvelope, type Wave1ActivationResponse } from '../lib/api';
 
-export function Dashboard() {
-  const { data, loading, error, refresh } = useDashboard();
-  const [busyHandoff, setBusyHandoff] = useState<string>();
-  const metrics = data?.metrics;
-  const resolveHandoff = async (id: string) => {
-    setBusyHandoff(id);
-    try {
-      await updateHandoff(id, { status: 'resolved' });
-      await refresh();
-    } finally {
-      setBusyHandoff(undefined);
-    }
-  };
-  return <div className="dashboard-page">
-    {error && <div className="dashboard-alert">{error}</div>}
-    <div className="dashboard-source"><Database size={14} /><span>Data layer</span><strong>{data?.dataSource.mode || 'conectando'}</strong></div>
-    <section className="metrics-grid">
-      <MetricCard label="Conversaciones" value={loading ? '—' : (metrics?.totalConversations || 0).toLocaleString()} change="Persistidas" icon={MessageSquareText} />
-      <MetricCard label="Leads B2B" value={loading ? '—' : (metrics?.totalLeads || 0).toLocaleString()} change="Pipeline capturado" icon={Users} tone="blue" />
-      <MetricCard label="Órdenes" value={loading ? '—' : (metrics?.totalOrders || 0).toLocaleString()} change="Repository-backed" icon={PackageSearch} tone="blue" />
-      <MetricCard label="Productos activos" value={loading ? '—' : (metrics?.activeProducts || 0).toLocaleString()} change="Catálogo disponible" icon={Boxes} />
-      <MetricCard label="Handoffs humanos" value={loading ? '—' : (metrics?.humanHandoffs || 0).toLocaleString()} change="Conversaciones escaladas" icon={Handshake} tone="amber" />
-      <MetricCard label="Worker runs" value={loading ? '—' : (metrics?.workerRuns || 0).toLocaleString()} change="Trazabilidad completa" icon={Activity} />
-    </section>
-    <div className="command-grid"><ChatPanel compact onCompleted={refresh} /><aside className="command-rail"><WorkerPanel workers={data?.workers || []} /><EventStream events={data?.events || []} /><HandoffQueue queue={data?.handoffs || []} onResolve={(id) => void resolveHandoff(id)} busyId={busyHandoff} /></aside></div>
-  </div>;
+type OverviewData={daily?:FrontendEnvelope;wave1?:Wave1ActivationResponse;inventory?:Awaited<ReturnType<typeof getInventoryInitializationStatus>>};
+export function Dashboard(){
+  const [data,setData]=useState<OverviewData>({});const [loading,setLoading]=useState(true);const [error,setError]=useState('');
+  const token=sessionStorage.getItem('cornerops-console-token')||'';
+  const load=useCallback(async()=>{setLoading(true);const results=await Promise.allSettled([getControlTowerFrontend('founder-daily',token),getWave1Activation(token),getInventoryInitializationStatus(token)]);setData({daily:results[0].status==='fulfilled'?results[0].value:undefined,wave1:results[1].status==='fulfilled'?results[1].value:undefined,inventory:results[2].status==='fulfilled'?results[2].value:undefined});const failed=results.filter(item=>item.status==='rejected').length;setError(failed?`${failed} live section${failed===1?' is':'s are'} unavailable. No substitute records are shown.`:'');setLoading(false)},[token]);
+  useEffect(()=>{void load()},[load]);
+  const wave1=data.wave1;const inventory=data.inventory;const daily=data.daily;
+  return <div className="dashboard-page"><header className="page-title"><div><span className="eyebrow">Unified Command Center v1.15</span><h1>Overview</h1><p>Live operational evidence. CornerMex and SupplyGraph remain semantically separate.</p></div><div className="module-header-actions"><StatusBadge tone={error?'amber':'green'}>{error?'PARTIAL':'LIVE READ-ONLY'}</StatusBadge><button onClick={()=>void load()} disabled={loading}><RefreshCw size={14} className={loading?'spin':''}/>Refresh</button></div></header>{error&&<div className="dashboard-alert">{error}</div>}<div className="dashboard-source"><Database size={14}/><span>Source</span><strong>{daily?.sourceMode||wave1?.status||'unavailable'}</strong><StatusBadge tone="green">WRITES BLOCKED</StatusBadge></div><section className="metrics-grid">
+    <MetricCard label="Authorized sellers" value={loading?'—':wave1?String(wave1.sellerCount):'—'} change="Verified seller scope" icon={Store}/>
+    <MetricCard label="Seller catalog listings" value={loading?'—':wave1?wave1.sellers.reduce((sum,item)=>sum+item.productCount,0).toLocaleString():'—'} change="SupplyGraph, not CornerMex products" icon={Boxes} tone="blue"/>
+    <MetricCard label="Operational inventory products" value={loading?'—':inventory?inventory.productsWithInitializedInventory.toLocaleString():'—'} change="Initialized ledger coverage" icon={PackageCheck} tone="blue"/>
+    <MetricCard label="Physically verified stock" value={loading?'—':inventory?inventory.physicallyVerifiedProducts.toLocaleString():'—'} change="No physical claim when unverified" icon={ShieldCheck} tone="amber"/>
+  </section><section className="panel overview-summary"><div className="panel-heading"><div><span className="eyebrow">Founder daily</span><h2>Operational summary</h2></div><StatusBadge tone={daily?'green':'red'}>{daily?'LIVE':'UNAVAILABLE'}</StatusBadge></div>{daily?<><p>{String(daily.data.headline||'Founder daily is available.')}</p><div className="module-status-strip"><span>Audit <strong>{daily.auditId||'unavailable'}</strong></span><span>Read-only <strong>{String(daily.readOnly)}</strong></span><span>External sends blocked <strong>{String(daily.externalSendsBlocked)}</strong></span></div></>:<div className="module-empty"><strong>Operator authentication or service availability required</strong><p>Connect in Control Tower. No fake daily summary is substituted.</p></div>}</section><section className="panel overview-links"><h2>Operational modules</h2><div><Link to="/control-tower">Control Tower</Link><Link to="/work-queue">Work Queue</Link><Link to="/approvals">Approvals</Link><Link to="/audit-log">Audit Log</Link><Link to="/security">Security</Link></div></section></div>;
 }

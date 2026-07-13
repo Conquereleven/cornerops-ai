@@ -1,5 +1,20 @@
 # CornerOps AI
 
+## Product Roadmap
+
+- v1.15 Unified Command Center
+- v1.16 Marketing Intelligence
+- v1.17 Seller Network Completion
+- v1.18 Basket Optimizer
+- v1.19 Landed Cost and MarginQuote
+- v1.20 Controlled Business Actions
+- v1.21 OpenClaw Gateway and Dry-Run
+- v1.22 Controlled Channels
+- v1.23 RFQ and Procurement
+- v1.24 Seller Portal and RBAC
+- v1.25 Fulfillment and Payments
+- v2.0 Controlled AI Workers
+
 CornerOps AI is the internal AI operating system for CornerMex. It coordinates
 business operations, agents, workflows, memory, tools, integrations and
 human-approved automation. OpenClaw is integrated only as a self-hosted

@@ -126,6 +126,20 @@ const consoleRequest = <T>(path: string, token = '', options?: RequestInit) => r
 
 export const getControlTowerV08 = (token = '') =>
   consoleRequest<ControlTowerV08Report>('/api/control-tower/v1.1/status', token);
+export type FrontendEnvelope = {
+  status: string;
+  sourceMode: string;
+  readOnly: boolean;
+  dryRun: boolean;
+  writesBlocked: boolean;
+  externalSendsBlocked: boolean;
+  approvalRequired: boolean;
+  auditId?: string;
+  warnings: string[];
+  data: Record<string, unknown>;
+};
+export const getControlTowerFrontend = (section = '', token = '') =>
+  intelligenceRequest<FrontendEnvelope>(`/api/control-tower/frontend/v1${section ? `/${section}` : ''}`, token);
 export const getControlTowerApprovals = (token = '') =>
   consoleRequest<ApprovalCenterResponse>('/api/control-tower/v0.8/approvals', token);
 export const decideApprovalDryRun = (id: string, decision: 'approve' | 'reject', token = '') =>

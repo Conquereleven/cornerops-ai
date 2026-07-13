@@ -1,18 +1,25 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { AppShell } from './components/layout/AppShell';
+import { moduleRegistry, type ModuleKey } from './config/moduleRegistry';
+import { AuthorizedSellers } from './routes/AuthorizedSellers';
 import { ChatCenter } from './routes/ChatCenter';
 import { Conversations } from './routes/Conversations';
+import { ControlTower } from './routes/ControlTower';
 import { Dashboard } from './routes/Dashboard';
 import { Integrations } from './routes/Integrations';
 import { Leads } from './routes/Leads';
+import { OperationalModulePage } from './routes/OperationalModulePage';
 import { Orders } from './routes/Orders';
 import { Products } from './routes/Products';
+import { SellerCatalog, SellerComparison, SellerInventory, AuthorizedSellerDetail } from './routes/SellerOperations';
 import { Settings } from './routes/Settings';
 import { WorkerSettings } from './routes/WorkerSettings';
-import { ControlTower } from './routes/ControlTower';
-import { AuthorizedSellers } from './routes/AuthorizedSellers';
-import { AuthorizedSellerDetail,SellerCatalog,SellerComparison,SellerInventory } from './routes/SellerOperations';
 
-export default function App() {
-  return <BrowserRouter><Routes><Route element={<AppShell />}><Route path="/" element={<Dashboard />} /><Route path="/control-tower" element={<ControlTower />} /><Route path="/authorized-sellers" element={<AuthorizedSellers />} /><Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail />} /><Route path="/seller-catalog" element={<SellerCatalog />} /><Route path="/seller-inventory" element={<SellerInventory />} /><Route path="/seller-comparison" element={<SellerComparison />} /><Route path="/chat" element={<ChatCenter />} /><Route path="/conversations" element={<Conversations />} /><Route path="/orders" element={<Orders />} /><Route path="/products" element={<Products />} /><Route path="/leads" element={<Leads />} /><Route path="/worker-settings" element={<WorkerSettings />} /><Route path="/integrations" element={<Integrations />} /><Route path="/settings" element={<Settings />} /></Route></Routes></BrowserRouter>;
-}
+const dedicated:Partial<Record<ModuleKey,ReactElement>>={
+  overview:<Dashboard/>, 'control-tower':<ControlTower/>, 'ai-chat':<ChatCenter/>,
+  orders:<Orders/>,products:<Products/>,'b2b-leads':<Leads/>,conversations:<Conversations/>,
+  'authorized-sellers':<AuthorizedSellers/>,'seller-catalog':<SellerCatalog/>,'seller-inventory':<SellerInventory/>,'seller-comparison':<SellerComparison/>,
+  'worker-settings':<WorkerSettings/>,integrations:<Integrations/>,settings:<Settings/>,
+};
+export default function App(){return <BrowserRouter><Routes><Route element={<AppShell/>}>{moduleRegistry.map(item=><Route key={item.key} path={item.route} element={dedicated[item.key]||<OperationalModulePage moduleKey={item.key}/>}/>)}<Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail/>}/>{moduleRegistry.flatMap(item=>(item.aliases||[]).map(alias=><Route key={alias} path={alias} element={<Navigate to={item.route} replace/>}/>))}<Route path="*" element={<Navigate to="/overview" replace/>}/></Route></Routes></BrowserRouter>}

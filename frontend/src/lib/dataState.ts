@@ -1,0 +1,5 @@
+export type DataStateStatus='live'|'live_read_only'|'partial'|'empty'|'configuration_required'|'disabled'|'unavailable'|'stale'|'error';
+export type DataStateSource='internal_postgresql'|'cornerops_api'|'cornermex_read_only'|'supplygraph'|'internal_audit'|'internal_work_queue'|'internal_approval_engine'|'configuration'|'unavailable';
+export interface FrontendDataState{status:DataStateStatus;source:DataStateSource;lastUpdatedAt?:string;freshness:'current'|'stale'|'unknown';readOnly:boolean;writesBlocked:boolean;externalActionsBlocked:boolean;reasonCode?:string;retryable:boolean;affectedSections?:string[]}
+export const unavailableState=(reasonCode='API_UNAVAILABLE'):FrontendDataState=>({status:'unavailable',source:'unavailable',freshness:'unknown',readOnly:true,writesBlocked:true,externalActionsBlocked:true,reasonCode,retryable:true});
+export const liveReadOnlyState=(source:DataStateSource,lastUpdatedAt?:string):FrontendDataState=>({status:'live_read_only',source,lastUpdatedAt,freshness:'current',readOnly:true,writesBlocked:true,externalActionsBlocked:true,retryable:true});

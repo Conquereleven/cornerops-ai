@@ -1,50 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { render,screen,waitFor } from '@testing-library/react';
+import { afterEach,describe,expect,test,vi } from 'vitest';
 import App from './App';
 
-const dashboard = {
-  metrics: {
-    totalConversations: 10,
-    totalLeads: 2,
-    totalOrders: 3,
-    activeProducts: 4,
-    workerRuns: 7,
-    conversationsToday: 10,
-    b2bLeadsCaptured: 2,
-    ordersConsulted: 3,
-    productsConsulted: 4,
-    humanHandoffs: 1,
-    activeWorkers: 5,
-    totalWorkers: 6,
-    firstResponseSeconds: 42,
-  },
-  workers: [],
-  events: [],
-  handoffs: [],
-  dataSource: { mode: 'mock', requested: false, configured: false },
-  generatedAt: new Date().toISOString(),
-};
-
-describe('App', () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  test('renders the command center with backend data', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
-      const url = String(input);
-      const body = url.endsWith('/health')
-        ? { status: 'ok', service: 'cornerops-ai-workers', dataSource: dashboard.dataSource }
-        : dashboard;
-      return new Response(JSON.stringify(body), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-
-    render(<App />);
-
-    expect(screen.getByRole('heading', { name: /AI Chat Center/ })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('10')).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByText('Backend conectado')).toBeInTheDocument());
-    expect(screen.getByText('No hay handoffs pendientes.')).toBeInTheDocument();
-  });
-});
+const envelope={status:'success',sourceMode:'internal_postgresql',readOnly:true,dryRun:true,writesBlocked:true,externalSendsBlocked:true,approvalRequired:false,auditId:'audit-live-overview',warnings:[],data:{headline:'Live founder summary'}};
+const wave1={status:'ready',sellerCount:14,sellers:[{productCount:489}],writesBlocked:true,externalContactBlocked:true,marketComparisonPerformed:false,marketCompletenessClaim:false,bestSupplierClaim:false,basketOptimizerStatus:'deferred'};
+const inventory={productsWithInitializedInventory:489,physicallyVerifiedProducts:0,initialQuantityPerProduct:100,inventorySource:'founder_authorized_initialization',physicalCountVerified:false};
+describe('App',()=>{afterEach(()=>{vi.restoreAllMocks();window.history.pushState({},'', '/')});test('renders live Overview without production fixtures',async()=>{sessionStorage.setItem('cornerops-console-token','test-token');vi.spyOn(globalThis,'fetch').mockImplementation(async input=>{const url=String(input);const body=url.endsWith('/health')?{status:'ok',service:'cornerops-ai',dataSource:{mode:'supabase'}}:url.includes('wave1-activation')?wave1:url.includes('inventory/initialization-status')?inventory:envelope;return new Response(JSON.stringify(body),{status:200,headers:{'content-type':'application/json'}})});render(<App/>);expect(await screen.findByRole('heading',{name:'Overview'})).toBeInTheDocument();await waitFor(()=>expect(screen.getAllByText('489')).toHaveLength(2));expect(screen.queryByText(/Data layer MOCK|Usuario 1|order #123/)).not.toBeInTheDocument();expect(screen.getByText('Writes blocked')).toBeInTheDocument()})});
