@@ -17,6 +17,7 @@ const {
   WorkQueueService,
   createInternalOperationsStore,
 } = require('../core/work-queue');
+const { SupplyGraphService, SupplyGraphStore } = require('../core/supplygraph');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -53,6 +54,12 @@ const workQueueService = new WorkQueueService({
   store: internalOperationsStore,
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
+const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });
+const supplyGraphService = new SupplyGraphService({
+  config: env,
+  internalStore: internalOperationsStore,
+  store: supplyGraphStore,
+});
 const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
 const environmentDoctorService = new EnvironmentDoctorService({ config: env });
 const operatingStageEngine = new OperatingStageEngine({ config: env });
@@ -318,6 +325,97 @@ const listPersistentDrafts = async (req, res, next) => {
 
 const recordFounderActionAuthFailure = (event) => internalOperationsStore.recordAuditEvent(event);
 
+const supplyGraphStatus = async (_req, res, next) => {
+  try { return res.json(await supplyGraphService.status()); } catch (error) { return next(error); }
+};
+
+const listSupplyGraphSuppliers = async (req, res, next) => {
+  try {
+    const suppliers = await supplyGraphService.listSuppliers({
+      status: req.query.status,
+      supplierType: req.query.supplierType,
+      countryCode: req.query.countryCode,
+      verificationStatus: req.query.verificationStatus,
+      limit: req.query.limit,
+    });
+    return res.json({ suppliers, cornerMexWritesBlocked: true, externalActionsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const getSupplyGraphSupplier = async (req, res, next) => {
+  try {
+    const supplier = await supplyGraphService.getSupplier(req.params.id);
+    return supplier ? res.json({ supplier, cornerMexWritesBlocked: true, externalActionsBlocked: true })
+      : res.status(404).json({ code: 'SUPPLYGRAPH_SUPPLIER_NOT_FOUND', message: 'Supplier not found.' });
+  } catch (error) { return next(error); }
+};
+
+const listSupplyGraphCatalog = async (req, res, next) => {
+  try {
+    const items = await supplyGraphService.listCatalog({
+      supplierId: req.query.supplierId,
+      category: req.query.category,
+      brand: req.query.brand,
+      verificationStatus: req.query.verificationStatus,
+      stockStatus: req.query.stockStatus,
+      observedBefore: req.query.observedBefore,
+      observedAfter: req.query.observedAfter,
+      limit: req.query.limit,
+      cursor: req.query.cursor,
+      offset: req.query.offset,
+    });
+    return res.json({ items, cornerMexWritesBlocked: true, externalActionsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const listSupplyGraphDemands = async (req, res, next) => {
+  try {
+    const requests = await supplyGraphService.listDemands({
+      status: req.query.status,
+      priority: req.query.priority,
+      emirate: req.query.emirate,
+      customerSegment: req.query.customerSegment,
+      sourceType: req.query.sourceType,
+      limit: req.query.limit,
+      cursor: req.query.cursor,
+      offset: req.query.offset,
+    });
+    return res.json({ requests, matchingEngineStatus: 'not_implemented', externalActionsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const getSupplyGraphDemand = async (req, res, next) => {
+  try {
+    const demand = await supplyGraphService.getDemand(req.params.id);
+    return demand ? res.json({ ...demand, matchingEngineStatus: 'not_implemented', externalActionsBlocked: true })
+      : res.status(404).json({ code: 'SUPPLYGRAPH_DEMAND_NOT_FOUND', message: 'Demand request not found.' });
+  } catch (error) { return next(error); }
+};
+
+const syncSupplyGraphIntermex = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.syncIntermex(actorContext(req));
+    return res.status(202).json(result);
+  } catch (error) { return next(error); }
+};
+
+const createSupplyGraphDemand = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.createDemand(req.body || {}, actorContext(req));
+    return res.status(result.created ? 201 : 200).json({
+      ...result, matchingEngineStatus: 'not_implemented', externalActionsBlocked: true,
+    });
+  } catch (error) { return next(error); }
+};
+
+const updateSupplyGraphDemand = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.updateDemand(req.params.id, req.body || {}, actorContext(req));
+    return result ? res.json({ ...result, matchingEngineStatus: 'not_implemented', externalActionsBlocked: true })
+      : res.status(404).json({ code: 'SUPPLYGRAPH_DEMAND_NOT_FOUND', message: 'Demand request not found.' });
+  } catch (error) { return next(error); }
+};
+
 module.exports = {
   actionEngine,
   actionEngineDrafts,
@@ -345,6 +443,16 @@ module.exports = {
   approvePersistentApproval: decidePersistentApproval('approved'),
   signals,
   syncWorkQueue,
+  supplyGraphService,
+  supplyGraphStatus,
+  listSupplyGraphSuppliers,
+  getSupplyGraphSupplier,
+  listSupplyGraphCatalog,
+  listSupplyGraphDemands,
+  getSupplyGraphDemand,
+  syncSupplyGraphIntermex,
+  createSupplyGraphDemand,
+  updateSupplyGraphDemand,
   updateCaseStatus,
   updateWorkItem,
   workQueueService,

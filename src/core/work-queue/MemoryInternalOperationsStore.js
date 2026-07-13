@@ -49,8 +49,11 @@ class MemoryInternalOperationsStore {
     };
     const items = [];
     const activeKeys = new Set(recommendations.map((item) => item.idempotencyKey).filter(Boolean));
+    const scopeSourceType = context.sourceType || 'action_engine';
+    const scopeSourceId = context.sourceId || null;
     for (const existing of this.state.workItems) {
-      if (existing.sourceType === 'action_engine'
+      if (existing.sourceType === scopeSourceType
+        && (!scopeSourceId || existing.sourceId === scopeSourceId)
         && !activeKeys.has(existing.idempotencyKey)
         && existing.evidence?.conditionActive !== false) {
         existing.evidence = { ...(existing.evidence || {}), conditionActive: false };

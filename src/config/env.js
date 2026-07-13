@@ -661,6 +661,20 @@ const baseEnv = {
     8000,
     { min: 500, max: 30000 },
   ),
+  supplyGraphEnabled: parseBoolean(process.env.SUPPLYGRAPH_ENABLED),
+  supplyGraphIntermexSyncEnabled: parseBoolean(process.env.SUPPLYGRAPH_INTERMEX_SYNC_ENABLED),
+  supplyGraphDemandIntakeEnabled: parseBoolean(process.env.SUPPLYGRAPH_DEMAND_INTAKE_ENABLED),
+  supplyGraphObservationStaleAfterHours: parseInteger(
+    process.env.SUPPLYGRAPH_OBSERVATION_STALE_AFTER_HOURS,
+    168,
+    { min: 1, max: 8760 },
+  ),
+  supplyGraphIntermexSourcePath:
+    process.env.SUPPLYGRAPH_INTERMEX_SOURCE_PATH
+    || 'docs/data/cornermex-products-master-enriched-from-intermex.csv',
+  supplyGraphIntermexSourceChecksum:
+    process.env.SUPPLYGRAPH_INTERMEX_SOURCE_CHECKSUM
+    || '90f8585196507fbe3663586d5a902449828d67b52ca7db436dd06867c13f1934',
   databaseUrl: process.env.DATABASE_URL || '',
   readOnlyDatabaseUrl: process.env.READONLY_DATABASE_URL || '',
   supabaseReadonlyKey: process.env.SUPABASE_READONLY_KEY || '',
