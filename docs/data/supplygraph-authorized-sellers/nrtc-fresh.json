@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "nrtc-fresh",
+  "products": [],
   "seller": {
     "canonicalKey": "nrtc-fresh",
     "canonicalName": "NRTC Fresh",
@@ -17,19 +19,20 @@
     "sellerType": "produce importer and distributor",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
-    "warnings": []
+    "warnings": [],
+    "activationOrder": 14
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:15.320Z",
     "officialSourceUrl": "https://nrtcgroup.com/",
-    "officialSourceVerified": true,
-    "sourceChecksum": "2db47b848613486ddd2ed206549b764de90c290eec6d4bdb4e6c767e09bf446a",
-    "sourceStatus": "reachable_official_source"
+    "officialSourceVerified": false,
+    "sourceChecksum": "f59b150021807460b7252b03c063bea2e4b358f3fc089d73d6f490e059cfb1c0",
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "chalcos-cantina",
+  "products": [],
   "seller": {
     "canonicalKey": "chalcos-cantina",
     "canonicalName": "Chalco's Cantina",
@@ -17,21 +19,22 @@
     "sellerType": "Tex-Mex restaurant",
     "sourceStatus": "unavailable",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
     "warnings": [
       "OFFICIAL_SOURCE_UNAVAILABLE"
-    ]
+    ],
+    "activationOrder": 13
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:14.317Z",
     "officialSourceUrl": "https://chalcoscantina.ae/",
     "officialSourceVerified": false,
     "sourceChecksum": "2145c2dddc05b7775e2eb8dff13882106b2a6c28e924a1711b5196b806b19b7c",
-    "sourceStatus": "unavailable"
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

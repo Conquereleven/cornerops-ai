@@ -49,6 +49,12 @@ router.get('/supplygraph/sellers/:id/inventory', controller.listAuthorizedSeller
 router.get('/supplygraph/sellers/:id/media-status', controller.listAuthorizedSellerMedia);
 router.get('/supplygraph/seller-readiness', controller.getSellerReadiness);
 router.get('/supplygraph/seller-catalog-gaps', controller.getSellerCatalogGaps);
+router.get('/supplygraph/wave1-activation', controller.getWave1Activation);
+router.get('/supplygraph/sellers/:id/catalog-health', controller.getSellerCatalogHealth);
+router.get('/supplygraph/catalog/capture-summary', controller.getWave1CaptureSummary);
+router.get('/supplygraph/media/coverage', controller.getSellerMediaCoverage);
+router.get('/supplygraph/inventory/initialization-status', controller.getSellerInventoryInitializationStatus);
+router.post('/supplygraph/wave1-activation/work-queue/sync', founderActionAuth, controller.syncWave1WorkQueue);
 router.get('/supplygraph/products/:id', controller.getAuthorizedProduct);
 router.get('/supplygraph/products/:id/inventory', controller.getAuthorizedProductInventory);
 router.get('/supplygraph/products/:id/media', controller.getAuthorizedProductMedia);

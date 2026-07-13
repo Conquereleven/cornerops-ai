@@ -1,17 +1,17 @@
 {
   "registryVersion": "supplygraph-seller-registry-v1.13.0",
-  "registryChecksum": "9741751bbe287c48cbc48d8673caa78504a40e20a3fef1cb697f6b42fd9fbc05",
-  "generatedAt": "2026-07-13T00:00:00.000Z",
+  "registryChecksum": "03ab814ecf0bdc556e3df26bcd2d28f4b446655330755e902c9201e9896494f7",
+  "generatedAt": "2026-07-13T18:53:16.323Z",
   "authorizedSellerCount": 32,
   "uniqueCanonicalKeyCount": 32,
   "pipelineSellerCount": 25,
   "authorizedMarketExtensionCount": 7,
-  "catalogSellerCount": 1,
-  "catalogProductCount": 190,
+  "catalogSellerCount": 7,
+  "catalogProductCount": 489,
   "limits": {
     "maxSellers": 32,
     "maxProductsPerSeller": 250,
-    "maxTotalProducts": 2000,
+    "maxTotalProducts": 1500,
     "maxImagesPerProduct": 3,
     "maxImageBytes": 5242880,
     "maxImagesTotal": 3000,
@@ -33,23 +33,23 @@
     {
       "canonicalKey": "lila-molino-cafe-lila-taqueria",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "lila-molino-cafe-lila-taqueria.json"
     },
     {
       "canonicalKey": "la-tiendita-abu-dhabi",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 100,
       "snapshotFile": "la-tiendita-abu-dhabi.json"
     },
     {
       "canonicalKey": "intermex-uae",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
+      "sourceStatus": "reused_verified_catalog",
       "captureStatus": "reused_verified_catalog",
       "productCount": 190,
       "snapshotFile": "intermex-uae.json"
@@ -57,49 +57,49 @@
     {
       "canonicalKey": "maria-bonita-taco-shop-grill",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "maria-bonita-taco-shop-grill.json"
     },
     {
       "canonicalKey": "taqado-mexican-kitchen",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "unavailable",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "taqado-mexican-kitchen.json"
     },
     {
       "canonicalKey": "el-mostacho-dubai",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "el-mostacho-dubai.json"
     },
     {
       "canonicalKey": "chalcos-cantina",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "unavailable",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "chalcos-cantina.json"
     },
     {
       "canonicalKey": "maiz-tacos-dubai",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 10,
       "snapshotFile": "maiz-tacos-dubai.json"
     },
     {
       "canonicalKey": "burro-blanco-dubai",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 10,
       "snapshotFile": "burro-blanco-dubai.json"
     },
     {
@@ -153,17 +153,17 @@
     {
       "canonicalKey": "greenheart-organic-farms",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 98,
       "snapshotFile": "greenheart-organic-farms.json"
     },
     {
       "canonicalKey": "emirates-bio-farm",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 80,
       "snapshotFile": "emirates-bio-farm.json"
     },
     {
@@ -177,16 +177,16 @@
     {
       "canonicalKey": "freshontable",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
-      "productCount": 0,
+      "sourceStatus": "source_verified",
+      "captureStatus": "complete",
+      "productCount": 1,
       "snapshotFile": "freshontable.json"
     },
     {
       "canonicalKey": "nrtc-fresh",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "nrtc-fresh.json"
     },
@@ -217,8 +217,8 @@
     {
       "canonicalKey": "fresh-express-uae",
       "authorizationStatus": "founder_attested",
-      "sourceStatus": "reachable_official_source",
-      "captureStatus": "official_source_pending_bounded_capture",
+      "sourceStatus": "blocked",
+      "captureStatus": "blocked",
       "productCount": 0,
       "snapshotFile": "fresh-express-uae.json"
     },
@@ -286,5 +286,6 @@
       "productCount": 0,
       "snapshotFile": "lulu-hypermarket-uae.json"
     }
-  ]
+  ],
+  "snapshotSchemaVersion": "supplygraph-seller-snapshot-v1.14.0"
 }

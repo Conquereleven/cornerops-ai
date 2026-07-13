@@ -67,12 +67,19 @@ app.use('/api', dataRoutes);
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
-if (fs.existsSync(frontendIndexPath)) {
-  app.use(express.static(frontendDistPath));
+if (env.corneropsFrontendServeEnabled && fs.existsSync(frontendIndexPath)) {
+  app.use(express.static(frontendDistPath, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      if (/[/\\]assets[/\\].*\.[a-f0-9]{8,}\./i.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      else res.setHeader('Cache-Control', 'public, max-age=300');
+    },
+  }));
   app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) {
+    if (req.path.startsWith('/api') || !req.accepts('html')) {
       return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
     }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return res.sendFile(frontendIndexPath);
   });
 } else {

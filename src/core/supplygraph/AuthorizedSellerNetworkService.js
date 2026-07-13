@@ -5,6 +5,7 @@ const { LIMITS, RULESETS, VERSIONS } = require('./authorizedSellerRules');
 const { REGISTRY_CHECKSUM, SELLERS } = require('./authorizedSellerRegistry');
 const { safeCamel } = require('./SupplyGraphStore');
 const { SellerSnapshotValidator } = require('./SellerSnapshotValidator');
+const { WAVE1_SELLERS } = require('./wave1SellerRegistry');
 
 class AuthorizedSellerNetworkService {
   constructor({ config = {}, store } = {}) { this.config=config; this.store=store; this.packages=[]; this.applications=[]; this.inventory=new Map(); }
@@ -44,11 +45,17 @@ class AuthorizedSellerNetworkService {
     const preview=this.preview(key); if(!preview)return null;
     const snapshot=snapshotInput?new SellerSnapshotValidator().snapshot(snapshotInput):null;
     if(snapshot&&snapshot.sellerCanonicalKey!==key)throw createSupplyGraphError('Snapshot seller identity does not match the authorized seller.','SUPPLYGRAPH_SELLER_IDENTITY_CONFLICT',409);
-    if(snapshot){preview.catalogItemCount=snapshot.products.length;preview.inventoryInitializationCount=snapshot.products.length;preview.packageFingerprint=sha256(stable({seller:preview.seller,snapshot,version:VERSIONS.onboarding,registryChecksum:REGISTRY_CHECKSUM}));}
+    if(snapshot){
+      preview.seller={...preview.seller,
+        sourceStatus:snapshotInput?.research?.sourceStatus==='complete'?'source_verified':preview.seller.sourceStatus,
+        captureStatus:snapshotInput?.catalog?.captureStatus||'captured',catalogProductCount:snapshot.products.length};
+      preview.catalogItemCount=snapshot.products.length;preview.inventoryInitializationCount=snapshot.products.length;
+      preview.packageFingerprint=sha256(stable({seller:preview.seller,snapshot,version:VERSIONS.onboarding,registryChecksum:REGISTRY_CHECKSUM}));
+    }
     if(!this.isPostgres()){
       const existing=this.packages.find((p)=>p.packageFingerprint===preview.packageFingerprint);
       if(existing)return{package:existing,reused:true};
-      const row={id:randomUUID(),sellerKey:key,status:'pending_review',version:1,...preview,createdBy:context.actorId||'founder',createdAt:new Date().toISOString()};
+      const row={id:randomUUID(),sellerKey:key,status:'pending_review',version:1,wave1CatalogExtension:Boolean(snapshot),...preview,createdBy:context.actorId||'founder',createdAt:new Date().toISOString()};
       this.packages.push(row); return{package:row,reused:false};
     }
     const internal=this.store.internalStore;
@@ -77,6 +84,7 @@ class AuthorizedSellerNetworkService {
     if(!command.approvalId)throw createSupplyGraphError('Founder approval is required.','SUPPLYGRAPH_APPROVAL_REQUIRED',409);
     if(!this.isPostgres()){
       const row=this.packages.find((p)=>p.id===id);if(!row)return null;
+      if(row.wave1CatalogExtension&&!this.config.supplyGraphWave1CatalogActivationEnabled)throw createSupplyGraphError('Wave 1 catalog activation is disabled.','SUPPLYGRAPH_WAVE1_CATALOG_ACTIVATION_DISABLED',503);
       if(row.status!=='pending_review'||Number(command.version)!==row.version)throw createSupplyGraphError('Package version is stale.','SUPPLYGRAPH_VERSION_CONFLICT',409);
       row.status='applied';row.version+=1;const application={id:randomUUID(),packageId:id,approvalId:command.approvalId,executed:false,externalContact:false,createdAt:new Date().toISOString()};this.applications.push(application);return{package:row,application,inventoryInitialized:false,externalActionsBlocked:true};
     }
@@ -88,10 +96,12 @@ class AuthorizedSellerNetworkService {
       const table=internal.table.bind(internal);
       const locked=await client.query(`select * from ${table('supplier_onboarding_packages')} where id=$1 for update`,[id]);
       const row=locked.rows[0];if(!row)return null;
+      if(row.onboarding_model_version===VERSIONS.onboarding&&!this.config.supplyGraphWave1CatalogActivationEnabled)throw createSupplyGraphError('Wave 1 catalog activation is disabled.','SUPPLYGRAPH_WAVE1_CATALOG_ACTIVATION_DISABLED',503);
       if(row.status!=='pending_review'||Number(command.version)!==row.version)throw createSupplyGraphError('Package version is stale.','SUPPLYGRAPH_VERSION_CONFLICT',409);
       const approval=await client.query(`select status from ${table('approval_requests')} where id=$1`,[command.approvalId]);
       if(approval.rows[0]?.status!=='approved')throw createSupplyGraphError('Approved founder decision is required.','SUPPLYGRAPH_APPROVAL_REQUIRED',409);
       const seller=this.seller(row.supplier_canonical_key);if(!seller)throw createSupplyGraphError('Authorized seller is not in the pinned registry.','SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND',404);
+      const proposedProfile=row.proposed_profile||seller;
       let profile=await client.query(`select * from ${table('supplier_profiles')} where canonical_key=$1 for update`,[seller.canonicalKey]);
       let reused=true;
       if(!profile.rows[0]){
@@ -110,16 +120,19 @@ class AuthorizedSellerNetworkService {
         const catalogId=catalog.rows[0].id;
         if(item.public_price!==null){
           const offerKey=`seller-public-price:${item.source_checksum}:${catalogId}`;
-          await client.query(`insert into ${table('supplier_offer_snapshots')}(supplier_catalog_item_id,idempotency_key,currency,unit_price,stock_status,observed_at,source_type,source_reference,source_checksum,verification_status,metadata) values($1,$2,$3,$4,'unknown',$5,'seller_public_catalog',$6,$7,'source_verified',$8::jsonb) on conflict(idempotency_key) do nothing`,[catalogId,offerKey,item.currency,item.public_price,item.observed_at,item.product_page_url,item.source_checksum,JSON.stringify({priceType:'public_web_price',wholesalePriceClaim:false})]);
+          await client.query(`insert into ${table('supplier_offer_snapshots')}(supplier_catalog_item_id,idempotency_key,currency,unit_price,stock_status,observed_at,source_type,source_reference,source_checksum,verification_status,metadata) values($1,$2,$3,$4,'unknown',$5,'seller_public_catalog',$6,$7,'source_verified',$8::jsonb) on conflict(idempotency_key) do nothing`,[catalogId,offerKey,item.currency,item.public_price,item.observed_at,item.product_page_url,item.source_checksum,JSON.stringify({priceType:item.price_type,wholesalePriceClaim:false})]);
         }
         for(const [position,url] of [item.primary_image_url,...(item.gallery_image_urls||[])].filter(Boolean).entries()){
           const mediaType=position===0?'primary':'gallery';const sourceChecksum=sha256(url);const hostname=new URL(url).hostname;
           await client.query(`insert into ${table('seller_product_media')}(seller_id,supplier_catalog_item_id,media_type,position,source_image_url,source_hostname,source_checksum,usage_basis,status,observed_at) values($1,$2,$3,$4,$5,$6,$7,$8,'source_verified',$9) on conflict do nothing`,[profile.rows[0].id,catalogId,mediaType,position,url,hostname,sourceChecksum,seller.authorizationStatus==='documented'?'seller_authorization_documented':'seller_authorization_founder_attestation',item.observed_at]);
         }
         if(this.config.supplyGraphSellerInventoryEnabled){
-          const seedKey=`supplygraph-inventory-v1.13:${profile.rows[0].id}:${catalogId}`;
-          const ledger=await client.query(`insert into ${table('seller_inventory_ledger')}(seller_id,supplier_catalog_item_id,movement_type,quantity_delta,unit,source_type,source_reference,idempotency_key,authorization_basis,physical_count_verified,created_by,reason) values($1,$2,'initial_seed',$3,'operational_units','founder_authorized_initialization',$4,$5,'founder_attestation',false,$6,'Founder-authorized operational initialization; not a physical count') on conflict(idempotency_key) do nothing returning *`,[profile.rows[0].id,catalogId,LIMITS.initialProductStock,command.approvalId,seedKey,context.actorId||'founder']);
-          if(ledger.rows[0]){await client.query(`insert into ${table('seller_inventory_balances')}(seller_id,supplier_catalog_item_id,on_hand_quantity,reserved_quantity,unit,physical_count_verified,initialization_source,last_ledger_event_id) values($1,$2,$3,0,'operational_units',false,'founder_authorized_initialization',$4) on conflict(seller_id,supplier_catalog_item_id) do nothing`,[profile.rows[0].id,catalogId,LIMITS.initialProductStock,ledger.rows[0].id]);productsSeeded+=1;}else seedEventsReused+=1;
+          const inventoryUnit=item.unit_of_measure||'seller_listing_unit';
+          const existingSeed=await client.query(`select id from ${table('seller_inventory_ledger')} where seller_id=$1 and supplier_catalog_item_id=$2 and movement_type='initial_seed' limit 1`,[profile.rows[0].id,catalogId]);
+          if(existingSeed.rows[0]){seedEventsReused+=1;continue;}
+          const seedKey=`${VERSIONS.inventory}:${profile.rows[0].id}:${catalogId}:${LIMITS.initialProductStock}`;
+          const ledger=await client.query(`insert into ${table('seller_inventory_ledger')}(seller_id,supplier_catalog_item_id,movement_type,quantity_delta,unit,source_type,source_reference,idempotency_key,authorization_basis,physical_count_verified,created_by,reason) values($1,$2,'initial_seed',$3,$4,'founder_authorized_initialization',$5,$6,'founder_attestation',false,$7,'v1.14 Wave 1 catalog activation; not a physical count') on conflict(idempotency_key) do nothing returning *`,[profile.rows[0].id,catalogId,LIMITS.initialProductStock,inventoryUnit,command.approvalId,seedKey,context.actorId||'founder']);
+          if(ledger.rows[0]){await client.query(`insert into ${table('seller_inventory_balances')}(seller_id,supplier_catalog_item_id,on_hand_quantity,reserved_quantity,unit,physical_count_verified,initialization_source,last_ledger_event_id) values($1,$2,$3,0,$4,false,'founder_authorized_initialization',$5) on conflict(seller_id,supplier_catalog_item_id) do nothing`,[profile.rows[0].id,catalogId,LIMITS.initialProductStock,inventoryUnit,ledger.rows[0].id]);productsSeeded+=1;}else seedEventsReused+=1;
         }
       }
       if(this.config.supplyGraphSellerInventoryEnabled&&proposed.rows.length===0&&seller.catalogProductCount>0){
@@ -133,7 +146,7 @@ class AuthorizedSellerNetworkService {
       const fingerprint=sha256(stable({packageId:id,version:row.version,approvalId:command.approvalId}));
       const resultStatus=proposed.rows.length?'applied':seller.catalogProductCount?'no_material_change':'applied_partial_catalog';
       const application=await client.query(`insert into ${table('supplier_onboarding_applications')}(package_id,application_fingerprint,preview_fingerprint,expected_package_version,result_status,supplier_id,created_catalog_items,reused_catalog_items,updated_catalog_items,skipped_catalog_items,conflict_count,reason_codes,applied_by) values($1,$2,$3,$4,$5,$6,$7,$8,0,0,0,$9::jsonb,$10) returning *`,[id,fingerprint,row.payload_fingerprint,row.version,resultStatus,profile.rows[0].id,createdCatalogItems,reusedCatalogItems,JSON.stringify([reused?'supplier_reused':'supplier_created',seller.captureStatus]),context.actorId||'founder']);
-      await client.query(`update ${table('supplier_profiles')} set product_count=(select count(*) from ${table('supplier_catalog_items')} where supplier_id=$1),updated_at=now(),version=version+1 where id=$1`,[profile.rows[0].id]);
+      await client.query(`update ${table('supplier_profiles')} set product_count=(select count(*) from ${table('supplier_catalog_items')} where supplier_id=$1),source_verification_status=$2,catalog_capture_status=$3,updated_at=now(),version=version+1 where id=$1`,[profile.rows[0].id,proposedProfile.sourceStatus==='source_verified'?'source_verified':(profile.rows[0].source_verification_status||proposedProfile.sourceStatus),proposedProfile.captureStatus||profile.rows[0].catalog_capture_status]);
       const updated=await client.query(`update ${table('supplier_onboarding_packages')} set status='applied',applied_at=now(),updated_at=now(),version=version+1,approval_request_id=$3 where id=$1 and version=$2 returning *`,[id,row.version,command.approvalId]);
       await this.store.appendAudit(client,{eventType:'supplygraph_seller_onboarding_applied',entityType:'supplier_onboarding_package',entityId:id,...context,metadata:{sellerKey:seller.canonicalKey,reusedSupplier:reused,executed:false,externalContact:false}});
       return{package:updated.rows[0],application:application.rows[0],supplier:profile.rows[0],inventoryInitialized:productsSeeded>0,productsSeeded,seedEventsReused,initialStockPerProduct:LIMITS.initialProductStock,physicalCountVerified:false,externalActionsBlocked:true};
@@ -164,6 +177,37 @@ class AuthorizedSellerNetworkService {
   async coverageResults(filters={}){if(!this.isPostgres())return this.coverage();const internal=this.store.internalStore;const limit=Math.min(Math.max(Number(filters.limit)||100,1),100);const values=[];let where='';if(filters.matchRunId){values.push(filters.matchRunId);where=`where match_run_id=$${values.length}`;}values.push(limit);const result=await internal.pool.query(`select * from ${internal.table('sourcing_supplier_coverage_results')} ${where} order by coverage_ratio desc,supplier_id limit $${values.length}`,values);return result.rows.map(safeCamel);}
   async readiness(){const sellers=await this.persistedSellers({limit:100});return sellers.map((seller)=>({sellerId:seller.id||seller.canonicalKey,canonicalKey:seller.canonicalKey,catalogReady:Number(seller.productCount||seller.catalogProductCount||0)>0,comparisonReady:Number(seller.productCount||seller.catalogProductCount||0)>0,authorizationStatus:seller.authorizationStatus,sourceVerificationStatus:seller.sourceVerificationStatus||seller.captureStatus||'unknown'}));}
   async catalogGaps(){const readiness=await this.readiness();return readiness.filter((item)=>!item.catalogReady).map((item)=>({...item,gap:'public_catalog_not_captured'}));}
+  async wave1Activation(){
+    const fallback=WAVE1_SELLERS.map((seller)=>({sellerId:seller.canonicalKey,canonicalKey:seller.canonicalKey,canonicalName:seller.canonicalName,activationOrder:seller.activationOrder,pipelineScore:seller.pipelineScore,pipelinePriority:seller.pipelinePriority,sourceVerificationStatus:seller.sourceStatus,captureStatus:seller.captureStatus,productCount:seller.catalogProductCount,publicPriceCount:seller.catalogProductCount,imageCount:0,inventoryProductCount:seller.catalogProductCount,physicalCountVerifiedCount:0,catalogReady:seller.catalogProductCount>0,comparisonReady:seller.catalogProductCount>0,blocker:seller.catalogProductCount?null:'public_catalog_not_captured'}));
+    if(!this.isPostgres())return{status:'local_registry',sellerCount:14,sellers:fallback,...this.wave1Safety()};
+    try{
+      const t=this.store.internalStore.table.bind(this.store.internalStore);const keys=WAVE1_SELLERS.map((seller)=>seller.canonicalKey);
+      const result=await this.store.internalStore.pool.query(`select p.id,p.canonical_key,p.canonical_name,p.source_verification_status,p.catalog_capture_status,p.product_count,
+        count(distinct o.id)::int public_price_count,count(distinct m.id) filter(where m.status in ('source_verified','imported'))::int image_count,
+        count(distinct b.supplier_catalog_item_id)::int inventory_product_count,count(distinct b.supplier_catalog_item_id) filter(where b.physical_count_verified)::int physical_count_verified_count
+        from ${t('supplier_profiles')} p left join ${t('supplier_catalog_items')} c on c.supplier_id=p.id and c.active_observation=true
+        left join ${t('supplier_offer_snapshots')} o on o.supplier_catalog_item_id=c.id left join ${t('seller_product_media')} m on m.supplier_catalog_item_id=c.id
+        left join ${t('seller_inventory_balances')} b on b.supplier_catalog_item_id=c.id where p.canonical_key=any($1::text[])
+        group by p.id order by p.canonical_key`,[keys]);
+      const byKey=new Map(result.rows.map((row)=>[row.canonical_key,row]));
+      const sellers=WAVE1_SELLERS.map((seller)=>{const row=byKey.get(seller.canonicalKey);if(!row)return fallback.find((item)=>item.canonicalKey===seller.canonicalKey);const productCount=Number(row.product_count||0);return{sellerId:row.id,canonicalKey:seller.canonicalKey,canonicalName:seller.canonicalName,activationOrder:seller.activationOrder,pipelineScore:seller.pipelineScore,pipelinePriority:seller.pipelinePriority,sourceVerificationStatus:row.source_verification_status||'unknown',captureStatus:row.catalog_capture_status||'unknown',productCount,publicPriceCount:Number(row.public_price_count||0),imageCount:Number(row.image_count||0),inventoryProductCount:Number(row.inventory_product_count||0),physicalCountVerifiedCount:Number(row.physical_count_verified_count||0),catalogReady:productCount>0,comparisonReady:productCount>0,blocker:productCount?null:'public_catalog_not_captured'};});
+      return{status:'ready',sellerCount:14,sellers,...this.wave1Safety()};
+    }catch(_error){return{status:'unavailable',sellerCount:14,sellers:fallback,warnings:['WAVE1_ACTIVATION_QUERY_UNAVAILABLE'],...this.wave1Safety()};}
+  }
+  wave1Safety(){return{wave1ActivationEnabled:Boolean(this.config.supplyGraphWave1CatalogActivationEnabled),writesBlocked:!this.config.supplyGraphWave1CatalogActivationEnabled,captureRuntimeNetworkCalls:false,externalContactBlocked:true,marketComparisonPerformed:false,marketCompletenessClaim:false,bestSupplierClaim:false,basketOptimizerStatus:'deferred_v1.15'};}
+  async catalogHealth(id){const seller=await this.persistedSeller(id);if(!seller)return null;const [items,inventory,media]=await Promise.all([this.sellerCatalog(id,{limit:100}),this.inventory({sellerId:id,limit:100}),this.media({sellerId:id,limit:100})]);return{sellerId:id,canonicalKey:seller.canonicalKey,productCount:Number(seller.productCount||items.length),publicPriceCount:items.filter((item)=>item.latestOffer?.unitPrice!==null&&item.latestOffer?.unitPrice!==undefined).length,mediaCount:media.length,inventoryProductCount:inventory.length,physicalCountVerifiedCount:inventory.filter((item)=>item.physicalCountVerified).length,catalogReady:items.length>0,comparisonReady:items.length>0,stockSource:'cornerops_operational_inventory',physicalCountVerified:false,...this.wave1Safety()};}
+  async mediaCoverage(){const activation=await this.wave1Activation();const products=activation.sellers.reduce((sum,seller)=>sum+seller.productCount,0),images=activation.sellers.reduce((sum,seller)=>sum+seller.imageCount,0);return{productCount:products,productsWithManagedMedia:images,productsWithoutManagedMedia:Math.max(products-images,0),...this.wave1Safety()};}
+  async inventoryInitializationStatus(){const activation=await this.wave1Activation();return{productsWithInitializedInventory:activation.sellers.reduce((sum,seller)=>sum+seller.inventoryProductCount,0),physicallyVerifiedProducts:activation.sellers.reduce((sum,seller)=>sum+seller.physicalCountVerifiedCount,0),initialQuantityPerProduct:LIMITS.initialProductStock,inventorySource:'founder_authorized_initialization',stockSource:'cornerops_operational_inventory',physicalCountVerified:false,...this.wave1Safety()};}
+  wave1Recommendations(activation){
+    return activation.sellers.flatMap((seller)=>{
+      const base={sourceType:'supplygraph_wave1',sourceId:seller.sellerId,priority:seller.pipelinePriority?.startsWith('A')?'high':'medium',approvalRequired:false,safePayload:{internalOnly:true,executed:false,externalActionAllowed:false,supplierContactAllowed:false,customerContactAllowed:false}};const rows=[];
+      if(!seller.catalogReady)rows.push({...base,idempotencyKey:`wave1-capture:${seller.canonicalKey}:${seller.captureStatus}`,sourceFlow:'supplygraph_wave1_capture_blocked_flow',actionType:'review_wave1_catalog_capture',title:`Review Wave 1 catalog capture: ${seller.canonicalName}`,evidence:{conditionActive:true,sellerKey:seller.canonicalKey,blocker:seller.blocker||'public_catalog_not_captured'}});
+      if(seller.catalogReady&&seller.imageCount<seller.productCount)rows.push({...base,idempotencyKey:`wave1-media:${seller.canonicalKey}:${seller.productCount}:${seller.imageCount}`,sourceFlow:'supplygraph_wave1_media_quality_flow',actionType:'review_wave1_missing_media',title:`Review Wave 1 missing media: ${seller.canonicalName}`,evidence:{conditionActive:true,sellerKey:seller.canonicalKey,productCount:seller.productCount,imageCount:seller.imageCount}});
+      if(seller.catalogReady&&seller.inventoryProductCount<seller.productCount)rows.push({...base,idempotencyKey:`wave1-inventory:${seller.canonicalKey}:${seller.productCount}:${seller.inventoryProductCount}`,sourceFlow:'supplygraph_wave1_inventory_flow',actionType:'review_wave1_inventory_initialization',title:`Review Wave 1 inventory initialization: ${seller.canonicalName}`,evidence:{conditionActive:true,sellerKey:seller.canonicalKey,productCount:seller.productCount,inventoryProductCount:seller.inventoryProductCount}});
+      return rows;
+    });
+  }
+  async syncWave1WorkQueue(context={}){if(!this.isPostgres())return{items:[],recommendations:this.wave1Recommendations(await this.wave1Activation())};const activation=await this.wave1Activation();return this.store.internalStore.syncRecommendations(this.wave1Recommendations(activation),{...context,sourceType:'supplygraph_wave1',sourceId:'wave1-v1.14'});}
   coverage() { return SELLERS.map((seller)=>({sellerKey:seller.canonicalKey,productCount:seller.catalogProductCount,coverageStatus:seller.catalogProductCount?'catalog_available':'catalog_unavailable',splitSourcingPotential:false,marketComparisonPerformed:false})); }
 }
 module.exports={AuthorizedSellerNetworkService};

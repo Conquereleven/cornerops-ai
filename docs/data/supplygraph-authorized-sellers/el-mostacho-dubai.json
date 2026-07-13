@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "el-mostacho-dubai",
+  "products": [],
   "seller": {
     "canonicalKey": "el-mostacho-dubai",
     "canonicalName": "El Mostacho",
@@ -17,19 +19,20 @@
     "sellerType": "independent Mexican restaurant",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
-    "warnings": []
+    "warnings": [],
+    "activationOrder": 6
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:01.548Z",
     "officialSourceUrl": "https://www.instagram.com/el_mostacho_dubai/",
-    "officialSourceVerified": true,
-    "sourceChecksum": "664f6406349b8c35a823cd1688caf76352abd11b9f9ee76f8dd35b17865026b6",
-    "sourceStatus": "reachable_official_source"
+    "officialSourceVerified": false,
+    "sourceChecksum": "44c488b41d8133ab31144d00f88c5f1c968422d6318488448ce4a344bdbb775d",
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null
