@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { getLeads } from '../lib/api';
-import { mockLeads } from '../lib/mockData';
 import { useResource } from './useResource';
 
 export function useLeads(status?: string) {
@@ -8,5 +7,5 @@ export function useLeads(status?: string) {
     () => getLeads({ limit: 250, status }),
     [status],
   );
-  return useResource(loader, mockLeads);
+  return useResource(loader, []);
 }

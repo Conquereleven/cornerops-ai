@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useResource<T>(loader: () => Promise<T>, fallback: T) {
-  const [data, setData] = useState<T>(fallback);
+export function useResource<T>(loader: () => Promise<T>, emptyValue: T) {
+  const emptyRef = useRef(emptyValue);
+  const [data, setData] = useState<T>(emptyValue);
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(false);
   const [error, setError] = useState('');
@@ -12,7 +13,7 @@ export function useResource<T>(loader: () => Promise<T>, fallback: T) {
       setOffline(false);
       setError('');
     } catch (requestError) {
-      setData(fallback);
+      setData(emptyRef.current);
       setOffline(true);
       setError(
         requestError instanceof Error
@@ -22,7 +23,7 @@ export function useResource<T>(loader: () => Promise<T>, fallback: T) {
     } finally {
       setLoading(false);
     }
-  }, [loader, fallback]);
+  }, [loader]);
   useEffect(() => {
     void refresh();
   }, [refresh]);

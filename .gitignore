@@ -1,6 +1,7 @@
 node_modules
 frontend/dist
 frontend/.npm-cache
+.npm-cache
 .env
 coverage
 .DS_Store

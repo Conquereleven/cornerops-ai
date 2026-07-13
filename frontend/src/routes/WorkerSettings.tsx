@@ -16,7 +16,7 @@ const icons = {
 const testMessages: Record<WorkerName, string> = {
   supportWorker: 'Hola, necesito ayuda general',
   salesWorker: '¿Tienen Tajín disponible?',
-  ordersWorker: '¿Cuál es el estado de mi orden #123?',
+  ordersWorker: 'Resume una orden usando un identificador explícito proporcionado por el operador.',
   b2bWorker: 'Quiero precios de mayoreo para mi restaurante',
   humanHandoffWorker: 'Quiero hablar con una persona',
   ivrWorker: 'Prueba de IVR',

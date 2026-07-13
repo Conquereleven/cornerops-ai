@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { getOrders } from '../lib/api';
-import { mockOrders } from '../lib/mockData';
 import { useResource } from './useResource';
 
 export function useOrders(status?: string) {
@@ -8,5 +7,5 @@ export function useOrders(status?: string) {
     () => getOrders({ limit: 250, status }),
     [status],
   );
-  return useResource(loader, mockOrders);
+  return useResource(loader, []);
 }

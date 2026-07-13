@@ -686,6 +686,10 @@ const baseEnv = {
   supplyGraphMaxImagesPerProduct: parseInteger(process.env.SUPPLYGRAPH_MAX_IMAGES_PER_PRODUCT, 3, { min: 0, max: 3 }),
   supplyGraphComparisonMaxSellers: parseInteger(process.env.SUPPLYGRAPH_COMPARISON_MAX_SELLERS, 32, { min: 1, max: 32 }),
   corneropsFrontendServeEnabled: parseBoolean(process.env.CORNEROPS_FRONTEND_SERVE_ENABLED),
+  corneropsUnifiedCommandCenterEnabled: parseBoolean(process.env.CORNEROPS_UNIFIED_COMMAND_CENTER_ENABLED),
+  corneropsLiveOverviewEnabled: parseBoolean(process.env.CORNEROPS_LIVE_OVERVIEW_ENABLED),
+  corneropsMarketingFoundationEnabled: parseBoolean(process.env.CORNEROPS_MARKETING_FOUNDATION_ENABLED),
+  corneropsCapabilityStatusEnabled: parseBoolean(process.env.CORNEROPS_CAPABILITY_STATUS_ENABLED),
   supplyGraphEvidenceMaxFactsPerPackage: parseInteger(
     process.env.SUPPLYGRAPH_EVIDENCE_MAX_FACTS_PER_PACKAGE, 100, { min: 1, max: 500 },
   ),

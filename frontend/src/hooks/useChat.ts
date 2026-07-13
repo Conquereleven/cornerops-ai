@@ -2,31 +2,7 @@ import { useState } from 'react';
 import { sendChatMessage } from '../lib/api';
 import type { ChatMessage } from '../lib/types';
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: 'demo-user',
-    role: 'user',
-    content: '¿Cuál es el estado de mi orden #123?',
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: 'demo-order',
-    role: 'assistant',
-    content:
-      'Encontré tu orden #123. Actualmente está en preparación, el pago aparece como pagado y la entrega está pendiente de recolección. Fecha estimada de entrega: 2026-06-18.',
-    worker: 'ordersWorker',
-    intent: 'order_status',
-    metadata: {
-      orderId: '123',
-      status: 'preparing',
-      paymentStatus: 'paid',
-      deliveryStatus: 'pending_pickup',
-      estimatedDelivery: '2026-06-18',
-      requiresHuman: false,
-    },
-    timestamp: new Date().toISOString(),
-  },
-];
+const initialMessages: ChatMessage[] = [];
 
 export function useChat() {
   const [messages, setMessages] = useState(initialMessages);
@@ -41,7 +17,7 @@ export function useChat() {
     setError('');
     try {
       const response = await sendChatMessage({
-        userId: '1',
+        userId: 'internal-operator',
         message: cleanContent,
         conversationId,
         requestId: crypto.randomUUID(),
