@@ -49,6 +49,7 @@ describe('SupplyGraph Wave 1 v1.14',()=>{
     expect(recommendations.map((item)=>item.actionType)).toEqual(['review_wave1_catalog_capture','review_wave1_missing_media','review_wave1_inventory_initialization']);
     expect(recommendations.every((item)=>item.safePayload.externalActionAllowed===false)).toBe(true);
   });
+  test('media coverage never labels source references as managed imports',async()=>{const service=new AuthorizedSellerNetworkService();service.wave1Activation=jest.fn(async()=>({sellers:[{productCount:3,imageCount:2,managedMediaCount:0}]}));await expect(service.mediaCoverage()).resolves.toMatchObject({productCount:3,officialImageReferenceCount:2,productsWithManagedMedia:0,productsWithoutManagedMedia:3});});
   test('Wave 1 application kill switch blocks extension apply but leaves reads available',async()=>{
     const service=new AuthorizedSellerNetworkService({config:{supplyGraphAuthorizedSellersEnabled:true,supplyGraphSellerOnboardingEnabled:true,supplyGraphSellerOnboardingApplicationEnabled:true,supplyGraphWave1CatalogActivationEnabled:false}});
     const checksum=crypto.createHash('sha256').update('official').digest('hex');const created=await service.createFromSnapshot({schemaVersion:VERSIONS.snapshot,sellerCanonicalKey:'maiz-tacos-dubai',products:[{productType:'restaurant_menu_item',displayName:'Taco',productPageUrl:'https://www.maiztacos.com/menu#taco',publicPrice:20,currency:'AED',priceType:'public_menu_price',observedAt:'2026-07-13T00:00:00Z',sourceChecksum:checksum}]});
