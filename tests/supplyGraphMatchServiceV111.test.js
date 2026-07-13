@@ -35,6 +35,35 @@ const createReadyDemand = async (service, exactName) => service.createDemand({
 }, context);
 
 describe('SupplyGraph Match Service v1.11', () => {
+  test('normalizes nested PostgreSQL offer evidence before scoring', async () => {
+    const pool = {
+      query: jest.fn()
+        .mockResolvedValueOnce({ rows: [{ id: 'supplier-1', canonical_name: 'Intermex UAE' }] })
+        .mockResolvedValueOnce({ rows: [{
+          id: 'catalog-1', display_name: 'Achiote Paste', source_checksum: 'checksum-1',
+          latest_offer: {
+            id: 'offer-1', source_checksum: 'checksum-1', verification_status: 'source_verified',
+            unit_price: '10.5000', observed_at: '2026-07-12T00:00:00.000Z',
+          },
+        }] }),
+    };
+    const supplyGraphStore = {
+      getDemand: jest.fn().mockResolvedValue({ request: { id: 'demand-1' }, items: [] }),
+      isTestMemory: () => false,
+      table: (name) => `cornerops_internal.${name}`,
+    };
+    const store = new SupplyGraphMatchStore({ supplyGraphStore, internalStore: { pool } });
+
+    const inputs = await store.loadInputs('demand-1');
+
+    expect(inputs.catalog[0].latestOffer).toMatchObject({
+      sourceChecksum: 'checksum-1',
+      verificationStatus: 'source_verified',
+      unitPrice: '10.5000',
+      observedAt: '2026-07-12T00:00:00.000Z',
+    });
+  });
+
   test('persists partial single-supplier assessment and reuses identical fingerprint', async () => {
     const { state, workState, service } = build();
     await service.syncIntermex(context);
