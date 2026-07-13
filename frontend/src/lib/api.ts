@@ -158,6 +158,11 @@ export const getIntelligenceOverview = (token = '') =>
   intelligenceRequest<IntelligenceOverview>('/api/intelligence/overview', token);
 export const getFounderReview = (token = '') =>
   intelligenceRequest<FounderReview>('/api/intelligence/founder-review', token);
+export type AuthorizedSellerSummary = { canonicalKey:string;canonicalName:string;authorizationStatus:string;sourceMode:string;captureStatus:string;catalogProductCount:number;pipelinePriority?:string|null;pipelineWave?:string|null;officialSourceUrl?:string|null };
+export type AuthorizedSellerNetworkResponse = { sellers:AuthorizedSellerSummary[];writesBlocked:boolean;externalContactBlocked:boolean;purchasingBlocked:boolean;quoteGenerationBlocked:boolean;marketComparisonPerformed:boolean };
+export const getAuthorizedSellerNetwork=(token='')=>intelligenceRequest<AuthorizedSellerNetworkResponse>('/api/intelligence/supplygraph/authorized-sellers?limit=32',token);
+export const getAuthorizedSellerReadiness=(token='')=>intelligenceRequest<{sellers:Array<{sellerId:string;canonicalKey:string;catalogReady:boolean;comparisonReady:boolean;authorizationStatus:string;sourceVerificationStatus:string}>;writesBlocked:boolean}>('/api/intelligence/supplygraph/seller-readiness',token);
+export const getAuthorizedSellerCatalogGaps=(token='')=>intelligenceRequest<{gaps:Array<{sellerId:string;canonicalKey:string;gap:string}>}>('/api/intelligence/supplygraph/seller-catalog-gaps',token);
 export const getIntelligenceClients = (token = '') =>
   intelligenceRequest<ClientSummary[]>('/api/intelligence/clients', token);
 export const getIntelligenceSignals = (token = '') =>

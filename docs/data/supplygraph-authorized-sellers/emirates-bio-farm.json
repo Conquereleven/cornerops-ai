@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "emirates-bio-farm",
+    "canonicalName": "Emirates Bio Farm",
+    "pipelineScore": 79,
+    "pipelinePriority": "A",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "organic farm and ecommerce",
+    "onboardingModel": "Supplier Seller + Fulfillment Integration",
+    "targetChannel": "HORECA and B2C",
+    "geography": "Abu Dhabi",
+    "officialSourceUrl": "https://emiratesbiofarm.com/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "organic farm and ecommerce",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://emiratesbiofarm.com/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "1d4f4570cfd4c9e343b546012bd3d5eb7141aa430c24a8572b3dc9941e509f41",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

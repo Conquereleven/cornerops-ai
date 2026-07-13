@@ -1,0 +1,290 @@
+{
+  "registryVersion": "supplygraph-seller-registry-v1.13.0",
+  "registryChecksum": "9741751bbe287c48cbc48d8673caa78504a40e20a3fef1cb697f6b42fd9fbc05",
+  "generatedAt": "2026-07-13T00:00:00.000Z",
+  "authorizedSellerCount": 32,
+  "uniqueCanonicalKeyCount": 32,
+  "pipelineSellerCount": 25,
+  "authorizedMarketExtensionCount": 7,
+  "catalogSellerCount": 1,
+  "catalogProductCount": 190,
+  "limits": {
+    "maxSellers": 32,
+    "maxProductsPerSeller": 250,
+    "maxTotalProducts": 2000,
+    "maxImagesPerProduct": 3,
+    "maxImageBytes": 5242880,
+    "maxImagesTotal": 3000,
+    "captureConcurrency": 3,
+    "domainDelayMs": 1000,
+    "retryCount": 1,
+    "initialProductStock": 100
+  },
+  "policyChecksums": {
+    "onboarding": "cae621446587965a35321634a97d8ae904c6476121a195f304fe0140f99e71f6",
+    "registry": "4068f710302662f3a8ea22722a466b15f7bf62631d3ad69d1cdca724cf200fd4",
+    "snapshot": "6ebad04c2a04c5723a7fb73a7b2615b2a7eefd887dfa28ca43d6f65723012309",
+    "media": "52b71d24241aad762c13d680898180085bdf23a781f7dc04446acf3c5364b045",
+    "inventory": "44c00bc7744d1c7d7fa4b60bafd7f5384e5add597805cf7b5b9fd71dde100fdc",
+    "match": "681bda049419f703855244cd129896f426e12bef8e48977135392ed8cfb2ab68",
+    "comparison": "e846d31eac850fb08fa824775c93fea5d2381afe6cf8dea52507f74b1169df49"
+  },
+  "sellers": [
+    {
+      "canonicalKey": "lila-molino-cafe-lila-taqueria",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "lila-molino-cafe-lila-taqueria.json"
+    },
+    {
+      "canonicalKey": "la-tiendita-abu-dhabi",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "la-tiendita-abu-dhabi.json"
+    },
+    {
+      "canonicalKey": "intermex-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "reused_verified_catalog",
+      "productCount": 190,
+      "snapshotFile": "intermex-uae.json"
+    },
+    {
+      "canonicalKey": "maria-bonita-taco-shop-grill",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "maria-bonita-taco-shop-grill.json"
+    },
+    {
+      "canonicalKey": "taqado-mexican-kitchen",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "unavailable",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "taqado-mexican-kitchen.json"
+    },
+    {
+      "canonicalKey": "el-mostacho-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "el-mostacho-dubai.json"
+    },
+    {
+      "canonicalKey": "chalcos-cantina",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "unavailable",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "chalcos-cantina.json"
+    },
+    {
+      "canonicalKey": "maiz-tacos-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "maiz-tacos-dubai.json"
+    },
+    {
+      "canonicalKey": "burro-blanco-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "burro-blanco-dubai.json"
+    },
+    {
+      "canonicalKey": "tortilla-mexican-grill-uae-eathos",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "tortilla-mexican-grill-uae-eathos.json"
+    },
+    {
+      "canonicalKey": "fusion-ceviche-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "fusion-ceviche-dubai.json"
+    },
+    {
+      "canonicalKey": "coya-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "coya-uae.json"
+    },
+    {
+      "canonicalKey": "tamoka-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "tamoka-dubai.json"
+    },
+    {
+      "canonicalKey": "la-mar-gaston-acurio-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "unavailable",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "la-mar-gaston-acurio-dubai.json"
+    },
+    {
+      "canonicalKey": "senor-pico-dubai",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "senor-pico-dubai.json"
+    },
+    {
+      "canonicalKey": "greenheart-organic-farms",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "greenheart-organic-farms.json"
+    },
+    {
+      "canonicalKey": "emirates-bio-farm",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "emirates-bio-farm.json"
+    },
+    {
+      "canonicalKey": "ripe-organic",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "ripe-organic.json"
+    },
+    {
+      "canonicalKey": "freshontable",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "freshontable.json"
+    },
+    {
+      "canonicalKey": "nrtc-fresh",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "nrtc-fresh.json"
+    },
+    {
+      "canonicalKey": "barakat-fresh",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "barakat-fresh.json"
+    },
+    {
+      "canonicalKey": "kibsons",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "blocked_access",
+      "captureStatus": "blocked_auth_or_access",
+      "productCount": 0,
+      "snapshotFile": "kibsons.json"
+    },
+    {
+      "canonicalKey": "casinetto-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "blocked_access",
+      "captureStatus": "blocked_auth_or_access",
+      "productCount": 0,
+      "snapshotFile": "casinetto-uae.json"
+    },
+    {
+      "canonicalKey": "fresh-express-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "fresh-express-uae.json"
+    },
+    {
+      "canonicalKey": "organic-foods-cafe-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "organic-foods-cafe-uae.json"
+    },
+    {
+      "canonicalKey": "bidfood-middle-east-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "bidfood-middle-east-uae.json"
+    },
+    {
+      "canonicalKey": "nesto-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "unavailable",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "nesto-uae.json"
+    },
+    {
+      "canonicalKey": "almaya-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "unavailable",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "almaya-uae.json"
+    },
+    {
+      "canonicalKey": "union-coop-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "union-coop-uae.json"
+    },
+    {
+      "canonicalKey": "spinneys-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "spinneys-uae.json"
+    },
+    {
+      "canonicalKey": "waitrose-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "reachable_official_source",
+      "captureStatus": "official_source_pending_bounded_capture",
+      "productCount": 0,
+      "snapshotFile": "waitrose-uae.json"
+    },
+    {
+      "canonicalKey": "lulu-hypermarket-uae",
+      "authorizationStatus": "founder_attested",
+      "sourceStatus": "blocked_access",
+      "captureStatus": "blocked_auth_or_access",
+      "productCount": 0,
+      "snapshotFile": "lulu-hypermarket-uae.json"
+    }
+  ]
+}

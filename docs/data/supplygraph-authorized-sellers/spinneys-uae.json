@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "spinneys-uae",
+    "canonicalName": "Spinneys UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "retailer",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "premium_supermarket",
+    "geography": "UAE",
+    "officialSourceUrl": "https://www.spinneys.com/en-ae/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "retailer",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.spinneys.com/en-ae/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "dcde9fc68e945b01a13edb8d59656e6aabb988c9469ab41499e812f55b679708",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

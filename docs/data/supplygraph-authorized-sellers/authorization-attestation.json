@@ -1,0 +1,10 @@
+{
+  "basis": "founder_attestation",
+  "attestedSellerCount": 32,
+  "status": "founder_attested",
+  "scope": "internal authorized seller candidate network",
+  "limitations": [
+    "Authorization does not prove stock, MOQ, lead time, wholesale price, purchasing readiness or complete UAE market coverage."
+  ],
+  "rulesetChecksum": "4068f710302662f3a8ea22722a466b15f7bf62631d3ad69d1cdca724cf200fd4"
+}

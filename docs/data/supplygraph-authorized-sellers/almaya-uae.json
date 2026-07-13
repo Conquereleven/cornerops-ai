@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "almaya-uae",
+    "canonicalName": "Al Maya UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "retailer",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "supermarket_ecommerce",
+    "geography": "UAE",
+    "officialSourceUrl": "https://www.almayaonline.com/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "retailer",
+    "sourceStatus": "unavailable",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_UNAVAILABLE"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.almayaonline.com/",
+    "officialSourceVerified": false,
+    "sourceChecksum": "b6fef0e5791f006e42a172113243838df6741006551f3802724d06a4a5072ca7",
+    "sourceStatus": "unavailable"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

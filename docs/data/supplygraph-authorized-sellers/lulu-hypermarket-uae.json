@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "lulu-hypermarket-uae",
+    "canonicalName": "LuLu Hypermarket UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "retailer",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "hypermarket_ecommerce",
+    "geography": "UAE",
+    "officialSourceUrl": "https://gcc.luluhypermarket.com/en-ae/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "retailer",
+    "sourceStatus": "blocked_access",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_BLOCKED_ACCESS"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://gcc.luluhypermarket.com/en-ae/",
+    "officialSourceVerified": false,
+    "sourceChecksum": "f0bf7f47a524de67455ce3fe786d6fc24c28860f76b282f06243492d9cabbdeb",
+    "sourceStatus": "blocked_access"
+  },
+  "catalog": {
+    "captureStatus": "blocked_auth_or_access",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

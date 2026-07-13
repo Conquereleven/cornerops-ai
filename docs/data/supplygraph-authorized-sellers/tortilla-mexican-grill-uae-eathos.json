@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "tortilla-mexican-grill-uae-eathos",
+    "canonicalName": "Tortilla Mexican Grill UAE / Eathos",
+    "pipelineScore": 70,
+    "pipelinePriority": "B",
+    "pipelineWave": "Wave 2",
+    "sellerSegment": "regional QSR chain/operator",
+    "onboardingModel": "Strategic Brand Partner",
+    "targetChannel": "corporate, events and GCC",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.tortilla.co.uk/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "regional QSR chain/operator",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.tortilla.co.uk/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "c1c9ed46f43db1b5e70e334d811bfa66c3c3a431fa9c1680ac7fcb262a6b4b9f",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

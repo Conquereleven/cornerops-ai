@@ -1,0 +1,307 @@
+{
+  "researchVersion": "supplygraph-public-source-research-v1.13.0",
+  "observedAt": "2026-07-13T15:18:21.762Z",
+  "sellerCount": 32,
+  "reachableCount": 24,
+  "blockedCount": 3,
+  "unavailableCount": 5,
+  "unresolvedCount": 0,
+  "runtimeCrawling": false,
+  "formsSubmitted": false,
+  "messagesSent": false,
+  "results": [
+    {
+      "canonicalKey": "almaya-uae",
+      "status": "unavailable",
+      "httpStatus": null,
+      "sourceUrl": "https://www.almayaonline.com/",
+      "finalUrl": null,
+      "sourceChecksum": "b6fef0e5791f006e42a172113243838df6741006551f3802724d06a4a5072ca7",
+      "errorCode": "TypeError",
+      "retried": false
+    },
+    {
+      "canonicalKey": "barakat-fresh",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.barakatfresh.ae/",
+      "finalUrl": "https://barakatfresh.ae/",
+      "sourceChecksum": "02cf55bc5d9f1b7e40e2f2c95056dffffc343970ce03e48b6eab1383830e6ccd",
+      "retried": false
+    },
+    {
+      "canonicalKey": "bidfood-middle-east-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.bidfoodme.com/",
+      "finalUrl": "https://www.bidfoodme.com/",
+      "sourceChecksum": "861d1641b157031a5eb35f3912004f79a2d0a2eef1e3f30f83231a4f6af3e11e",
+      "retried": false
+    },
+    {
+      "canonicalKey": "burro-blanco-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://burroblanco.ae/",
+      "finalUrl": "https://burroblanco.ae/",
+      "sourceChecksum": "196612957b33e9dbcf37da061f217368388cea26df00afbfbbfacb7530780016",
+      "retried": false
+    },
+    {
+      "canonicalKey": "casinetto-uae",
+      "status": "blocked_access",
+      "httpStatus": 403,
+      "sourceUrl": "https://casinetto.com/",
+      "finalUrl": "https://casinetto.com/",
+      "sourceChecksum": "b583fac76f1cf5c2195a110fad8d39238917e44ce65262f17ff3c39adb42ff28",
+      "retried": false
+    },
+    {
+      "canonicalKey": "chalcos-cantina",
+      "status": "unavailable",
+      "httpStatus": null,
+      "sourceUrl": "https://chalcoscantina.ae/",
+      "finalUrl": null,
+      "sourceChecksum": "2145c2dddc05b7775e2eb8dff13882106b2a6c28e924a1711b5196b806b19b7c",
+      "errorCode": "TypeError",
+      "retried": false
+    },
+    {
+      "canonicalKey": "coya-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.coyarestaurant.com/dubai/",
+      "finalUrl": "https://www.coyarestaurant.com/dubai/",
+      "sourceChecksum": "8c343fd8e2758c513e43ee789e72f43a1198ed2ab845fea54fc69bcf6b42fa69",
+      "retried": false
+    },
+    {
+      "canonicalKey": "el-mostacho-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.instagram.com/el_mostacho_dubai/",
+      "finalUrl": "https://www.instagram.com/el_mostacho_dubai/",
+      "sourceChecksum": "664f6406349b8c35a823cd1688caf76352abd11b9f9ee76f8dd35b17865026b6",
+      "retried": false
+    },
+    {
+      "canonicalKey": "emirates-bio-farm",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://emiratesbiofarm.com/",
+      "finalUrl": "https://emiratesbiofarm.com/",
+      "sourceChecksum": "1d4f4570cfd4c9e343b546012bd3d5eb7141aa430c24a8572b3dc9941e509f41",
+      "retried": false
+    },
+    {
+      "canonicalKey": "fresh-express-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.freshexpressint.com/",
+      "finalUrl": "https://freshexpressint.com/",
+      "sourceChecksum": "a30e7c52d6a3567209a4153ada701109275c96e5230b96662a60e6b6f87e4623",
+      "retried": false
+    },
+    {
+      "canonicalKey": "freshontable",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://freshontable.com/",
+      "finalUrl": "https://www.freshontable.com/",
+      "sourceChecksum": "7627507c0ef8365a0eab9ca9f66b359b4fbcf9ac8ecea8cb3c3d04afe7fa9313",
+      "retried": false
+    },
+    {
+      "canonicalKey": "fusion-ceviche-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://jlt.ae/directory/fusion-ceviche",
+      "finalUrl": "https://jlt.ae/directory/fusion-ceviche",
+      "sourceChecksum": "fa45713ccaf7f58ed8766935e7c08dea23b412a2468d9b1b98861cfcef872959",
+      "retried": false
+    },
+    {
+      "canonicalKey": "greenheart-organic-farms",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://greenheartuae.com/",
+      "finalUrl": "https://greenheartuae.com/",
+      "sourceChecksum": "33ef4811be9ae06edc7b35c6e6767b79f1ab8537b631e8bbc3fc71113e4e0f2d",
+      "retried": false
+    },
+    {
+      "canonicalKey": "intermex-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://intermexuae.com/",
+      "finalUrl": "https://intermexuae.com/",
+      "sourceChecksum": "c9e07b698c891731e8ab8011d6eb80efa8ce11051eebcd7777de69c44e66b220",
+      "retried": false
+    },
+    {
+      "canonicalKey": "kibsons",
+      "status": "blocked_access",
+      "httpStatus": 403,
+      "sourceUrl": "https://www.kibsons.com/en",
+      "finalUrl": "https://www.kibsons.com/en",
+      "sourceChecksum": "08dde7f759640e3c043a415367fa439923e2d5f91bd8c13e405a73045a50b974",
+      "retried": false
+    },
+    {
+      "canonicalKey": "la-mar-gaston-acurio-dubai",
+      "status": "unavailable",
+      "httpStatus": null,
+      "sourceUrl": "https://www.atlantis.com/atlantis-the-royal/dining/la-mar-by-gaston-acurio",
+      "finalUrl": null,
+      "sourceChecksum": "5d7211e03071a57f6831323af4869d0076ce81d24232fe46b122b8d807d3b6c1",
+      "errorCode": "TimeoutError",
+      "retried": false
+    },
+    {
+      "canonicalKey": "la-tiendita-abu-dhabi",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://latienditashop.com/welcome/",
+      "finalUrl": "https://latienditashop.com/welcome/",
+      "sourceChecksum": "17776f0bedc5b4a7338855cdd615688abd9fc54fc45a20208fa4f3a396e21c13",
+      "retried": false
+    },
+    {
+      "canonicalKey": "lila-molino-cafe-lila-taqueria",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.lilamolino.com/",
+      "finalUrl": "https://www.lilamolino.com/",
+      "sourceChecksum": "979422416f939ccc6eb6664be5e78e352c344a62f2c02b81200f53fa170b3ed6",
+      "retried": false
+    },
+    {
+      "canonicalKey": "lulu-hypermarket-uae",
+      "status": "blocked_access",
+      "httpStatus": 403,
+      "sourceUrl": "https://gcc.luluhypermarket.com/en-ae/",
+      "finalUrl": "https://gcc.luluhypermarket.com/en-ae/",
+      "sourceChecksum": "f0bf7f47a524de67455ce3fe786d6fc24c28860f76b282f06243492d9cabbdeb",
+      "retried": false
+    },
+    {
+      "canonicalKey": "maiz-tacos-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.maiztacos.com/",
+      "finalUrl": "https://www.maiztacos.com/",
+      "sourceChecksum": "eb5185c6efc833bc2e89d0874b4b85ed4ccc62f73fb6b9b6df92d246bea2e485",
+      "retried": false
+    },
+    {
+      "canonicalKey": "maria-bonita-taco-shop-grill",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://mariabonitatacoshop.com/",
+      "finalUrl": "https://mariabonitatacoshop.com/",
+      "sourceChecksum": "3e103758a36cb0a26dc33a20e5190bc682b888a04124e0f2b60ef66a5d847b85",
+      "retried": false
+    },
+    {
+      "canonicalKey": "nesto-uae",
+      "status": "unavailable",
+      "httpStatus": null,
+      "sourceUrl": "https://nestogroup.com/",
+      "finalUrl": null,
+      "sourceChecksum": "7317714e0dd9dc6dee7682f1ed368ae387a80c502afbb299f2e10340ccbdf1b3",
+      "errorCode": "TypeError",
+      "retried": false
+    },
+    {
+      "canonicalKey": "nrtc-fresh",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://nrtcgroup.com/",
+      "finalUrl": "https://nrtcgroup.com/",
+      "sourceChecksum": "2db47b848613486ddd2ed206549b764de90c290eec6d4bdb4e6c767e09bf446a",
+      "retried": false
+    },
+    {
+      "canonicalKey": "organic-foods-cafe-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://organicfoodsandcafe.com/",
+      "finalUrl": "https://organicfoodsandcafe.com/",
+      "sourceChecksum": "06f8009244d54160416f80769f71d07e83cd6ced07e8db81a91473132fccb7c7",
+      "retried": false
+    },
+    {
+      "canonicalKey": "ripe-organic",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://ripeme.com/",
+      "finalUrl": "https://ripeme.com/",
+      "sourceChecksum": "e74dc45388103b80244ea3280b1bcc09f828d9806efcc6ee5800a2418797f317",
+      "retried": false
+    },
+    {
+      "canonicalKey": "senor-pico-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://senorpico.com/thepalm/eat/",
+      "finalUrl": "https://senorpico.com/thepalm/eat/",
+      "sourceChecksum": "fdd2917178bbf6ca5ac5c135f60af60985d3d1b0af4e33acddb5ccaaa3af6010",
+      "retried": false
+    },
+    {
+      "canonicalKey": "spinneys-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.spinneys.com/en-ae/",
+      "finalUrl": "https://www.spinneys.com/en-ae/",
+      "sourceChecksum": "dcde9fc68e945b01a13edb8d59656e6aabb988c9469ab41499e812f55b679708",
+      "retried": false
+    },
+    {
+      "canonicalKey": "tamoka-dubai",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.tamokadubai.com/",
+      "finalUrl": "https://www.tamokadubai.com/",
+      "sourceChecksum": "9985fee4466eb04421fe079f4483dff53e10db49635e6a644adcd2e769cb1316",
+      "retried": false
+    },
+    {
+      "canonicalKey": "taqado-mexican-kitchen",
+      "status": "unavailable",
+      "httpStatus": null,
+      "sourceUrl": "https://www.taqado.com/",
+      "finalUrl": null,
+      "sourceChecksum": "ef350656c85c05b33f0f21896a2d00c4e831ba5e6d5a16b6a64146d3a9ff8ed1",
+      "errorCode": "TypeError",
+      "retried": false
+    },
+    {
+      "canonicalKey": "tortilla-mexican-grill-uae-eathos",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.tortilla.co.uk/",
+      "finalUrl": "https://www.tortilla.co.uk/",
+      "sourceChecksum": "c1c9ed46f43db1b5e70e334d811bfa66c3c3a431fa9c1680ac7fcb262a6b4b9f",
+      "retried": false
+    },
+    {
+      "canonicalKey": "union-coop-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.unioncoop.ae/",
+      "finalUrl": "https://www.unioncoop.ae/",
+      "sourceChecksum": "7e6c12e5f1fc918adba93386f430f36a921e4833ec4a93e7dcf3218843b3a555",
+      "retried": false
+    },
+    {
+      "canonicalKey": "waitrose-uae",
+      "status": "reachable_official_source",
+      "httpStatus": 200,
+      "sourceUrl": "https://www.waitrose.ae/en/",
+      "finalUrl": "https://www.waitrose.ae/en/",
+      "sourceChecksum": "b85e53d48be8842cb72481c99ea19a82d8ba05897cca9e51606575b68d7a76bf",
+      "retried": false
+    }
+  ]
+}

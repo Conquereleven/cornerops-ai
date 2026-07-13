@@ -22,7 +22,7 @@ const jsonSafe = (value) => {
 const safeCamel = (row) => jsonSafe(camel(row));
 
 const emptyState = () => ({
-  suppliers: [], catalogItems: [], offerSnapshots: [], demandRequests: [], demandItems: [], auditEvents: [],
+  suppliers: [], catalogItems: [], offerSnapshots: [], demandRequests: [], demandItems: [], auditEvents: [], supplierCoverageResults: [],
   matchRuns: [], matchItemResults: [], matchCandidates: [], sourcingRecommendations: [],
   evidencePackages: [], factObservations: [], evidenceApplications: [],
 });

@@ -1,0 +1,11 @@
+const request=require('supertest');const crypto=require('crypto');
+const operatorToken='v113-operator';const founderToken='v113-founder';const hash=(v)=>crypto.createHash('sha256').update(v).digest('hex');
+Object.assign(process.env,{CONTROL_TOWER_FRONTEND_API_ENABLED:'true',CONTROL_TOWER_FRONTEND_AUTH_REQUIRED:'true',CONTROL_TOWER_FRONTEND_READ_ONLY:'true',CONTROL_TOWER_FRONTEND_FAIL_CLOSED:'true',CONTROL_TOWER_FRONTEND_MASK_PII:'true',CONTROL_TOWER_FRONTEND_TOKEN_HASH:hash(operatorToken),CONTROL_TOWER_FOUNDER_ACTION_AUTH_REQUIRED:'true',CONTROL_TOWER_FOUNDER_ACTION_TOKEN_HASH:hash(founderToken),CONTROL_TOWER_FOUNDER_ACTION_RATE_LIMIT_PER_MINUTE:'100',SUPPLYGRAPH_AUTHORIZED_SELLERS_ENABLED:'true',SUPPLYGRAPH_SELLER_ONBOARDING_ENABLED:'true'});
+const controller=require('../src/controllers/intelligenceController');const app=require('../src/app');
+const operator=(call)=>call.set('Authorization',`Bearer ${operatorToken}`);const founder=(call)=>operator(call).set('x-cornerops-founder-action-token',founderToken);
+describe('Authorized Seller API v1.13',()=>{
+  test('operator reads are authenticated and safety-labeled',async()=>{await request(app).get('/api/intelligence/supplygraph/authorized-sellers').expect(401);const response=await operator(request(app).get('/api/intelligence/supplygraph/authorized-sellers')).expect(200);expect(response.body.sellers).toHaveLength(32);expect(response.body).toMatchObject({writesBlocked:true,externalContactBlocked:true,marketComparisonPerformed:false});});
+  test('onboarding mutation requires founder auth and remains approval gated',async()=>{const path='/api/intelligence/supplygraph/authorized-sellers/intermex-uae/onboarding-packages';await operator(request(app).post(path)).send({}).expect(401);const response=await founder(request(app).post(path)).send({}).expect(201);expect(response.body.package.catalogItemCount).toBe(190);expect(response.body.externalContactBlocked).toBe(true);});
+  test('profile-only seller reports zero products without inventing catalog truth',async()=>{const response=await operator(request(app).get('/api/intelligence/supplygraph/authorized-sellers/el-mostacho-dubai')).expect(200);expect(response.body.seller.catalogProductCount).toBe(0);expect(response.body.seller.officialSourceUrl).toBeTruthy();});
+  afterAll(()=>{controller.authorizedSellerNetworkService.packages.length=0;});
+});

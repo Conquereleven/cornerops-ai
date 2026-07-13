@@ -25,6 +25,7 @@ const {
   SupplierEvidenceResolver,
   SupplierEvidenceService,
   SupplierEvidenceStore,
+  AuthorizedSellerNetworkService,
 } = require('../core/supplygraph');
 
 const flowEngine = new CornerMexFlowEngine({
@@ -91,6 +92,7 @@ const supplyGraphService = new SupplyGraphService({
   matchService: supplyGraphMatchService,
   evidenceService: supplierEvidenceService,
 });
+const authorizedSellerNetworkService = new AuthorizedSellerNetworkService({ config: env, store: supplyGraphStore });
 const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
 const environmentDoctorService = new EnvironmentDoctorService({ config: env });
 const operatingStageEngine = new OperatingStageEngine({ config: env });
@@ -357,8 +359,33 @@ const listPersistentDrafts = async (req, res, next) => {
 const recordFounderActionAuthFailure = (event) => internalOperationsStore.recordAuditEvent(event);
 
 const supplyGraphStatus = async (_req, res, next) => {
-  try { return res.json(await supplyGraphService.status()); } catch (error) { return next(error); }
+  try { return res.json({ ...(await supplyGraphService.status()), authorizedSellerNetwork: await authorizedSellerNetworkService.status() }); } catch (error) { return next(error); }
 };
+
+const authorizedSellerSafety = { writesBlocked:true, externalContactBlocked:true, purchasingBlocked:true, quoteGenerationBlocked:true, marketComparisonPerformed:false };
+const listAuthorizedSellers = async(req,res,next)=>{try{return res.json({sellers:authorizedSellerNetworkService.registry(req.query),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getAuthorizedSeller = async(req,res,next)=>{try{const seller=authorizedSellerNetworkService.seller(req.params.sellerKey);return seller?res.json({seller,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const previewSellerOnboarding = async(req,res,next)=>{try{const result=authorizedSellerNetworkService.preview(req.params.sellerKey);return result?res.json({...result,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const createSellerOnboardingPackage = async(req,res,next)=>{try{const result=await authorizedSellerNetworkService.createPackage(req.params.sellerKey,actorContext(req));return result?res.status(result.reused?200:201).json({...result,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const createSellerOnboardingPackageFromBody=async(req,res,next)=>{try{const key=req.body?.sellerCanonicalKey||req.body?.sellerKey;const result=await authorizedSellerNetworkService.createPackage(key,actorContext(req));return result?res.status(result.reused?200:201).json({...result,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const createSellerOnboardingPackageFromSnapshot=async(req,res,next)=>{try{const result=await authorizedSellerNetworkService.createFromSnapshot(req.body||{},actorContext(req));return result?res.status(result.reused?200:201).json({...result,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const applySellerOnboardingPackage = async(req,res,next)=>{try{const result=await authorizedSellerNetworkService.apply(req.params.id,req.body||{},actorContext(req));return result?res.json({...result,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_ONBOARDING_PACKAGE_NOT_FOUND'});}catch(error){return next(error);}};
+const listSellerOnboardingPackages = async(req,res,next)=>{try{return res.json({packages:await authorizedSellerNetworkService.listPackages(req.query),...authorizedSellerSafety});}catch(error){return next(error);}};
+const listSellerCoverage = async(_req,res,next)=>{try{return res.json({coverage:authorizedSellerNetworkService.coverage(),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getSellerOnboardingPackage=async(req,res,next)=>{try{const row=await authorizedSellerNetworkService.getPackage(req.params.id);return row?res.json({package:row,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_ONBOARDING_PACKAGE_NOT_FOUND'});}catch(error){return next(error);}};
+const cancelSellerOnboardingPackage=async(req,res,next)=>{try{return res.json({package:await authorizedSellerNetworkService.cancel(req.params.id,req.body||{},actorContext(req)),...authorizedSellerSafety});}catch(error){return next(error);}};
+const listAuthorizedSellerProfiles=async(req,res,next)=>{try{return res.json({sellers:await authorizedSellerNetworkService.persistedSellers(req.query),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getAuthorizedSellerProfile=async(req,res,next)=>{try{const seller=await authorizedSellerNetworkService.persistedSeller(req.params.id);return seller?res.json({seller,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const listAuthorizedSellerCatalog=async(req,res,next)=>{try{return res.json({items:await authorizedSellerNetworkService.sellerCatalog(req.params.id,req.query),...authorizedSellerSafety});}catch(error){return next(error);}};
+const listAuthorizedSellerInventory=async(req,res,next)=>{try{return res.json({inventory:await authorizedSellerNetworkService.inventory({sellerId:req.params.id,...req.query}),...authorizedSellerSafety});}catch(error){return next(error);}};
+const listAuthorizedSellerMedia=async(req,res,next)=>{try{return res.json({media:await authorizedSellerNetworkService.media({sellerId:req.params.id,...req.query}),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getAuthorizedProduct=async(req,res,next)=>{try{const product=await authorizedSellerNetworkService.product(req.params.id);return product?res.json({product,...authorizedSellerSafety}):res.status(404).json({code:'SUPPLYGRAPH_PRODUCT_NOT_FOUND'});}catch(error){return next(error);}};
+const getAuthorizedProductInventory=async(req,res,next)=>{try{return res.json({inventory:await authorizedSellerNetworkService.inventory({productId:req.params.id}),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getAuthorizedProductMedia=async(req,res,next)=>{try{return res.json({media:await authorizedSellerNetworkService.media({productId:req.params.id}),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getSellerReadiness=async(_req,res,next)=>{try{return res.json({sellers:await authorizedSellerNetworkService.readiness(),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getSellerCatalogGaps=async(_req,res,next)=>{try{return res.json({gaps:await authorizedSellerNetworkService.catalogGaps(),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getMatchSupplierCoverage=async(req,res,next)=>{try{return res.json({coverage:await authorizedSellerNetworkService.coverageResults({matchRunId:req.params.id}),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getDemandSupplierCoverage=async(req,res,next)=>{try{const latest=await supplyGraphMatchStore.latestForDemand(req.params.id);return res.json({matchRunId:latest?.matchRun?.id||null,coverage:latest?.supplierCoverage||[],...authorizedSellerSafety});}catch(error){return next(error);}};
 
 const listSupplyGraphSuppliers = async (req, res, next) => {
   try {
@@ -550,6 +577,16 @@ module.exports = {
   supplyGraphService,
   supplierEvidenceService,
   supplierEvidenceStore,
+  authorizedSellerNetworkService,
+  listAuthorizedSellers,
+  getAuthorizedSeller,
+  previewSellerOnboarding,
+  createSellerOnboardingPackage,
+  createSellerOnboardingPackageFromBody,createSellerOnboardingPackageFromSnapshot,
+  applySellerOnboardingPackage,
+  listSellerOnboardingPackages,
+  listSellerCoverage,
+  getSellerOnboardingPackage,cancelSellerOnboardingPackage,listAuthorizedSellerProfiles,getAuthorizedSellerProfile,listAuthorizedSellerCatalog,listAuthorizedSellerInventory,listAuthorizedSellerMedia,getAuthorizedProduct,getAuthorizedProductInventory,getAuthorizedProductMedia,getSellerReadiness,getSellerCatalogGaps,getMatchSupplierCoverage,getDemandSupplierCoverage,
   supplyGraphStatus,
   listSupplyGraphSuppliers,
   getSupplyGraphSupplier,

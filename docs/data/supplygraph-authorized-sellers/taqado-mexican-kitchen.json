@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "taqado-mexican-kitchen",
+    "canonicalName": "Taqado Mexican Kitchen",
+    "pipelineScore": 77,
+    "pipelinePriority": "A",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "Mexican QSR chain",
+    "onboardingModel": "Kitchen Brand / Corporate Bundles",
+    "targetChannel": "offices, catering and B2C",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.taqado.com/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "Mexican QSR chain",
+    "sourceStatus": "unavailable",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_UNAVAILABLE"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.taqado.com/",
+    "officialSourceVerified": false,
+    "sourceChecksum": "ef350656c85c05b33f0f21896a2d00c4e831ba5e6d5a16b6a64146d3a9ff8ed1",
+    "sourceStatus": "unavailable"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

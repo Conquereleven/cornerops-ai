@@ -2,6 +2,8 @@ const { createSupplyGraphError, evaluateDemandCompleteness, sha256 } = require('
 const { ENGINE_VERSION, RULESET_CHECKSUM, stable } = require('./supplyGraphMatchRules');
 const { SupplyGraphScoreCalculator, round } = require('./SupplyGraphScoreCalculator');
 const { SupplyGraphConfidenceCalculator } = require('./SupplyGraphConfidenceCalculator');
+const { VERSIONS, RULESETS } = require('./authorizedSellerRules');
+const { MultiSellerCoverageCalculator } = require('./MultiSellerCoverageCalculator');
 
 const REQUIRED_CHECKS = Object.freeze({
   stock_status: 'verify_supplier_stock', minimum_order_quantity: 'verify_supplier_moq',
@@ -54,14 +56,16 @@ class SupplyGraphMatchService {
       maximumUnitPrice: item.maximumUnitPrice, temperatureZone: item.temperatureZone,
     })).sort((a, b) => a.id.localeCompare(b.id));
     return sha256(stable({ demandRequestId: inputs.request.id, demandVersion: inputs.request.version, activeItems,
-      engineVersion: ENGINE_VERSION, rulesetChecksum: RULESET_CHECKSUM,
+      engineVersion: this.config.supplyGraphMultiSellerComparisonEnabled ? VERSIONS.match : ENGINE_VERSION,
+      rulesetChecksum: this.config.supplyGraphMultiSellerComparisonEnabled ? RULESETS.match.checksum : RULESET_CHECKSUM,
       suppliers: inputs.suppliers.map((item) => item.id).sort(), ...watermarks,
       staleAfterHours: this.config.supplyGraphObservationStaleAfterHours || 168 }));
   }
 
   candidate(item, catalog) {
     const offer = catalog.latestOffer || null;
-    const match = this.score.calculate(item, catalog, offer, { expectedChecksum: this.config.supplyGraphIntermexSourceChecksum });
+    const expectedChecksum=catalog.supplierCanonicalKey==='intermex-uae'?this.config.supplyGraphIntermexSourceChecksum:null;
+    const match = this.score.calculate(item, catalog, offer, { expectedChecksum });
     const confidence = this.confidence.calculate(item, catalog, offer, match, { staleAfterHours: this.config.supplyGraphObservationStaleAfterHours || 168 });
     const unknown = [...match.unknownFacts];
     if (!offer || offer.stockStatus === 'unknown') unknown.push('stock_status');
@@ -124,16 +128,23 @@ class SupplyGraphMatchService {
     const completeness = evaluateDemandCompleteness(inputs.request, inputs.items);
     if (inputs.request.status !== 'ready_for_matching' || !completeness.completeForMatching) throw createSupplyGraphError('Demand request is not ready for matching.', 'SUPPLYGRAPH_DEMAND_NOT_READY', 409);
     if (!inputs.suppliers.length || !inputs.catalog.length) throw createSupplyGraphError('Verified supplier catalog is unavailable.', 'SUPPLYGRAPH_MATCH_SOURCE_UNAVAILABLE', 503);
-    const watermarks = this.buildWatermarks(inputs);
-    const inputFingerprint = this.fingerprint(inputs, watermarks);
-    const entries = inputs.items.filter((item) => item.active !== false).map((demand) => {
+    const multiEnabled = Boolean(this.config.supplyGraphMultiSellerComparisonEnabled);
+    const eligibleSuppliers = multiEnabled ? inputs.suppliers.slice(0, this.config.supplyGraphComparisonMaxSellers || 32)
+      : inputs.suppliers.filter((supplier) => supplier.canonicalKey === 'intermex-uae').slice(0, 1);
+    const scoped = { ...inputs, suppliers: eligibleSuppliers.length ? eligibleSuppliers : inputs.suppliers.slice(0, 1) };
+    scoped.catalog = inputs.catalog.filter((item) => scoped.suppliers.some((supplier) => supplier.id === item.supplierId));
+    const watermarks = this.buildWatermarks(scoped);
+    const inputFingerprint = this.fingerprint(scoped, watermarks);
+    const entries = scoped.items.filter((item) => item.active !== false).map((demand) => {
       const demandEvidence = { ...demand, requestedCurrency: inputs.request.requestedCurrency, requiredBy: inputs.request.requiredBy };
-      const candidates = inputs.catalog.map((catalog) => this.candidate(demandEvidence, {
+      const candidates = scoped.catalog.map((catalog) => this.candidate(demandEvidence, {
         ...catalog,
-        supplierName: inputs.suppliers.find((supplier) => supplier.id === catalog.supplierId)?.canonicalName || null,
+        supplierName: scoped.suppliers.find((supplier) => supplier.id === catalog.supplierId)?.canonicalName || null,
+        supplierCanonicalKey: scoped.suppliers.find((supplier) => supplier.id === catalog.supplierId)?.canonicalKey || null,
       }))
         .filter((candidate) => !candidate.disqualifiers.includes('inactive_catalog_observation'))
-        .sort((a, b) => b.matchScore - a.matchScore || b.confidenceScore - a.confidenceScore || a.stableKey.localeCompare(b.stableKey))
+        .map((candidate)=>({...candidate,candidateTier:candidate.resultStatus==='catalog_match_found'?(candidate.unknownFacts.length?'match_verification_required':'match_ready'):candidate.resultStatus==='ambiguous_catalog_match'?'ambiguous':'not_matched'}))
+        .sort((a, b) => ({match_ready:0,match_verification_required:1,ambiguous:2,not_matched:3}[a.candidateTier]-({match_ready:0,match_verification_required:1,ambiguous:2,not_matched:3}[b.candidateTier]) || b.matchScore - a.matchScore || b.confidenceScore - a.confidenceScore || a.stableKey.localeCompare(b.stableKey)))
         .slice(0, parsed.maxCandidatesPerItem).map((candidate, index) => ({ ...candidate, rank: index + 1 }));
       const top = candidates[0] || null;
       const resultStatus = top?.resultStatus || 'no_catalog_match';
@@ -154,17 +165,19 @@ class SupplyGraphMatchService {
     const fulfillmentReadiness = counts.matched === 0 ? 'catalog_coverage_none' : counts.matched < entries.length ? 'catalog_coverage_partial'
       : entries.some((entry) => entry.result.requiredHumanChecks.length) ? 'supplier_verification_required' : 'commercial_terms_verified';
     const recommendation = this.recommendation(counts, entries);
-    const run = { demandRequestId, demandVersion: inputs.request.version, engineVersion: ENGINE_VERSION,
-      rulesetChecksum: RULESET_CHECKSUM, sourceWatermark: watermarks.sourceWatermark, inputFingerprint,
-      comparisonScope: 'single_verified_supplier', supplierCountEvaluated: inputs.suppliers.length,
+    const supplierComparisonPerformed = multiEnabled && scoped.suppliers.length > 1;
+    const run = { demandRequestId, demandVersion: scoped.request.version, engineVersion: supplierComparisonPerformed?VERSIONS.match:ENGINE_VERSION,
+      rulesetChecksum: supplierComparisonPerformed?RULESETS.match.checksum:RULESET_CHECKSUM, sourceWatermark: watermarks.sourceWatermark, inputFingerprint,
+      comparisonScope: supplierComparisonPerformed?'authorized_verified_seller_set':'single_verified_supplier', supplierCountEvaluated: scoped.suppliers.length,
       marketComparisonPerformed: false, bestSupplierClaim: false, ...aggregate,
       coverageStatus, fulfillmentReadiness, matchedItemCount: counts.matched, ambiguousItemCount: counts.ambiguous,
       unmatchedItemCount: counts.unmatched, activeItemCount: entries.length,
       catalogCoverageRatio: round(counts.matched / entries.length),
-      resultSummary: { aggregation: aggregate.aggregation, catalogWatermark: watermarks.catalogWatermark, offerWatermark: watermarks.offerWatermark, marketComparisonPerformed: false, bestSupplierClaim: false },
+      resultSummary: { aggregation: aggregate.aggregation, catalogWatermark: watermarks.catalogWatermark, offerWatermark: watermarks.offerWatermark, supplierComparisonPerformed, marketComparisonPerformed: false, marketCompleteness:false, bestSupplierClaim: false, splitSourcingPotential:counts.matched>0&&counts.matched<entries.length, basketOptimizerStatus:'not_implemented' },
       createdBy: context.actorId || 'founder' };
     const workItems = this.workItems(run, recommendation, entries);
-    const result = await this.store.persist({ run, items: entries, recommendation }, workItems, { ...context, sourceType: 'supplygraph_match', sourceId: demandRequestId });
+    const coverageResults=new MultiSellerCoverageCalculator().calculate({activeItemCount:entries.length,suppliers:scoped.suppliers.map((supplier)=>({supplierId:supplier.id,results:entries.map((entry)=>entry.candidates.find((candidate)=>candidate.supplierId===supplier.id)||{resultStatus:'no_catalog_match',matchScore:0,confidenceScore:0})}))});
+    const result = await this.store.persist({ run, items: entries, recommendation,coverageResults }, workItems, { ...context, sourceType: 'supplygraph_match', sourceId: demandRequestId });
     return { ...result, cornerMexMutations: false, productActivationBlocked: true, externalActionsBlocked: true };
   }
 }

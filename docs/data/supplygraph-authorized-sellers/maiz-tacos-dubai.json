@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "maiz-tacos-dubai",
+    "canonicalName": "Maiz Tacos",
+    "pipelineScore": 83,
+    "pipelinePriority": "A",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "taqueria and local brand",
+    "onboardingModel": "Kitchen Brand + Fulfilled by CornerMex",
+    "targetChannel": "B2C and HORECA",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.maiztacos.com/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "taqueria and local brand",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.maiztacos.com/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "eb5185c6efc833bc2e89d0874b4b85ed4ccc62f73fb6b9b6df92d246bea2e485",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

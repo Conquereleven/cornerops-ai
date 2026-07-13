@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "chalcos-cantina",
+    "canonicalName": "Chalco's Cantina",
+    "pipelineScore": 76,
+    "pipelinePriority": "A",
+    "pipelineWave": "Wave 1",
+    "sellerSegment": "Tex-Mex restaurant",
+    "onboardingModel": "Kitchen Brand + Marketplace Seller",
+    "targetChannel": "B2C, events and offices",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://chalcoscantina.ae/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "Tex-Mex restaurant",
+    "sourceStatus": "unavailable",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_UNAVAILABLE"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://chalcoscantina.ae/",
+    "officialSourceVerified": false,
+    "sourceChecksum": "2145c2dddc05b7775e2eb8dff13882106b2a6c28e924a1711b5196b806b19b7c",
+    "sourceStatus": "unavailable"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

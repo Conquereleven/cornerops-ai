@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "tamoka-dubai",
+    "canonicalName": "Tamoka Dubai",
+    "pipelineScore": 65,
+    "pipelinePriority": "B",
+    "pipelineWave": "Wave 2",
+    "sellerSegment": "Latin American and Caribbean restaurant",
+    "onboardingModel": "Co-branded Kitchen Brand",
+    "targetChannel": "premium B2C, hotels and events",
+    "geography": "Dubai",
+    "officialSourceUrl": "https://www.tamokadubai.com/",
+    "pipelineSource": "founder_commercial_pipeline",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "Latin American and Caribbean restaurant",
+    "sourceStatus": "reachable_official_source",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": []
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://www.tamokadubai.com/",
+    "officialSourceVerified": true,
+    "sourceChecksum": "9985fee4466eb04421fe079f4483dff53e10db49635e6a644adcd2e769cb1316",
+    "sourceStatus": "reachable_official_source"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}

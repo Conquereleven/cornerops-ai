@@ -15,6 +15,13 @@ const { SupplierEvidencePreviewBuilder } = require('./SupplierEvidencePreviewBui
 const evidenceRules = require('./supplierEvidenceRules');
 const matchRules = require('./supplyGraphMatchRules');
 const supplyGraphTypes = require('./supplyGraphTypes');
+const { AuthorizedSellerNetworkService } = require('./AuthorizedSellerNetworkService');
+const authorizedSellerRules = require('./authorizedSellerRules');
+const authorizedSellerRegistry = require('./authorizedSellerRegistry');
+const { SellerCatalogCapturePolicy } = require('./SellerCatalogCapturePolicy');
+const { SellerSnapshotValidator } = require('./SellerSnapshotValidator');
+const { SellerInventoryService } = require('./SellerInventoryService');
+const { MultiSellerCoverageCalculator } = require('./MultiSellerCoverageCalculator');
 
 module.exports = {
   DemandIntakeService,
@@ -31,8 +38,15 @@ module.exports = {
   SupplierEvidenceValidator,
   SupplierEvidenceResolver,
   SupplierEvidencePreviewBuilder,
+  AuthorizedSellerNetworkService,
+  SellerCatalogCapturePolicy,
+  SellerSnapshotValidator,
+  SellerInventoryService,
+  MultiSellerCoverageCalculator,
   emptyState,
   ...supplyGraphTypes,
   ...matchRules,
   ...evidenceRules,
+  ...authorizedSellerRules,
+  ...authorizedSellerRegistry,
 };

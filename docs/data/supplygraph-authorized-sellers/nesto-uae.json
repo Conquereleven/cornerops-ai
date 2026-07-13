@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "seller": {
+    "canonicalKey": "nesto-uae",
+    "canonicalName": "Nesto UAE",
+    "pipelineScore": null,
+    "pipelinePriority": null,
+    "pipelineWave": null,
+    "sellerSegment": "retailer",
+    "onboardingModel": "authorized market seller review",
+    "targetChannel": "hypermarket",
+    "geography": "UAE",
+    "officialSourceUrl": "https://nestogroup.com/",
+    "pipelineSource": "authorized_market_extension",
+    "authorizationBasis": "founder_attestation",
+    "authorizationStatus": "founder_attested",
+    "sellerType": "retailer",
+    "sourceStatus": "unavailable",
+    "sourceMode": "official_public_source",
+    "captureStatus": "official_source_pending_bounded_capture",
+    "catalogProductCount": 0,
+    "warnings": [
+      "OFFICIAL_SOURCE_UNAVAILABLE"
+    ]
+  },
+  "research": {
+    "observedAt": "2026-07-13T00:00:00.000Z",
+    "officialSourceUrl": "https://nestogroup.com/",
+    "officialSourceVerified": false,
+    "sourceChecksum": "7317714e0dd9dc6dee7682f1ed368ae387a80c502afbb299f2e10340ccbdf1b3",
+    "sourceStatus": "unavailable"
+  },
+  "catalog": {
+    "captureStatus": "official_source_pending_bounded_capture",
+    "products": [],
+    "productCount": 0,
+    "priceBasis": null
+  },
+  "safety": {
+    "runtimeCrawling": false,
+    "formsSubmitted": false,
+    "messagesSent": false,
+    "accountsCreated": false,
+    "unknownFactsRemainUnknown": true
+  }
+}
