@@ -25,6 +25,12 @@
 - Rollback model: feature disablement; data preserved
 - Decision: `approved_for_application`
 
+The first performance-advisor run identified one redundant index: the explicit canonical lookup index
+duplicated the unique-constraint index on `canonical_key`. Remediation migration
+`20260713010500_supplygraph_remove_duplicate_index_v110.sql` drops only that redundant index and leaves
+the unique constraint intact. Its SHA-256 is
+`c2f566c09dbddaeb39e3f74c060994d9ada5c0624ecbe5a44278998f0a21e451`. No table or data is removed.
+
 ## Authentication and execution
 
 Reads require the operator token. Mutations require both operator and Founder Action tokens. Origin,

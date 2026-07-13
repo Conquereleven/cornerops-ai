@@ -6,6 +6,10 @@ const migrationPath = path.join(
   '../supabase/migrations/20260712220000_supplygraph_data_foundation_v110.sql',
 );
 const sql = fs.readFileSync(migrationPath, 'utf8').toLowerCase();
+const remediation = fs.readFileSync(path.join(
+  __dirname,
+  '../supabase/migrations/20260713010500_supplygraph_remove_duplicate_index_v110.sql',
+), 'utf8').toLowerCase();
 
 describe('SupplyGraph migration v1.10', () => {
   test('creates only the five expected private-schema tables', () => {
@@ -43,5 +47,11 @@ describe('SupplyGraph migration v1.10', () => {
       'demand_requests_status_idx', 'demand_requests_priority_idx',
       'demand_requests_emirate_idx', 'demand_requests_segment_idx', 'demand_items_request_idx',
     ]) expect(sql).toContain(index);
+  });
+
+  test('removes only the redundant canonical lookup index reported by the advisor', () => {
+    expect(remediation).toContain('drop index if exists cornerops_internal.supplier_profiles_canonical_lookup_idx');
+    expect(remediation).not.toMatch(/drop\s+(?:table|schema|function|trigger)/);
+    expect(remediation).not.toMatch(/(?:from|into|update|table)\s+public\./);
   });
 });
