@@ -54,7 +54,7 @@ class AuthorizedSellerNetworkService {
     const internal=this.store.internalStore;
     return internal.withTransaction(async(client)=>{
       const table=internal.table('supplier_onboarding_packages');
-      const existing=await client.query(`select * from ${table} where package_fingerprint=$1`,[preview.packageFingerprint]);
+      const existing=await client.query(`select * from ${table} where payload_fingerprint=$1`,[preview.packageFingerprint]);
       if(existing.rows[0])return{package:existing.rows[0],reused:true};
       const inserted=await client.query(`insert into ${table}(idempotency_key,supplier_canonical_key,evidence_scope,onboarding_model_version,onboarding_ruleset_checksum,snapshot_schema_version,snapshot_key,snapshot_checksum,proposed_profile,status,verification_status,authorization_status,catalog_item_count,image_reference_count,payload_fingerprint,created_by) values($1,$2,'production',$3,$4,$5,$6,$7,$8::jsonb,'pending_review','human_verified',$9,$10,0,$11,$12) returning *`,[`seller-onboarding:${preview.packageFingerprint}`,key,VERSIONS.onboarding,RULESETS.onboarding.checksum,VERSIONS.snapshot,`authorized-seller:${key}`,REGISTRY_CHECKSUM,JSON.stringify(preview.seller),preview.seller.authorizationStatus,preview.catalogItemCount,preview.packageFingerprint,context.actorId||'founder']);
       const row=inserted.rows[0];

@@ -46,4 +46,16 @@ describe('SupplyGraph Authorized Seller Network v1.13',()=>{
     const store=new SupplyGraphStore({state:emptyState(),internalStore:{table:(name)=>name}});expect(store.state.suppliers).toHaveLength(0);
     const service=new AuthorizedSellerNetworkService({config:{supplyGraphAuthorizedSellersEnabled:true},store});service.registry();expect(store.state.suppliers).toHaveLength(0);
   });
+  test('PostgreSQL idempotency lookup uses the migrated payload fingerprint column',async()=>{
+    const queries=[];const internalStore={pool:{},table:(name)=>`cornerops_internal.${name}`,
+      withTransaction:(operation)=>operation({query:async(sql)=>{queries.push(sql);return{rows:[{id:'existing-package'}]};}})};
+    const service=new AuthorizedSellerNetworkService({
+      config:{supplyGraphAuthorizedSellersEnabled:true,supplyGraphSellerOnboardingEnabled:true},
+      store:{internalStore},
+    });
+    const result=await service.createPackage('intermex-uae');
+    expect(result).toMatchObject({reused:true,package:{id:'existing-package'}});
+    expect(queries[0]).toContain('where payload_fingerprint=$1');
+    expect(queries[0]).not.toContain('package_fingerprint');
+  });
 });
