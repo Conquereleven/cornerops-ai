@@ -2,6 +2,7 @@ const { AuthorizedSellerNetworkService, SellerCatalogCapturePolicy, SellerSnapsh
 const crypto=require('crypto');
 const { emptyState } = require('../src/core/supplygraph/SupplyGraphStore');
 const { SupplyGraphStore } = require('../src/core/supplygraph');
+const fs=require('fs');const path=require('path');
 
 describe('SupplyGraph Authorized Seller Network v1.13',()=>{
   test('registry is deterministic, unique and preserves founder metadata',()=>{
@@ -57,5 +58,10 @@ describe('SupplyGraph Authorized Seller Network v1.13',()=>{
     expect(result).toMatchObject({reused:true,package:{id:'existing-package'}});
     expect(queries[0]).toContain('where payload_fingerprint=$1');
     expect(queries[0]).not.toContain('package_fingerprint');
+  });
+  test('multi-seller scope migration preserves single-seller history and allows authorized comparison',()=>{
+    const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20260713171553_supplygraph_multi_seller_scope_v113.sql'),'utf8');
+    expect(sql).toContain("comparison_scope in ('single_verified_supplier', 'authorized_verified_seller_set')");
+    expect(sql).not.toMatch(/drop table|truncate|delete from|\bpublic\./i);
   });
 });
