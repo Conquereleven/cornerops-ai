@@ -23,6 +23,7 @@ const safeCamel = (row) => jsonSafe(camel(row));
 
 const emptyState = () => ({
   suppliers: [], catalogItems: [], offerSnapshots: [], demandRequests: [], demandItems: [], auditEvents: [],
+  matchRuns: [], matchItemResults: [], matchCandidates: [], sourcingRecommendations: [],
 });
 
 class SupplyGraphStore {

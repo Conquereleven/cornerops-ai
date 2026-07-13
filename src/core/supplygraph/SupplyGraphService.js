@@ -2,9 +2,10 @@ const { DemandIntakeService } = require('./DemandIntakeService');
 const { IntermexCatalogSynchronizer } = require('./IntermexCatalogSynchronizer');
 const { SupplyGraphDataQualityService } = require('./SupplyGraphDataQualityService');
 const { createSupplyGraphError } = require('./supplyGraphTypes');
+const { ENGINE_VERSION, RULESET_CHECKSUM } = require('./supplyGraphMatchRules');
 
 class SupplyGraphService {
-  constructor({ store, internalStore, config = {}, synchronizer } = {}) {
+  constructor({ store, internalStore, config = {}, synchronizer, matchService, matchStore } = {}) {
     this.store = store;
     this.internalStore = internalStore;
     this.config = config;
@@ -14,6 +15,8 @@ class SupplyGraphService {
     });
     this.demandIntake = new DemandIntakeService({ store, internalStore });
     this.dataQuality = new SupplyGraphDataQualityService({ store, config });
+    this.matchService = matchService;
+    this.matchStore = matchStore;
   }
 
   assertEnabled(capability) {
@@ -35,10 +38,28 @@ class SupplyGraphService {
         persistence: { healthy: false, provider: 'postgres', durable: true, schema: 'cornerops_internal' },
         metrics: null,
         warnings: ['SUPPLYGRAPH_DISABLED'],
+        matchingFeatureEnabled: Boolean(this.config.supplyGraphMatchingEnabled),
+        engineVersion: ENGINE_VERSION,
+        rulesetChecksum: RULESET_CHECKSUM,
         ...this.dataQuality.safety(),
       };
     }
-    return this.dataQuality.build();
+    const status = await this.dataQuality.build();
+    if (!this.matchStore) return status;
+    let matchingMetrics = null;
+    let matchingEngineStatus = this.config.supplyGraphMatchingEnabled ? 'unavailable' : 'disabled';
+    if (this.matchStore) {
+      try {
+        matchingMetrics = await this.matchStore.metrics();
+        matchingEngineStatus = this.config.supplyGraphMatchingEnabled ? 'ready' : 'disabled';
+      } catch (error) {
+        matchingEngineStatus = this.config.supplyGraphMatchingEnabled ? 'partial' : 'disabled';
+      }
+    }
+    return { ...status, matchingEngineStatus, matchingFeatureEnabled: Boolean(this.config.supplyGraphMatchingEnabled),
+      engineVersion: ENGINE_VERSION, rulesetChecksum: RULESET_CHECKSUM, matchingMetrics,
+      comparisonScope: 'single_verified_supplier', verifiedSupplierCount: status.metrics?.supplierCount ?? 'unknown',
+      marketComparisonAvailable: false, quoteGenerationStatus: 'not_implemented', externalExecutionStatus: 'blocked' };
   }
 
   async syncIntermex(context = {}) {
@@ -89,6 +110,11 @@ class SupplyGraphService {
   async listCatalog(filters) { this.assertEnabled(); return this.store.listCatalog(filters); }
   async listDemands(filters) { this.assertEnabled(); return this.store.listDemands(filters); }
   async getDemand(id) { this.assertEnabled(); return this.store.getDemand(id); }
+  async matchDemand(id, options, context) { return this.matchService.match(id, options, context); }
+  async listMatchRuns(filters) { this.assertEnabled(); return this.matchStore.list(filters); }
+  async getMatchRun(id) { this.assertEnabled(); return this.matchStore.get(id); }
+  async listDemandMatchRuns(id, filters = {}) { this.assertEnabled(); return this.matchStore.list({ ...filters, demandRequestId: id }); }
+  async latestDemandMatch(id) { this.assertEnabled(); return this.matchStore.latestForDemand(id); }
 }
 
 module.exports = { SupplyGraphService };

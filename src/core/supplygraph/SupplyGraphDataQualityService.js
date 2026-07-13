@@ -40,7 +40,8 @@ class SupplyGraphDataQualityService {
       cornerMexWritesBlocked: true,
       externalActionsBlocked: true,
       productActivationBlocked: true,
-      matchingEngineStatus: 'not_implemented',
+      matchingEngineStatus: this.config.supplyGraphMatchingEnabled === undefined
+        ? 'not_implemented' : this.config.supplyGraphMatchingEnabled ? 'ready' : 'disabled',
       supplierOutreachStatus: 'blocked',
       autonomousPurchasingStatus: 'blocked',
       quoteGenerationStatus: 'not_implemented',

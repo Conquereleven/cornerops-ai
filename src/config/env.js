@@ -664,6 +664,12 @@ const baseEnv = {
   supplyGraphEnabled: parseBoolean(process.env.SUPPLYGRAPH_ENABLED),
   supplyGraphIntermexSyncEnabled: parseBoolean(process.env.SUPPLYGRAPH_INTERMEX_SYNC_ENABLED),
   supplyGraphDemandIntakeEnabled: parseBoolean(process.env.SUPPLYGRAPH_DEMAND_INTAKE_ENABLED),
+  supplyGraphMatchingEnabled: parseBoolean(process.env.SUPPLYGRAPH_MATCHING_ENABLED),
+  supplyGraphMatchMaxCandidatesPerItem: parseInteger(
+    process.env.SUPPLYGRAPH_MATCH_MAX_CANDIDATES_PER_ITEM,
+    5,
+    { min: 1, max: 10 },
+  ),
   supplyGraphObservationStaleAfterHours: parseInteger(
     process.env.SUPPLYGRAPH_OBSERVATION_STALE_AFTER_HOURS,
     168,
