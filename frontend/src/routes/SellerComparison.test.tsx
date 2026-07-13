@@ -1,0 +1,13 @@
+import { render,screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach,beforeEach,describe,expect,test,vi } from 'vitest';
+import { SellerComparison } from './SellerOperations';
+
+const run={id:'run-1',comparisonScope:'authorized_verified_seller_set',supplierCountEvaluated:32,overallMatchScore:78,overallConfidenceScore:47.5,createdAt:'2026-07-13T00:00:00Z',supplierComparisonPerformed:true,marketCompletenessClaim:false,bestSupplierClaim:false,preferredWithinVerifiedScope:false,tieDetected:false,splitSourcingMayBeRequired:false};
+const detail={matchRun:run,items:[{id:'item-1',resultStatus:'catalog_match_found',unknownFacts:['stock_status'],requiredHumanChecks:['verify_supplier_stock'],candidates:[{id:'candidate-1',rank:1,candidateTier:'match_verification_required',matchScore:78,confidenceScore:47.5,reasonCodes:[],disqualifiers:[],presentationEvidence:{presentationOnly:true,notScoringInput:true,displayName:'Agave Syrup, Organic',supplierName:'Greenheart Organic Farms',publicPrice:21.5,currency:'AED',priceType:'public_web_price',sourceImageUrl:'https://seller.example/agave.webp',media:{managed:true,assetChecksum:'a'.repeat(64),mimeType:'image/webp',usageBasis:'founder_attestation',status:'imported'},inventory:{onHandQuantity:100,availableQuantity:100,unit:'seller_listing_unit',physicalCountVerified:false,initializationSource:'founder_authorized_initialization'}}}]}],supplierCoverage:[{supplierId:'seller-1',activeItemCount:1,matchedItemCount:1,coverageRatio:1,operationalInventoryCoverage:false,unknownFacts:['stock_status']}],recommendation:{recommendationType:'verify_supplier_facts',approvalRequired:true,executed:false,externalActionAllowed:false}};
+
+describe('Seller Comparison v1.14 evidence',()=>{
+  beforeEach(()=>{sessionStorage.setItem('cornerops-console-token','test-token');vi.spyOn(globalThis,'fetch').mockImplementation(async(input)=>new Response(JSON.stringify(String(input).endsWith('/run-1')?detail:{matchRuns:[run]}),{status:200,headers:{'content-type':'application/json'}}));});
+  afterEach(()=>{vi.restoreAllMocks();sessionStorage.clear();});
+  test('shows verified-scope candidates, image, price and non-physical inventory provenance',async()=>{render(<MemoryRouter><SellerComparison/></MemoryRouter>);expect(await screen.findByText('Agave Syrup, Organic')).toBeInTheDocument();expect(screen.getByText('Greenheart Organic Farms')).toBeInTheDocument();expect(screen.getByText('AED 21.5')).toBeInTheDocument();expect(screen.getByText(/founder_authorized_initialization/)).toHaveTextContent('physical not verified');expect(screen.getByText('not asserted')).toBeInTheDocument();expect(screen.getByText('SUPPLIER FACTS REQUIRE REVIEW')).toBeInTheDocument();});
+});
