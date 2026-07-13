@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "taqado-mexican-kitchen",
+  "products": [],
   "seller": {
     "canonicalKey": "taqado-mexican-kitchen",
     "canonicalName": "Taqado Mexican Kitchen",
@@ -17,21 +19,22 @@
     "sellerType": "Mexican QSR chain",
     "sourceStatus": "unavailable",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
     "warnings": [
       "OFFICIAL_SOURCE_UNAVAILABLE"
-    ]
+    ],
+    "activationOrder": 10
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:09.610Z",
     "officialSourceUrl": "https://www.taqado.com/",
     "officialSourceVerified": false,
     "sourceChecksum": "ef350656c85c05b33f0f21896a2d00c4e831ba5e6d5a16b6a64146d3a9ff8ed1",
-    "sourceStatus": "unavailable"
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

@@ -22,6 +22,10 @@ const { SellerCatalogCapturePolicy } = require('./SellerCatalogCapturePolicy');
 const { SellerSnapshotValidator } = require('./SellerSnapshotValidator');
 const { SellerInventoryService } = require('./SellerInventoryService');
 const { MultiSellerCoverageCalculator } = require('./MultiSellerCoverageCalculator');
+const { Wave1CatalogCaptureService } = require('./Wave1CatalogCaptureService');
+const { SellerMediaImportService,mimeFromBytes } = require('./SellerMediaImportService');
+const wave1SellerRegistry = require('./wave1SellerRegistry');
+const wave1CaptureAdapters = require('./wave1CaptureAdapters');
 
 module.exports = {
   DemandIntakeService,
@@ -43,10 +47,15 @@ module.exports = {
   SellerSnapshotValidator,
   SellerInventoryService,
   MultiSellerCoverageCalculator,
+  Wave1CatalogCaptureService,
+  SellerMediaImportService,
+  mimeFromBytes,
   emptyState,
   ...supplyGraphTypes,
   ...matchRules,
   ...evidenceRules,
   ...authorizedSellerRules,
   ...authorizedSellerRegistry,
+  ...wave1SellerRegistry,
+  ...wave1CaptureAdapters,
 };

@@ -6,6 +6,8 @@ const navItems = [
   { to: '/', label: 'Overview', icon: LayoutDashboard },
   { to: '/control-tower', label: 'Control Tower', icon: ShieldCheck },
   { to: '/authorized-sellers', label: 'Authorized Sellers', icon: Store },
+  { to: '/seller-catalog', label: 'Seller Catalog', icon: Tags },
+  { to: '/seller-inventory', label: 'Seller Inventory', icon: PackageSearch },
   { to: '/chat', label: 'AI Chat Center', icon: MessageSquareText },
   { to: '/conversations', label: 'Conversations', icon: Bot },
   { to: '/orders', label: 'Orders', icon: PackageSearch },

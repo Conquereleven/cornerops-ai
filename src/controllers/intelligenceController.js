@@ -386,6 +386,12 @@ const getSellerReadiness=async(_req,res,next)=>{try{return res.json({sellers:awa
 const getSellerCatalogGaps=async(_req,res,next)=>{try{return res.json({gaps:await authorizedSellerNetworkService.catalogGaps(),...authorizedSellerSafety});}catch(error){return next(error);}};
 const getMatchSupplierCoverage=async(req,res,next)=>{try{return res.json({coverage:await authorizedSellerNetworkService.coverageResults({matchRunId:req.params.id}),...authorizedSellerSafety});}catch(error){return next(error);}};
 const getDemandSupplierCoverage=async(req,res,next)=>{try{const latest=await supplyGraphMatchStore.latestForDemand(req.params.id);return res.json({matchRunId:latest?.matchRun?.id||null,coverage:latest?.supplierCoverage||[],...authorizedSellerSafety});}catch(error){return next(error);}};
+const getWave1Activation=async(_req,res,next)=>{try{return res.json(await authorizedSellerNetworkService.wave1Activation());}catch(error){return next(error);}};
+const getSellerCatalogHealth=async(req,res,next)=>{try{const result=await authorizedSellerNetworkService.catalogHealth(req.params.id);return result?res.json(result):res.status(404).json({code:'SUPPLYGRAPH_AUTHORIZED_SELLER_NOT_FOUND'});}catch(error){return next(error);}};
+const getWave1CaptureSummary=async(_req,res,next)=>{try{const result=await authorizedSellerNetworkService.wave1Activation();return res.json({status:result.status,sellerCount:result.sellerCount,catalogReadySellerCount:result.sellers.filter((seller)=>seller.catalogReady).length,profileOnlySellerCount:result.sellers.filter((seller)=>!seller.catalogReady).length,productsAccepted:result.sellers.reduce((sum,seller)=>sum+seller.productCount,0),publicPrices:result.sellers.reduce((sum,seller)=>sum+seller.publicPriceCount,0),...authorizedSellerSafety});}catch(error){return next(error);}};
+const getSellerMediaCoverage=async(_req,res,next)=>{try{return res.json(await authorizedSellerNetworkService.mediaCoverage());}catch(error){return next(error);}};
+const getSellerInventoryInitializationStatus=async(_req,res,next)=>{try{return res.json(await authorizedSellerNetworkService.inventoryInitializationStatus());}catch(error){return next(error);}};
+const syncWave1WorkQueue=async(req,res,next)=>{try{return res.json({...await authorizedSellerNetworkService.syncWave1WorkQueue(actorContext(req)),...authorizedSellerSafety});}catch(error){return next(error);}};
 
 const listSupplyGraphSuppliers = async (req, res, next) => {
   try {
@@ -587,6 +593,8 @@ module.exports = {
   listSellerOnboardingPackages,
   listSellerCoverage,
   getSellerOnboardingPackage,cancelSellerOnboardingPackage,listAuthorizedSellerProfiles,getAuthorizedSellerProfile,listAuthorizedSellerCatalog,listAuthorizedSellerInventory,listAuthorizedSellerMedia,getAuthorizedProduct,getAuthorizedProductInventory,getAuthorizedProductMedia,getSellerReadiness,getSellerCatalogGaps,getMatchSupplierCoverage,getDemandSupplierCoverage,
+  getWave1Activation,getSellerCatalogHealth,getWave1CaptureSummary,getSellerMediaCoverage,getSellerInventoryInitializationStatus,
+  syncWave1WorkQueue,
   supplyGraphStatus,
   listSupplyGraphSuppliers,
   getSupplyGraphSupplier,

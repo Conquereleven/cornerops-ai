@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "lila-molino-cafe-lila-taqueria",
+  "products": [],
   "seller": {
     "canonicalKey": "lila-molino-cafe-lila-taqueria",
     "canonicalName": "Lila Molino + Cafe / Lila Taqueria",
@@ -17,19 +19,20 @@
     "sellerType": "Mexican kitchen brand",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
-    "warnings": []
+    "warnings": [],
+    "activationOrder": 1
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:52:56.148Z",
     "officialSourceUrl": "https://www.lilamolino.com/",
-    "officialSourceVerified": true,
-    "sourceChecksum": "979422416f939ccc6eb6664be5e78e352c344a62f2c02b81200f53fa170b3ed6",
-    "sourceStatus": "reachable_official_source"
+    "officialSourceVerified": false,
+    "sourceChecksum": "f14b5226855e2764f73a482e8f8c71bb35d06f80afebb9de7cfffe448f48e8c7",
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

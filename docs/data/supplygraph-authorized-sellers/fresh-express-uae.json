@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "fresh-express-uae",
+  "products": [],
   "seller": {
     "canonicalKey": "fresh-express-uae",
     "canonicalName": "Fresh Express",
@@ -17,19 +19,20 @@
     "sellerType": "premium importer and distributor",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
-    "warnings": []
+    "warnings": [],
+    "activationOrder": 12
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:13.314Z",
     "officialSourceUrl": "https://www.freshexpressint.com/",
-    "officialSourceVerified": true,
-    "sourceChecksum": "a30e7c52d6a3567209a4153ada701109275c96e5230b96662a60e6b6f87e4623",
-    "sourceStatus": "reachable_official_source"
+    "officialSourceVerified": false,
+    "sourceChecksum": "d1e6ae3edf9f9ca3c7bc5a66eb7f08e2aa8ab0c5ad0511b7002650e672292f5e",
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

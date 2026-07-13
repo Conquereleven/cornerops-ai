@@ -1,5 +1,29 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "freshontable",
+  "products": [
+    {
+      "productType": "packaged_food",
+      "externalProductId": "8112481009709",
+      "supplierSku": null,
+      "displayName": "Pure Sidr Honey Bottle 550ml",
+      "normalizedName": "pure sidr honey bottle 550ml",
+      "description": "Experience the excellence of pure Sidr honey, harvested sustainably from the pristine mountains of the UAE. This exceptional honey offers a taste of nature's finest and makes a perfect gift for Ramadan or Eid celebrations.",
+      "brand": null,
+      "category": null,
+      "packSize": "550ml",
+      "unitOfMeasure": "550ml",
+      "publicPrice": 220,
+      "currency": "AED",
+      "priceType": "public_web_price",
+      "publicAvailabilityLabel": null,
+      "productPageUrl": "https://shop.freshontable.com/products/pure-sidr-honey-bottle-550ml",
+      "primaryImageUrl": "https://cdn.shopify.com/s/files/1/0399/2305/6685/files/WhatsAppImage2025-02-27at14.41.58_8b99974e.jpg?v=1741769927",
+      "galleryImageUrls": [],
+      "observedAt": "2026-07-13T18:53:02.901Z",
+      "sourceChecksum": "9df37d617b83d881c55fe7cf54337d684d6b29881a1d4ee248ac5ec68c924aba"
+    }
+  ],
   "seller": {
     "canonicalKey": "freshontable",
     "canonicalName": "FreshOnTable",
@@ -17,22 +41,45 @@
     "sellerType": "farm-to-table platform",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
-    "catalogProductCount": 0,
-    "warnings": []
+    "captureStatus": "complete",
+    "catalogProductCount": 1,
+    "warnings": [],
+    "activationOrder": 7
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:53:02.901Z",
     "officialSourceUrl": "https://freshontable.com/",
     "officialSourceVerified": true,
-    "sourceChecksum": "7627507c0ef8365a0eab9ca9f66b359b4fbcf9ac8ecea8cb3c3d04afe7fa9313",
-    "sourceStatus": "reachable_official_source"
+    "sourceChecksum": "9df37d617b83d881c55fe7cf54337d684d6b29881a1d4ee248ac5ec68c924aba",
+    "sourceStatus": "complete"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
-    "products": [],
-    "productCount": 0,
-    "priceBasis": null
+    "captureStatus": "complete",
+    "products": [
+      {
+        "productType": "packaged_food",
+        "externalProductId": "8112481009709",
+        "supplierSku": null,
+        "displayName": "Pure Sidr Honey Bottle 550ml",
+        "normalizedName": "pure sidr honey bottle 550ml",
+        "description": "Experience the excellence of pure Sidr honey, harvested sustainably from the pristine mountains of the UAE. This exceptional honey offers a taste of nature's finest and makes a perfect gift for Ramadan or Eid celebrations.",
+        "brand": null,
+        "category": null,
+        "packSize": "550ml",
+        "unitOfMeasure": "550ml",
+        "publicPrice": 220,
+        "currency": "AED",
+        "priceType": "public_web_price",
+        "publicAvailabilityLabel": null,
+        "productPageUrl": "https://shop.freshontable.com/products/pure-sidr-honey-bottle-550ml",
+        "primaryImageUrl": "https://cdn.shopify.com/s/files/1/0399/2305/6685/files/WhatsAppImage2025-02-27at14.41.58_8b99974e.jpg?v=1741769927",
+        "galleryImageUrls": [],
+        "observedAt": "2026-07-13T18:53:02.901Z",
+        "sourceChecksum": "9df37d617b83d881c55fe7cf54337d684d6b29881a1d4ee248ac5ec68c924aba"
+      }
+    ],
+    "productCount": 1,
+    "priceBasis": "public_web_price"
   },
   "safety": {
     "runtimeCrawling": false,

@@ -1,5 +1,7 @@
 {
-  "schemaVersion": "supplygraph-seller-snapshot-v1.13.0",
+  "schemaVersion": "supplygraph-seller-snapshot-v1.14.0",
+  "sellerCanonicalKey": "maria-bonita-taco-shop-grill",
+  "products": [],
   "seller": {
     "canonicalKey": "maria-bonita-taco-shop-grill",
     "canonicalName": "Maria Bonita Taco Shop & Grill",
@@ -17,19 +19,20 @@
     "sellerType": "Mexican restaurant",
     "sourceStatus": "reachable_official_source",
     "sourceMode": "official_public_source",
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "catalogProductCount": 0,
-    "warnings": []
+    "warnings": [],
+    "activationOrder": 4
   },
   "research": {
-    "observedAt": "2026-07-13T00:00:00.000Z",
+    "observedAt": "2026-07-13T18:52:59.335Z",
     "officialSourceUrl": "https://mariabonitatacoshop.com/",
-    "officialSourceVerified": true,
-    "sourceChecksum": "3e103758a36cb0a26dc33a20e5190bc682b888a04124e0f2b60ef66a5d847b85",
-    "sourceStatus": "reachable_official_source"
+    "officialSourceVerified": false,
+    "sourceChecksum": "b26770bb08cdbca2c3732caa32eee89c67edbcf3555c86b99ed9110149e813d6",
+    "sourceStatus": "blocked"
   },
   "catalog": {
-    "captureStatus": "official_source_pending_bounded_capture",
+    "captureStatus": "blocked",
     "products": [],
     "productCount": 0,
     "priceBasis": null

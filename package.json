@@ -86,6 +86,7 @@
     "supplygraph:validate-authorized-sellers": "node scripts/supplygraph-authorized-seller-ops-v1.13.js validate",
     "supplygraph:import-seller-media": "node scripts/supplygraph-authorized-seller-ops-v1.13.js media",
     "supplygraph:report-authorized-sellers": "node scripts/supplygraph-authorized-seller-ops-v1.13.js report",
+    "supplygraph:capture-wave1": "node scripts/capture-wave1-catalogs-v1.14.js",
     "founder:setup-check": "node scripts/founder-setup-check.js",
     "founder:daily": "node scripts/founder-daily.js",
     "founder:review": "node scripts/founder-review.js",
