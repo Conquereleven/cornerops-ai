@@ -27,4 +27,19 @@
 
 ## Production Record
 
-Populate after production verification with sanitized IDs/checksums only. Never record tokens, raw credentials, PII or supplier contact details here.
+- Implementation PR: `#58`, merged at `ae3e217` after 2/2 CI checks passed.
+- Migration applied once to Supabase project `nhxpujypqxbjiqqddxqt`.
+- Runtime role: `cornerops_internal_app`; delete, fact update and application truncate probes returned `42501` and rolled back.
+- Advisors: no new critical v1.12 security finding; new-table unused-index notices are expected before traffic. Existing unrelated public-schema and v1.11 index notices remain open.
+- Railway deployment: `334603a5-0e21-4ec3-95da-03362f803059`, online with both evidence flags enabled.
+- Package A: `5748dbee-1f85-4c87-892e-004c26f2dd93`, production, approved, `no_material_change`, conflict count `0`.
+- Package B: `47ee1cd6-fc3a-44e2-8065-0207f8410da7`, acceptance test, approved, `acceptance_test_only`, conflict count `0`.
+- Conflicting second Approval decision returned `409 APPROVAL_CONFLICT`.
+- Production evidence after A/B contains one price fact only; synthetic stock/MOQ/lead time did not enter production resolution.
+- Work Queue: two evidence-review items, zero automatic rematch items.
+- Audit: two package-created and two package-applied events persisted.
+- Restart verification: packages, applications, approvals, Work Queue and audit remained available over HTTP `200`.
+- SupplyGraph remained one verified supplier and 190 catalog items; market comparison remained unavailable.
+- CornerMex remained `real_read_only` with 9 readable public products, writes blocked and external sends blocked.
+- Kill switches passed locally; production was restored/left enabled after verification.
+- Lovable executions: `0`; consolidated prompt remains pending.
