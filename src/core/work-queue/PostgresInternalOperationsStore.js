@@ -106,15 +106,18 @@ class PostgresInternalOperationsStore {
         items: [],
       };
       const activeKeys = recommendations.map((item) => item.idempotencyKey).filter(Boolean);
+      const scopeSourceType = context.sourceType || 'action_engine';
+      const scopeSourceId = context.sourceId || null;
       const cleared = await client.query(
         `update ${this.table('work_items')}
          set evidence=coalesce(evidence,'{}'::jsonb) || '{"conditionActive":false}'::jsonb,
              updated_at=now(), version=version+1
-         where source_type='action_engine'
+         where source_type=$2
+           and ($3::text is null or source_id=$3)
            and not (idempotency_key = any($1::text[]))
            and coalesce((evidence->>'conditionActive')::boolean, true) is true
          returning id`,
-        [activeKeys],
+        [activeKeys, scopeSourceType, scopeSourceId],
       );
       for (const clearedRow of cleared.rows) {
         await this.appendAudit(client, {

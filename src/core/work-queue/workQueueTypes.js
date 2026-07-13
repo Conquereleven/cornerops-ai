@@ -4,7 +4,11 @@ const WORK_ITEM_STATUSES = Object.freeze([
 ]);
 const WORK_ITEM_PRIORITIES = Object.freeze(['critical', 'high', 'medium', 'low']);
 const APPROVAL_STATUSES = Object.freeze(['pending', 'approved', 'rejected', 'cancelled', 'expired']);
-const INTERNAL_TABLES = Object.freeze(['work_items', 'approval_requests', 'audit_events']);
+const INTERNAL_TABLES = Object.freeze([
+  'work_items', 'approval_requests', 'audit_events',
+  'supplier_profiles', 'supplier_catalog_items', 'supplier_offer_snapshots',
+  'demand_requests', 'demand_items',
+]);
 const OPEN_WORK_ITEM_STATUSES = Object.freeze([
   'recommended', 'drafted', 'queued_for_approval', 'approved', 'in_progress',
 ]);
