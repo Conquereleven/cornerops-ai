@@ -9,7 +9,8 @@
 
 ## Activation
 
-1. Apply only `20260712220000_supplygraph_data_foundation_v110.sql`.
+1. Apply `20260712220000_supplygraph_data_foundation_v110.sql`. If the advisor reports the reviewed
+   duplicate canonical index, apply only `20260713010500_supplygraph_remove_duplicate_index_v110.sql`.
 2. Run Supabase security and performance advisors.
 3. Prove exact runtime grants and rolled-back allowed/forbidden operations.
 4. Configure names only:
@@ -29,3 +30,10 @@
 Set all three SupplyGraph flags false and redeploy. Verify SupplyGraph mutations fail closed while v1.9.1
 Work Queue and Approvals remain operational. Preserve all tables, snapshots and audit evidence. Never
 truncate, drop or delete forensic data.
+
+## Verified production state
+
+SupplyGraph is enabled on Railway with provider `postgres` and durable private persistence. The initial
+190-row sync and its idempotent repeat passed. One synthetic demand was closed after missing-field,
+Work Queue, audit and optimistic-lock verification. A restart preserved all captured identities and
+versions. Disable all three flags to roll back the feature without removing evidence.

@@ -37,3 +37,12 @@ Reads require the operator token. Mutations require both operator and Founder Ac
 content type and rate limits reuse the existing middleware. Founder-only and operator-only mutation
 attempts fail closed. SupplyGraph has no external send, supplier contact, purchase, product activation,
 service-role or OpenClaw path.
+
+## Production least-privilege proof
+
+The real restricted login passed 14 allowed SELECT/INSERT/UPDATE probes and rejected 19 forbidden
+operations, including all SupplyGraph deletes, offer UPDATE/DELETE, schema/object creation, public
+business reads/writes, ALTER SCHEMA, CREATE ROLE, privilege grant effect and auth administration.
+`public.payments` does not exist. All probes ran inside a transaction that was rolled back; zero probe
+rows and zero PUBLIC schema ACL entries remained. Supabase security advisors reported no SupplyGraph
+finding. Preexisting public-schema findings remain outside this isolated activation and were not changed.
