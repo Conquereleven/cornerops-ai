@@ -15,6 +15,8 @@ All mutations remain in `cornerops_internal`. CornerMex public tables remain rea
 
 Only JPEG, PNG and WebP under 5 MB are eligible. MIME and magic bytes must agree. HTML, SVG, executable content, disallowed hosts and duplicate payloads are rejected or reused safely. Downloaded binaries are never committed.
 
+Managed assets are stored in the private `seller-product-assets` bucket. The bucket has no public, anon or authenticated object policy. Coverage is derived from checksum-pinned managed storage paths, never from a public URL. Existing Supabase credentials may be used only through an ephemeral offline importer and must not be printed, committed or retained in temporary files.
+
 ## Mutation Controls
 
 - Operator authentication plus separate Founder Action authentication

@@ -1,21 +1,10 @@
 # Wave 1 Production Activation v1.14
 
-## Preconditions
+## Production State
 
-1. Implementation PR merged with green CI.
-2. Snapshot validator passes for all 13 non-Intermex sellers.
-3. Full validation and secret scan pass.
-4. Supabase migration result is `migration_not_required_existing_schema_sufficient`.
+Wave 1 is live with 14 seller profiles, seven catalog-ready sellers, 489 catalog products, 489 initialized inventory rows and private managed media for all 278 discovered official image references. Capture remains disabled in Railway.
 
-## Capture
-
-```bash
-SUPPLYGRAPH_SELLER_CAPTURE_ENABLED=true npm run supplygraph:capture-wave1
-```
-
-Review `capture-report.json` and each checksum-pinned snapshot. Never apply a blocked, conflicted or unverified package.
-
-## Production Flags
+## Runtime Flags
 
 ```env
 SUPPLYGRAPH_WAVE1_CATALOG_ACTIVATION_ENABLED=true
@@ -30,18 +19,23 @@ SUPPLYGRAPH_MAX_TOTAL_WAVE1_PRODUCTS=1500
 SUPPLYGRAPH_MAX_IMAGES_PER_PRODUCT=3
 ```
 
-Capture remains disabled in the runtime deployment.
+## Private Media
 
-## Apply Order
+Apply only the reviewed migration `20260713190000_supplygraph_private_seller_media_bucket_v114.sql`. The bucket must remain private, accept only JPEG/PNG/WebP up to 5 MB and expose no public object policy. Media import must validate host, MIME, magic bytes, size and checksum before appending evidence and audit records.
 
-For each valid snapshot: create extension package, inspect preview, approve linked request, apply package, import validated media and confirm one inventory seed per new product. Intermex is regression-only.
+Never place a Supabase key in source, logs, CI output or frontend configuration. Delete ephemeral local credential material immediately after an offline import.
 
-Synchronize aggregate Work Queue tasks after all sellers are evaluated.
+## Verification
 
-## Acceptance
-
-Verify health, five SPA routes, live APIs, managed media, inventory provenance and one multi-seller match. Restart once and compare durable IDs/counts. Run CornerMex read-only checks.
+1. Confirm `/api/health` and the four SupplyGraph SPA routes return HTTP 200.
+2. Confirm 14 profiles, seven catalog-ready sellers and 489 products.
+3. Confirm 278 unique managed paths, 278 imported media records and zero pending image sources.
+4. Confirm 489 inventory rows, 48,900 operational units and zero physically verified rows.
+5. Repeat the sanitized multi-seller match and confirm idempotent run reuse.
+6. Confirm Work Queue and Approval records remain `executed:false` and externally blocked.
+7. Restart/deploy once and compare durable IDs and counts.
+8. Run CornerMex read-only checks and confirm unchanged business counts.
 
 ## Rollback
 
-Disable Wave 1 application, capture, media, inventory, comparison and frontend serving in that order. Redeploy. Never delete history, media evidence or ledgers.
+Disable frontend serving, comparison, inventory, media and Wave 1 application flags, then redeploy. Keep capture disabled. Do not delete packages, catalog history, media evidence, inventory ledger, match runs, approvals, Work Queue records or audits. Revoking media access means disabling the feature and access path, not making the bucket public.
