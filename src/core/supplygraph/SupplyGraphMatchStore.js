@@ -37,7 +37,14 @@ class SupplyGraphMatchStore {
          where c.active_observation=true order by c.supplier_id,c.identity_key`,
       ),
     ]);
-    return { ...demand, suppliers: suppliers.rows.map(safeCamel), catalog: catalog.rows.map(safeCamel) };
+    return {
+      ...demand,
+      suppliers: suppliers.rows.map(safeCamel),
+      catalog: catalog.rows.map((row) => {
+        const item = safeCamel(row);
+        return { ...item, latestOffer: item.latestOffer ? safeCamel(item.latestOffer) : null };
+      }),
+    };
   }
 
   async findByFingerprint(fingerprint) {
