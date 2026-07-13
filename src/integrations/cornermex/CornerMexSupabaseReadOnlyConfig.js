@@ -71,6 +71,14 @@ const TABLE_AVAILABILITY = Object.freeze({
 });
 
 const hasValue = (value) => String(value || '').trim().length > 0;
+const projectRefFromUrl = (value) => {
+  try {
+    const hostname = new URL(String(value || '')).hostname;
+    return hostname.endsWith('.supabase.co') ? hostname.split('.')[0] : null;
+  } catch (_error) {
+    return null;
+  }
+};
 const parseLimit = (value, fallback = 50) => Math.max(1, Math.min(Number(value) || fallback, 1000));
 const parseTimeout = (value, fallback = 8000) => Math.max(100, Math.min(Number(value) || fallback, 30000));
 const validTableIdentifier = (value) => /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/.test(String(value || ''));
@@ -139,6 +147,7 @@ class CornerMexSupabaseReadOnlyConfig {
     const enabled = Boolean(config.cornermexSupabaseEnabled);
     const urlConfigured = hasValue(config.cornermexSupabaseUrl);
     const anonKeyConfigured = hasValue(config.cornermexSupabaseAnonKey);
+    const sourceProjectRef = projectRefFromUrl(config.cornermexSupabaseUrl);
     const readOnly = config.cornermexSupabaseReadOnly !== false;
     const allowWrites = Boolean(config.cornermexSupabaseAllowWrites);
     const serviceRoleKeyBlocked = config.cornermexSupabaseServiceRoleKeyBlocked !== false;
@@ -167,6 +176,10 @@ class CornerMexSupabaseReadOnlyConfig {
       enabled,
       safe: unsafe.length === 0,
       activationCandidate: enabled && urlConfigured && anonKeyConfigured && unsafe.length === 0,
+      sourceSystem: 'cornermex_read_replica',
+      sourceRole: 'external_read_replica',
+      sourceProjectRef,
+      commerceSystemRole: 'cornermex_commerce_system',
       sourceMode: unsafe.length
         ? SOURCE_MODES.BLOCKED_UNSAFE_CONFIG
         : enabled && urlConfigured && anonKeyConfigured ? SOURCE_MODES.REPO_DISCOVERED : SOURCE_MODES.REPO_DISCOVERED,
@@ -219,6 +232,7 @@ module.exports = {
   SUPABASE_STATUS,
   TABLE_AVAILABILITY,
   parseTableMapJson,
+  projectRefFromUrl,
   tableMappingCandidatesFromConfig,
   tableMappingsFromConfig,
 };

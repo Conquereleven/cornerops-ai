@@ -107,7 +107,7 @@ class CornerMexCatalogReadModelReportService {
       generatedAt: nowIso(),
       reportId: reportId(),
       sourceMode: readiness?.sourceMode || validation.sourceMode || 'repo_discovered',
-      dataSource: readiness?.sourceMode?.startsWith('real_read_only') ? 'cornermex_supabase' : 'mock_fallback',
+      dataSource: readiness?.sourceMode?.startsWith('real_read_only') ? 'cornermex_supabase_read_replica' : 'unavailable',
       readOnly: true,
       writesBlocked: true,
       externalSendsBlocked: true,

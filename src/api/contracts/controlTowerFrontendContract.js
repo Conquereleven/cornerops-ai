@@ -192,7 +192,7 @@ class ControlTowerFrontendContract {
     try {
       return await this.liveControlTowerStatusService.build({
         requestId: 'control-tower-frontend-contract-v1.8',
-        userId: 'lovable-control-tower',
+        userId: 'cornerops-command-center',
         channel: 'api',
       });
     } catch (error) {
@@ -208,8 +208,9 @@ class ControlTowerFrontendContract {
         service: 'cornerops-ai',
         appName: 'CornerOps Control Tower',
         backendRole: 'brain',
-        lovableFrontendRole: 'cockpit',
-        cornerMexLovableRole: 'marketplace',
+        frontendRole: 'repository_frontend',
+        commerceSystemRole: 'cornermex_commerce_system',
+        deploymentRole: 'railway_production',
         generatedAt: live.generatedAt,
         mode: live.mode,
         sourceMode: live.mode,
@@ -234,8 +235,9 @@ class ControlTowerFrontendContract {
       service: 'cornerops-ai',
       appName: 'CornerOps Control Tower',
       backendRole: 'brain',
-      lovableFrontendRole: 'cockpit',
-      cornerMexLovableRole: 'marketplace',
+      frontendRole: 'repository_frontend',
+      commerceSystemRole: 'cornermex_commerce_system',
+      deploymentRole: 'railway_production',
       generatedAt: report.generatedAt,
       sourceMode: pickSourceMode(report.realSourceExpansion?.sourceModeSummary, 'local_internal'),
       fallbackActive: true,
@@ -317,7 +319,7 @@ class ControlTowerFrontendContract {
     const actionEngine = this.actionEngineService?.build
       ? await this.actionEngineService.build({
         requestId: 'control-tower-frontend-flows-v1.8',
-        userId: 'lovable-control-tower',
+        userId: 'cornerops-command-center',
         channel: 'api',
       }).catch((error) => ({ warnings: [`Action Engine failed safely: ${error.message}`] }))
       : null;
@@ -326,7 +328,7 @@ class ControlTowerFrontendContract {
       try {
         analysis = await this.flowEngine.analyzeFlows({
           requestId: 'control-tower-frontend-v1.3',
-          operatorId: 'lovable-control-tower',
+          operatorId: 'cornerops-command-center',
         });
       } catch (error) {
         analysis = { warnings: [`Flow analysis failed safely: ${error.message}`] };
@@ -444,7 +446,7 @@ class ControlTowerFrontendContract {
     const actionState = this.actionEngineService?.build
       ? await this.actionEngineService.build({
         requestId: 'control-tower-frontend-drafts-v1.8',
-        userId: 'lovable-control-tower',
+        userId: 'cornerops-command-center',
         channel: 'api',
       }).catch((error) => ({ warnings: [`Action Engine drafts preview failed safely: ${error.message}`], recommendedActions: [] }))
       : { recommendedActions: [] };
@@ -511,7 +513,7 @@ class ControlTowerFrontendContract {
     const actionEngine = this.actionEngineService?.build
       ? await this.actionEngineService.build({
         requestId: 'control-tower-frontend-actions-v1.8',
-        userId: 'lovable-control-tower',
+        userId: 'cornerops-command-center',
         channel: 'api',
       }).catch((error) => ({ warnings: [`Action Engine failed safely: ${error.message}`], recommendedActions: [] }))
       : null;

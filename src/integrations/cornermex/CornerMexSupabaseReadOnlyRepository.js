@@ -255,7 +255,7 @@ class CornerMexSupabaseReadOnlyRepository {
     const successful = SUCCESSFUL_AVAILABILITY.includes(availability);
     return {
       source: successful ? SOURCE_MODES.REAL_READ_ONLY : status.sourceMode || SOURCE_MODES.REPO_DISCOVERED,
-      dataSource: successful ? 'cornermex_supabase' : 'mock_fallback',
+      dataSource: successful ? 'cornermex_supabase_read_replica' : 'unavailable',
       supabaseStatus: successful ? SUPABASE_STATUS.CONNECTED : status.supabaseStatus || SUPABASE_STATUS.ERROR_SANITIZED,
       readOnly: true,
       writesBlocked: true,
