@@ -11,6 +11,7 @@
 - Safety: CornerMex writes, activation, external actions, outreach, purchasing and OpenClaw blocked
 - Current status: implementation_validation_in_progress
 - Advisor remediation: redundant canonical lookup index removal prepared; no table/data changes
+- Runtime remediation: PostgreSQL date values are serialized to ISO strings before API sanitization
 
 ## Initial capability matrix
 

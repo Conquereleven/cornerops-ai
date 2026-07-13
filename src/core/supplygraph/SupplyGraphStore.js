@@ -13,6 +13,13 @@ const {
 const clone = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 const now = () => new Date().toISOString();
 const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+const jsonSafe = (value) => {
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(jsonSafe);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, jsonSafe(entry)]));
+};
+const safeCamel = (row) => jsonSafe(camel(row));
 
 const emptyState = () => ({
   suppliers: [], catalogItems: [], offerSnapshots: [], demandRequests: [], demandItems: [], auditEvents: [],
@@ -171,7 +178,7 @@ class SupplyGraphStore {
         item = catalogResult.rows[0];
         summary.createdCatalogItems += 1;
         await this.appendAudit(client, { eventType: 'supplygraph_catalog_item_created', entityType: 'supplier_catalog_item', entityId: item.id, ...context });
-      } else if (!same(this.catalogComparable(camel(item)), this.catalogComparable(catalogFields))) {
+      } else if (!same(this.catalogComparable(safeCamel(item)), this.catalogComparable(catalogFields))) {
         catalogResult = await client.query(
           `update ${this.table('supplier_catalog_items')} set
              external_product_id=$3,supplier_sku=$4,normalized_name=$5,display_name=$6,brand=$7,
@@ -213,7 +220,7 @@ class SupplyGraphStore {
       eventType: 'supplygraph_intermex_sync_completed', entityType: 'supplier_profile', entityId: supplier.id,
       ...context, metadata: this.safeSyncMetadata(summary),
     });
-    return { supplier: camel(supplier), ...summary };
+    return { supplier: safeCamel(supplier), ...summary };
   }
 
   syncSummary(source) {
@@ -285,7 +292,7 @@ class SupplyGraphStore {
     );
     if (existing.rows[0]) {
       const items = await client.query(`select * from ${this.table('demand_items')} where demand_request_id=$1 order by created_at`, [existing.rows[0].id]);
-      return { request: camel(existing.rows[0]), items: items.rows.map(camel), created: false };
+      return { request: safeCamel(existing.rows[0]), items: items.rows.map(safeCamel), created: false };
     }
     const inserted = await client.query(
       `insert into ${this.table('demand_requests')}
@@ -313,7 +320,7 @@ class SupplyGraphStore {
       await this.appendAudit(client, { eventType: 'supplygraph_demand_item_created', entityType: 'demand_item', entityId: result.rows[0].id, ...context, metadata: { demandRequestId: request.id, itemKey: item.itemKey } });
     }
     await this.appendAudit(client, { eventType: 'supplygraph_demand_created', entityType: 'demand_request', entityId: request.id, ...context, metadata: { itemCount: items.length, status: request.status } });
-    return { request: camel(request), items: items.map(camel), created: true };
+    return { request: safeCamel(request), items: items.map(safeCamel), created: true };
   }
 
   async updateDemand(id, command, context = {}) {
@@ -341,10 +348,10 @@ class SupplyGraphStore {
   async updateDemandPostgres(client, id, command, context) {
     const requestResult = await client.query(`select * from ${this.table('demand_requests')} where id=$1 for update`, [id]);
     if (!requestResult.rows[0]) return null;
-    const request = camel(requestResult.rows[0]);
+    const request = safeCamel(requestResult.rows[0]);
     if (Number(command.version) !== request.version) throw createSupplyGraphError('Demand request version is stale.', 'SUPPLYGRAPH_VERSION_CONFLICT', 409);
     const itemResult = await client.query(`select * from ${this.table('demand_items')} where demand_request_id=$1 order by created_at for update`, [id]);
-    const items = itemResult.rows.map(camel);
+    const items = itemResult.rows.map(safeCamel);
     const itemEvents = [];
     await this.applyDemandCommand({
       request,
@@ -362,7 +369,7 @@ class SupplyGraphStore {
               item.requestedUnit, item.packPreference, item.brandRequired, item.preferredBrand,
               item.substitutesAllowed, item.maximumUnitPrice, item.temperatureZone, item.notes],
           );
-          Object.assign(item, camel(inserted.rows[0]));
+          Object.assign(item, safeCamel(inserted.rows[0]));
         } else {
           const updated = await client.query(
             `update ${this.table('demand_items')} set
@@ -374,7 +381,7 @@ class SupplyGraphStore {
               item.requestedUnit, item.packPreference, item.brandRequired, item.preferredBrand,
               item.substitutesAllowed, item.maximumUnitPrice, item.temperatureZone, item.notes, item.active],
           );
-          Object.assign(item, camel(updated.rows[0]));
+          Object.assign(item, safeCamel(updated.rows[0]));
         }
         itemEvents.push(item);
       },
@@ -390,7 +397,7 @@ class SupplyGraphStore {
     if (!updated.rows[0]) throw createSupplyGraphError('Demand request version is stale.', 'SUPPLYGRAPH_VERSION_CONFLICT', 409);
     for (const item of itemEvents) await this.appendAudit(client, { eventType: `supplygraph_demand_item_${command.command}`, entityType: 'demand_item', entityId: item.id, ...context, metadata: { demandRequestId: id, itemKey: item.itemKey } });
     await this.appendAudit(client, { eventType: `supplygraph_demand_${command.command}`, entityType: 'demand_request', entityId: id, ...context, metadata: { reason: command.reason || null, version: updated.rows[0].version } });
-    return { request: camel(updated.rows[0]), items };
+    return { request: safeCamel(updated.rows[0]), items };
   }
 
   async applyDemandCommand({ request, items, command, mutateItem }) {
@@ -449,14 +456,14 @@ class SupplyGraphStore {
     add('status', filters.status); add('supplier_type', filters.supplierType); add('country_code', filters.countryCode); add('verification_status', filters.verificationStatus);
     values.push(limit);
     const result = await this.internalStore.pool.query(`select * from ${this.table('supplier_profiles')} ${clauses.length ? `where ${clauses.join(' and ')}` : ''} order by canonical_name limit $${values.length}`, values);
-    return result.rows.map(camel);
+    return result.rows.map(safeCamel);
   }
 
   async getSupplier(id) {
     this.assertReady();
     if (this.isTestMemory()) return clone(this.state.suppliers.find((item) => item.id === id) || null);
     const result = await this.internalStore.pool.query(`select * from ${this.table('supplier_profiles')} where id=$1`, [id]);
-    return result.rows[0] ? camel(result.rows[0]) : null;
+    return result.rows[0] ? safeCamel(result.rows[0]) : null;
   }
 
   async listCatalog(filters = {}) {
@@ -483,7 +490,7 @@ class SupplyGraphStore {
        order by c.normalized_name limit $${values.length - 1} offset $${values.length}`,
       values,
     );
-    return result.rows.map(camel);
+    return result.rows.map(safeCamel);
   }
 
   async listDemands(filters = {}) {
@@ -497,7 +504,7 @@ class SupplyGraphStore {
     add('status', filters.status); add('priority', filters.priority); add('emirate', filters.emirate); add('customer_segment', filters.customerSegment); add('source_type', filters.sourceType);
     values.push(limit, offset);
     const result = await this.internalStore.pool.query(`select * from ${this.table('demand_requests')} ${clauses.length ? `where ${clauses.join(' and ')}` : ''} order by created_at desc limit $${values.length - 1} offset $${values.length}`, values);
-    return result.rows.map(camel);
+    return result.rows.map(safeCamel);
   }
 
   async getDemand(id) {
@@ -510,7 +517,7 @@ class SupplyGraphStore {
       this.internalStore.pool.query(`select * from ${this.table('demand_requests')} where id=$1`, [id]),
       this.internalStore.pool.query(`select * from ${this.table('demand_items')} where demand_request_id=$1 order by created_at`, [id]),
     ]);
-    return request.rows[0] ? { request: camel(request.rows[0]), items: items.rows.map(camel) } : null;
+    return request.rows[0] ? { request: safeCamel(request.rows[0]), items: items.rows.map(safeCamel) } : null;
   }
 
   async getDemandItemsMemory(id) { return clone(this.state.demandItems.filter((item) => item.demandRequestId === id)); }
@@ -563,10 +570,10 @@ class SupplyGraphStore {
          (select count(*)::int from ${this.table('demand_requests')} where status='ready_for_matching') demand_requests_ready_for_matching`,
       [Math.max(1, Number(staleAfterHours) || 168)],
     );
-    return camel(result.rows[0]);
+    return safeCamel(result.rows[0]);
   }
 
   countBy(items, key) { return items.reduce((counts, item) => ({ ...counts, [item[key]]: (counts[item[key]] || 0) + 1 }), {}); }
 }
 
-module.exports = { SupplyGraphStore, emptyState };
+module.exports = { SupplyGraphStore, emptyState, jsonSafe, safeCamel };
