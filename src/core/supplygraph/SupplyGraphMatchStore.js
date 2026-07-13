@@ -182,12 +182,34 @@ class SupplyGraphMatchStore {
     const [run, items, candidates, recommendation,coverage] = await Promise.all([
       client.query(`select * from ${this.table('sourcing_match_runs')} where id=$1`, [id]),
       client.query(`select * from ${this.table('sourcing_match_item_results')} where match_run_id=$1 order by created_at,id`, [id]),
-      client.query(`select * from ${this.table('sourcing_match_candidates')} where match_run_id=$1 order by demand_item_id,rank`, [id]),
+      client.query(`select mc.*,ci.display_name,sp.canonical_name supplier_name,
+        o.currency observed_currency,o.unit_price observed_unit_price,o.metadata observed_price_metadata,
+        b.on_hand_quantity,b.available_quantity,b.unit inventory_unit,b.physical_count_verified,b.initialization_source,
+        m.source_image_url,m.asset_checksum media_asset_checksum,m.mime_type media_mime_type,m.usage_basis media_usage_basis,m.status media_status,
+        (m.managed_storage_path is not null) managed_media_present
+        from ${this.table('sourcing_match_candidates')} mc
+        left join ${this.table('supplier_catalog_items')} ci on ci.id=mc.supplier_catalog_item_id
+        left join ${this.table('supplier_profiles')} sp on sp.id=mc.supplier_id
+        left join ${this.table('supplier_offer_snapshots')} o on o.id=mc.supplier_offer_snapshot_id
+        left join ${this.table('seller_inventory_balances')} b on b.supplier_catalog_item_id=mc.supplier_catalog_item_id and b.seller_id=mc.supplier_id
+        left join lateral (select sm.* from ${this.table('seller_product_media')} sm
+          where sm.supplier_catalog_item_id=mc.supplier_catalog_item_id
+          order by (sm.media_type='primary') desc,sm.position,sm.id limit 1) m on true
+        where mc.match_run_id=$1 order by mc.demand_item_id,mc.rank`, [id]),
       client.query(`select * from ${this.table('sourcing_recommendations')} where match_run_id=$1`, [id]),
       client.query(`select * from ${this.table('sourcing_supplier_coverage_results')} where match_run_id=$1 order by coverage_ratio desc,supplier_id`,[id]),
     ]);
     if (!run.rows[0]) return null;
-    const candidateRows = candidates.rows.map(safeCamel);
+    const candidateRows = candidates.rows.map((row) => {
+      const candidate=safeCamel(row);const evidence=candidate.evidenceSnapshot||{};const priceMetadata=candidate.observedPriceMetadata||{};
+      return {...candidate,presentationEvidence:{presentationOnly:true,notScoringInput:true,
+        displayName:candidate.displayName||evidence.catalogDisplayName||null,supplierName:candidate.supplierName||evidence.supplierName||null,
+        publicPrice:candidate.observedUnitPrice??evidence.observedPrice??null,currency:candidate.observedCurrency||evidence.currency||null,
+        priceType:priceMetadata.priceType||null,sourceImageUrl:candidate.sourceImageUrl||null,
+        media:{managed:Boolean(candidate.managedMediaPresent),assetChecksum:candidate.mediaAssetChecksum||null,mimeType:candidate.mediaMimeType||null,usageBasis:candidate.mediaUsageBasis||null,status:candidate.mediaStatus||'missing'},
+        inventory:{onHandQuantity:candidate.onHandQuantity??null,availableQuantity:candidate.availableQuantity??null,unit:candidate.inventoryUnit||null,physicalCountVerified:Boolean(candidate.physicalCountVerified),initializationSource:candidate.initializationSource||null}},
+      };
+    });
     return { matchRun: safeCamel(run.rows[0]), items: items.rows.map(safeCamel).map((item) => ({ ...item, candidates: candidateRows.filter((candidate) => candidate.itemResultId === item.id) })), recommendation: recommendation.rows[0] ? safeCamel(recommendation.rows[0]) : null,supplierCoverage:coverage.rows.map(safeCamel) };
   }
 
