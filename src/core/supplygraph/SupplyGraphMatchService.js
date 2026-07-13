@@ -33,7 +33,16 @@ class SupplyGraphMatchService {
   buildWatermarks(inputs) {
     const catalog = inputs.catalog.map((item) => ({ id: item.id, supplierId: item.supplierId, identityKey: item.identityKey, sourceChecksum: item.sourceChecksum, active: item.activeObservation !== false })).sort((a, b) => a.id.localeCompare(b.id));
     const offers = inputs.catalog.map((item) => item.latestOffer).filter(Boolean).map((offer) => ({ id: offer.id, catalogItemId: offer.supplierCatalogItemId, observedAt: offer.observedAt, sourceChecksum: offer.sourceChecksum })).sort((a, b) => a.id.localeCompare(b.id));
-    return { catalogWatermark: sha256(stable(catalog)), offerWatermark: sha256(stable(offers)), sourceWatermark: sha256(stable({ catalog, offers })) };
+    const evidence = inputs.catalog.map((item) => ({ id: item.id, watermark: item.evidenceWatermark || null,
+      factIds: item.evidenceFactIds || [], model: item.evidenceModelVersion || null,
+      ruleset: item.evidenceRulesetChecksum || null,
+      freshness: Object.fromEntries(Object.entries(item.latestOffer?.resolvedEvidence?.fields || {}).map(([key, field]) => [key, { stale: field.stale, conflict: field.conflict, validUntil: field.validUntil || null }]))
+    })).sort((a,b)=>a.id.localeCompare(b.id));
+    return { catalogWatermark: sha256(stable(catalog)), offerWatermark: sha256(stable(offers)),
+      evidenceWatermark: sha256(stable(evidence)), evidenceModelVersion: inputs.catalog[0]?.evidenceModelVersion || null,
+      evidenceRulesetChecksum: inputs.catalog[0]?.evidenceRulesetChecksum || null,
+      evidenceFactIds: [...new Set(evidence.flatMap((item)=>item.factIds))].sort(),
+      sourceWatermark: sha256(stable({ catalog, offers, evidence })) };
   }
 
   fingerprint(inputs, watermarks) {

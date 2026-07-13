@@ -24,6 +24,7 @@ const safeCamel = (row) => jsonSafe(camel(row));
 const emptyState = () => ({
   suppliers: [], catalogItems: [], offerSnapshots: [], demandRequests: [], demandItems: [], auditEvents: [],
   matchRuns: [], matchItemResults: [], matchCandidates: [], sourcingRecommendations: [],
+  evidencePackages: [], factObservations: [], evidenceApplications: [],
 });
 
 class SupplyGraphStore {
@@ -491,7 +492,29 @@ class SupplyGraphStore {
        order by c.normalized_name limit $${values.length - 1} offset $${values.length}`,
       values,
     );
-    return result.rows.map(safeCamel);
+    return result.rows.map((row) => {
+      const item = safeCamel(row);
+      return { ...item, latestOffer: item.latestOffer ? safeCamel(item.latestOffer) : null };
+    });
+  }
+
+  async getCatalogEvidenceInputs(id) {
+    this.assertReady();
+    if (this.isTestMemory()) {
+      const catalogItem = this.state.catalogItems.find((item) => item.id === id);
+      if (!catalogItem) return null;
+      const latestOffer = this.state.offerSnapshots.filter((item) => item.supplierCatalogItemId === id)
+        .sort((a, b) => `${b.observedAt}:${b.createdAt}`.localeCompare(`${a.observedAt}:${a.createdAt}`))[0] || null;
+      return { catalogItem: clone(catalogItem), latestOffer: clone(latestOffer) };
+    }
+    const result = await this.internalStore.pool.query(
+      `select c.*,row_to_json(o) latest_offer from ${this.table('supplier_catalog_items')} c
+       left join lateral (select * from ${this.table('supplier_offer_snapshots')} s where s.supplier_catalog_item_id=c.id order by observed_at desc,created_at desc limit 1) o on true
+       where c.id=$1`, [id],
+    );
+    if (!result.rows[0]) return null;
+    const catalogItem = safeCamel(result.rows[0]);
+    return { catalogItem: { ...catalogItem, latestOffer: undefined }, latestOffer: catalogItem.latestOffer ? safeCamel(catalogItem.latestOffer) : null };
   }
 
   async listDemands(filters = {}) {
