@@ -1,6 +1,6 @@
 const { sha256 } = require('./supplyGraphTypes');
 
-const ENGINE_VERSION = 'supplygraph-match-v1.11.0';
+const ENGINE_VERSION = 'supplygraph-match-v1.12.0';
 const GENERIC_TOKENS = Object.freeze(['product', 'item', 'pack', 'mexican', 'original']);
 const RULESET = Object.freeze({
   engineVersion: ENGINE_VERSION,

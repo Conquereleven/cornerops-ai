@@ -5,7 +5,7 @@ const { createSupplyGraphError } = require('./supplyGraphTypes');
 const { ENGINE_VERSION, RULESET_CHECKSUM } = require('./supplyGraphMatchRules');
 
 class SupplyGraphService {
-  constructor({ store, internalStore, config = {}, synchronizer, matchService, matchStore } = {}) {
+  constructor({ store, internalStore, config = {}, synchronizer, matchService, matchStore, evidenceService } = {}) {
     this.store = store;
     this.internalStore = internalStore;
     this.config = config;
@@ -17,6 +17,7 @@ class SupplyGraphService {
     this.dataQuality = new SupplyGraphDataQualityService({ store, config });
     this.matchService = matchService;
     this.matchStore = matchStore;
+    this.evidenceService = evidenceService;
   }
 
   assertEnabled(capability) {
@@ -56,10 +57,17 @@ class SupplyGraphService {
         matchingEngineStatus = this.config.supplyGraphMatchingEnabled ? 'partial' : 'disabled';
       }
     }
+    const evidence = this.evidenceService ? await this.evidenceService.status() : { status: 'unavailable', metrics: null };
+    const supplierCount = status.metrics?.supplierCount;
     return { ...status, matchingEngineStatus, matchingFeatureEnabled: Boolean(this.config.supplyGraphMatchingEnabled),
       engineVersion: ENGINE_VERSION, rulesetChecksum: RULESET_CHECKSUM, matchingMetrics,
-      comparisonScope: 'single_verified_supplier', verifiedSupplierCount: status.metrics?.supplierCount ?? 'unknown',
-      marketComparisonAvailable: false, quoteGenerationStatus: 'not_implemented', externalExecutionStatus: 'blocked' };
+      supplierEvidence: evidence, comparisonScope: 'single_verified_supplier', verifiedSupplierCount: supplierCount ?? 'unknown',
+      supplierCountWithFreshPrice: evidence.metrics?.supplierCountWithFreshPrice ?? 'unknown',
+      supplierCountWithFreshStock: evidence.metrics?.supplierCountWithFreshStock ?? 'unknown',
+      supplierCountWithMOQ: evidence.metrics?.supplierCountWithMOQ ?? 'unknown',
+      supplierCountWithLeadTime: evidence.metrics?.supplierCountWithLeadTime ?? 'unknown', multiSupplierComparisonReady: false,
+      basketOptimizationStatus: 'not_implemented', marketComparisonAvailable: false,
+      quoteGenerationStatus: 'not_implemented', externalExecutionStatus: 'blocked' };
   }
 
   async syncIntermex(context = {}) {

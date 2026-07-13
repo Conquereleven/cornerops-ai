@@ -670,6 +670,14 @@ const baseEnv = {
     5,
     { min: 1, max: 10 },
   ),
+  supplyGraphSupplierEvidenceEnabled: parseBoolean(process.env.SUPPLYGRAPH_SUPPLIER_EVIDENCE_ENABLED),
+  supplyGraphEvidenceApplicationEnabled: parseBoolean(process.env.SUPPLYGRAPH_EVIDENCE_APPLICATION_ENABLED),
+  supplyGraphEvidenceMaxFactsPerPackage: parseInteger(
+    process.env.SUPPLYGRAPH_EVIDENCE_MAX_FACTS_PER_PACKAGE, 100, { min: 1, max: 500 },
+  ),
+  supplyGraphEvidenceExpiringSoonHours: parseInteger(
+    process.env.SUPPLYGRAPH_EVIDENCE_EXPIRING_SOON_HOURS, 72, { min: 1, max: 720 },
+  ),
   supplyGraphObservationStaleAfterHours: parseInteger(
     process.env.SUPPLYGRAPH_OBSERVATION_STALE_AFTER_HOURS,
     168,

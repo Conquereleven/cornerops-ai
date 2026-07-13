@@ -7,9 +7,11 @@ const now = () => new Date().toISOString();
 const json = (value) => JSON.stringify(sanitizeMetadata(value));
 
 class SupplyGraphMatchStore {
-  constructor({ supplyGraphStore, internalStore } = {}) {
+  constructor({ supplyGraphStore, internalStore, evidenceStore, evidenceResolver } = {}) {
     this.supplyGraphStore = supplyGraphStore;
     this.internalStore = internalStore;
+    this.evidenceStore = evidenceStore;
+    this.evidenceResolver = evidenceResolver;
   }
 
   get state() { return this.supplyGraphStore.state; }
@@ -26,7 +28,8 @@ class SupplyGraphMatchStore {
         const current = latestOffers.get(offer.supplierCatalogItemId);
         if (!current || `${offer.observedAt}:${offer.createdAt}` > `${current.observedAt}:${current.createdAt}`) latestOffers.set(offer.supplierCatalogItemId, offer);
       });
-      return { ...demand, suppliers: clone(this.state.suppliers.filter((item) => item.status === 'active')), catalog: clone(activeCatalog.map((item) => ({ ...item, latestOffer: latestOffers.get(item.id) || null }))) };
+      const catalog = clone(activeCatalog.map((item) => ({ ...item, latestOffer: latestOffers.get(item.id) || null })));
+      return { ...demand, suppliers: clone(this.state.suppliers.filter((item) => item.status === 'active')), catalog: await this.enrichWithEvidence(catalog) };
     }
     const [suppliers, catalog] = await Promise.all([
       this.internalStore.pool.query(`select * from ${this.table('supplier_profiles')} where status='active' order by canonical_key`),
@@ -37,14 +40,36 @@ class SupplyGraphMatchStore {
          where c.active_observation=true order by c.supplier_id,c.identity_key`,
       ),
     ]);
+    const mappedCatalog = catalog.rows.map((row) => {
+      const item = safeCamel(row);
+      return { ...item, latestOffer: item.latestOffer ? safeCamel(item.latestOffer) : null };
+    });
     return {
       ...demand,
       suppliers: suppliers.rows.map(safeCamel),
-      catalog: catalog.rows.map((row) => {
-        const item = safeCamel(row);
-        return { ...item, latestOffer: item.latestOffer ? safeCamel(item.latestOffer) : null };
-      }),
+      catalog: await this.enrichWithEvidence(mappedCatalog),
     };
+  }
+
+  async enrichWithEvidence(catalog) {
+    if (!this.evidenceStore || !this.evidenceResolver || !catalog.length) return catalog;
+    const observations = await this.evidenceStore.appliedEvidenceForCatalog(catalog.map((item) => item.id));
+    const grouped = new Map();
+    observations.forEach((fact) => { const list = grouped.get(fact.supplierCatalogItemId) || []; list.push(fact); grouped.set(fact.supplierCatalogItemId, list); });
+    return catalog.map((item) => {
+      const resolved = this.evidenceResolver.resolve({ catalogItem: item, legacyOffer: item.latestOffer, observations: grouped.get(item.id) || [] });
+      const field = (name) => resolved.fields[name] || {};
+      const scalar = (name, key = 'value') => field(name).known ? (field(name).value?.[key] ?? field(name).value) : null;
+      const latestOffer = { ...(item.latestOffer || {}),
+        unitPrice: scalar('price', 'amount'), currency: field('price').currency || item.latestOffer?.currency || null,
+        stockStatus: scalar('stock_status') || 'unknown', stockQuantity: scalar('stock_quantity', 'quantity'),
+        minimumOrderQuantity: scalar('minimum_order', 'quantity'), minimumOrderUnit: field('minimum_order').unit || null,
+        leadTimeDays: scalar('lead_time_days'), shelfLifeDays: scalar('shelf_life_days'), resolvedEvidence: resolved,
+      };
+      return { ...item, temperatureZone: scalar('temperature_zone') || item.temperatureZone || null, latestOffer,
+        evidenceWatermark: resolved.watermark, evidenceFactIds: resolved.affectedFactIds,
+        evidenceModelVersion: resolved.evidenceModelVersion, evidenceRulesetChecksum: resolved.evidenceRulesetChecksum };
+    });
   }
 
   async findByFingerprint(fingerprint) {

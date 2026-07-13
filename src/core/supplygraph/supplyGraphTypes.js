@@ -5,6 +5,7 @@ const SUPPLYGRAPH_TABLES = Object.freeze([
   'supplier_profiles',
   'supplier_catalog_items',
   'supplier_offer_snapshots',
+  'supplier_evidence_packages', 'supplier_fact_observations', 'supplier_evidence_applications',
   'demand_requests',
   'demand_items',
   'sourcing_match_runs',

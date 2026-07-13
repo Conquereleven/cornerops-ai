@@ -22,6 +22,9 @@ const {
   SupplyGraphMatchStore,
   SupplyGraphService,
   SupplyGraphStore,
+  SupplierEvidenceResolver,
+  SupplierEvidenceService,
+  SupplierEvidenceStore,
 } = require('../core/supplygraph');
 
 const flowEngine = new CornerMexFlowEngine({
@@ -60,9 +63,21 @@ const workQueueService = new WorkQueueService({
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
 const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });
+const supplierEvidenceResolver = new SupplierEvidenceResolver();
+const supplierEvidenceStore = new SupplierEvidenceStore({
+  internalStore: internalOperationsStore,
+  supplyGraphStore,
+});
+const supplierEvidenceService = new SupplierEvidenceService({
+  config: env,
+  resolver: supplierEvidenceResolver,
+  store: supplierEvidenceStore,
+});
 const supplyGraphMatchStore = new SupplyGraphMatchStore({
   internalStore: internalOperationsStore,
   supplyGraphStore,
+  evidenceStore: supplierEvidenceStore,
+  evidenceResolver: supplierEvidenceResolver,
 });
 const supplyGraphMatchService = new SupplyGraphMatchService({
   config: env,
@@ -74,6 +89,7 @@ const supplyGraphService = new SupplyGraphService({
   store: supplyGraphStore,
   matchStore: supplyGraphMatchStore,
   matchService: supplyGraphMatchService,
+  evidenceService: supplierEvidenceService,
 });
 const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
 const environmentDoctorService = new EnvironmentDoctorService({ config: env });
@@ -383,6 +399,31 @@ const listSupplyGraphCatalog = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
+const includeAcceptanceTest = (req) => String(req.query.includeAcceptanceTest || '') === 'true';
+const evidenceSafety = { cornerMexMutations: false, externalActionsBlocked: true, supplierContactAllowed: false, customerContactAllowed: false, executed: false };
+
+const createSupplyGraphEvidencePackage = async (req, res, next) => {
+  try {
+    const result = await supplierEvidenceService.create(req.body || {}, actorContext(req));
+    return res.status(result.reused ? 200 : 201).json({ ...result, ...evidenceSafety });
+  } catch (error) { return next(error); }
+};
+const listSupplyGraphEvidencePackages = async (req, res, next) => {
+  try { return res.json({ packages: await supplierEvidenceService.list({ status:req.query.status,supplierId:req.query.supplierId,limit:req.query.limit,offset:req.query.offset,includeAcceptanceTest:includeAcceptanceTest(req) }), ...evidenceSafety }); }
+  catch (error) { return next(error); }
+};
+const getSupplyGraphEvidencePackage = async (req, res, next) => {
+  try { const result=await supplierEvidenceService.get(req.params.id,{includeAcceptanceTest:includeAcceptanceTest(req)});return result?res.json({...result,applications:await supplierEvidenceStore.applicationsForPackage(req.params.id),...evidenceSafety}):res.status(404).json({code:'SUPPLYGRAPH_EVIDENCE_PACKAGE_NOT_FOUND',message:'Evidence package not found.'}); }
+  catch(error){return next(error);}
+};
+const previewSupplyGraphEvidencePackage = async (req,res,next)=>{try{const result=await supplierEvidenceService.preview(req.params.id,{includeAcceptanceTest:includeAcceptanceTest(req)});return result?res.json({...result,...evidenceSafety}):res.status(404).json({code:'SUPPLYGRAPH_EVIDENCE_PACKAGE_NOT_FOUND',message:'Evidence package not found.'});}catch(error){return next(error);}};
+const applySupplyGraphEvidencePackage = async (req,res,next)=>{try{const result=await supplierEvidenceService.apply(req.params.id,req.body||{},actorContext(req));return result?res.json({...result,...evidenceSafety}):res.status(404).json({code:'SUPPLYGRAPH_EVIDENCE_PACKAGE_NOT_FOUND',message:'Evidence package not found.'});}catch(error){return next(error);}};
+const cancelSupplyGraphEvidencePackage = async (req,res,next)=>{try{const result=await supplierEvidenceService.cancel(req.params.id,req.body||{},actorContext(req));return result?res.json({package:result,...evidenceSafety}):res.status(404).json({code:'SUPPLYGRAPH_EVIDENCE_PACKAGE_NOT_FOUND',message:'Evidence package not found.'});}catch(error){return next(error);}};
+const getSupplyGraphCatalogEvidence = async(req,res,next)=>{try{const result=await supplierEvidenceService.catalogEvidence(req.params.catalogItemId,{includeAcceptanceTest:includeAcceptanceTest(req)});return result?res.json({...result,...evidenceSafety}):res.status(404).json({code:'SUPPLYGRAPH_CATALOG_ITEM_NOT_FOUND',message:'Catalog item not found.'});}catch(error){return next(error);}};
+const getSupplyGraphSupplierEvidenceStatus = async(req,res,next)=>{try{return res.json({...await supplierEvidenceService.supplierStatus(req.params.supplierId),...evidenceSafety});}catch(error){return next(error);}};
+const listSupplyGraphEvidenceConflicts = async(_req,res,next)=>{try{return res.json({conflicts:await supplierEvidenceService.conflicts(),...evidenceSafety});}catch(error){return next(error);}};
+const listSupplyGraphEvidenceExpiring = async(req,res,next)=>{try{return res.json({facts:await supplierEvidenceService.expiring({hours:req.query.hours}),...evidenceSafety});}catch(error){return next(error);}};
+
 const listSupplyGraphDemands = async (req, res, next) => {
   try {
     const requests = await supplyGraphService.listDemands({
@@ -507,10 +548,22 @@ module.exports = {
   signals,
   syncWorkQueue,
   supplyGraphService,
+  supplierEvidenceService,
+  supplierEvidenceStore,
   supplyGraphStatus,
   listSupplyGraphSuppliers,
   getSupplyGraphSupplier,
   listSupplyGraphCatalog,
+  createSupplyGraphEvidencePackage,
+  listSupplyGraphEvidencePackages,
+  getSupplyGraphEvidencePackage,
+  previewSupplyGraphEvidencePackage,
+  applySupplyGraphEvidencePackage,
+  cancelSupplyGraphEvidencePackage,
+  getSupplyGraphCatalogEvidence,
+  getSupplyGraphSupplierEvidenceStatus,
+  listSupplyGraphEvidenceConflicts,
+  listSupplyGraphEvidenceExpiring,
   listSupplyGraphDemands,
   getSupplyGraphDemand,
   syncSupplyGraphIntermex,

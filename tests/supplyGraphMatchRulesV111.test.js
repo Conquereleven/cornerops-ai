@@ -23,7 +23,7 @@ const demand = (overrides = {}) => ({ productQuery: 'Tajin Clasico 400 g', reque
 
 describe('SupplyGraph deterministic rules v1.11', () => {
   test('version and ruleset checksum are stable', () => {
-    expect(ENGINE_VERSION).toBe('supplygraph-match-v1.11.0');
+    expect(ENGINE_VERSION).toBe('supplygraph-match-v1.12.0');
     expect(RULESET_CHECKSUM).toMatch(/^[a-f0-9]{64}$/);
   });
 

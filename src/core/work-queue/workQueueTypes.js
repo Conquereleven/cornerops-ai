@@ -10,6 +10,7 @@ const INTERNAL_TABLES = Object.freeze([
   'demand_requests', 'demand_items',
   'sourcing_match_runs', 'sourcing_match_item_results',
   'sourcing_match_candidates', 'sourcing_recommendations',
+  'supplier_evidence_packages', 'supplier_fact_observations', 'supplier_evidence_applications',
 ]);
 const OPEN_WORK_ITEM_STATUSES = Object.freeze([
   'recommended', 'drafted', 'queued_for_approval', 'approved', 'in_progress',
