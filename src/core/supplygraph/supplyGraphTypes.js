@@ -7,6 +7,10 @@ const SUPPLYGRAPH_TABLES = Object.freeze([
   'supplier_offer_snapshots',
   'demand_requests',
   'demand_items',
+  'sourcing_match_runs',
+  'sourcing_match_item_results',
+  'sourcing_match_candidates',
+  'sourcing_recommendations',
 ]);
 const DEMAND_PRIORITIES = Object.freeze(['critical', 'high', 'medium', 'low']);
 const DEMAND_STATUSES = Object.freeze(['needs_information', 'ready_for_matching', 'closed']);

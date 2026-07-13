@@ -17,7 +17,12 @@ const {
   WorkQueueService,
   createInternalOperationsStore,
 } = require('../core/work-queue');
-const { SupplyGraphService, SupplyGraphStore } = require('../core/supplygraph');
+const {
+  SupplyGraphMatchService,
+  SupplyGraphMatchStore,
+  SupplyGraphService,
+  SupplyGraphStore,
+} = require('../core/supplygraph');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -55,10 +60,20 @@ const workQueueService = new WorkQueueService({
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
 const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });
+const supplyGraphMatchStore = new SupplyGraphMatchStore({
+  internalStore: internalOperationsStore,
+  supplyGraphStore,
+});
+const supplyGraphMatchService = new SupplyGraphMatchService({
+  config: env,
+  matchStore: supplyGraphMatchStore,
+});
 const supplyGraphService = new SupplyGraphService({
   config: env,
   internalStore: internalOperationsStore,
   store: supplyGraphStore,
+  matchStore: supplyGraphMatchStore,
+  matchService: supplyGraphMatchService,
 });
 const productActivationEngine = new ProductActivationEngine({ catalogCohortService });
 const environmentDoctorService = new EnvironmentDoctorService({ config: env });
@@ -416,6 +431,54 @@ const updateSupplyGraphDemand = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
+const matchSupplyGraphDemand = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.matchDemand(req.params.id, req.body || {}, actorContext(req));
+    return res.status(result.reused ? 200 : 201).json(result);
+  } catch (error) { return next(error); }
+};
+
+const listSupplyGraphMatchRuns = async (req, res, next) => {
+  try {
+    const matchRuns = await supplyGraphService.listMatchRuns({
+      demandRequestId: req.query.demandRequestId,
+      coverageStatus: req.query.coverageStatus,
+      fulfillmentReadiness: req.query.fulfillmentReadiness,
+      recommendationType: req.query.recommendationType,
+      createdAfter: req.query.createdAfter,
+      createdBefore: req.query.createdBefore,
+      limit: req.query.limit,
+      offset: req.query.offset || req.query.cursor,
+    });
+    return res.json({ matchRuns, comparisonScope: 'single_verified_supplier', marketComparisonPerformed: false, externalActionsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const getSupplyGraphMatchRun = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.getMatchRun(req.params.id);
+    return result ? res.json({ ...result, externalActionsBlocked: true, productActivationBlocked: true })
+      : res.status(404).json({ code: 'SUPPLYGRAPH_MATCH_RUN_NOT_FOUND', message: 'Match run not found.' });
+  } catch (error) { return next(error); }
+};
+
+const listSupplyGraphDemandMatchRuns = async (req, res, next) => {
+  try {
+    const matchRuns = await supplyGraphService.listDemandMatchRuns(req.params.id, {
+      limit: req.query.limit, offset: req.query.offset || req.query.cursor,
+    });
+    return res.json({ matchRuns, externalActionsBlocked: true });
+  } catch (error) { return next(error); }
+};
+
+const latestSupplyGraphDemandMatch = async (req, res, next) => {
+  try {
+    const result = await supplyGraphService.latestDemandMatch(req.params.id);
+    return result ? res.json({ ...result, externalActionsBlocked: true, productActivationBlocked: true })
+      : res.status(404).json({ code: 'SUPPLYGRAPH_MATCH_RUN_NOT_FOUND', message: 'No match run exists for demand.' });
+  } catch (error) { return next(error); }
+};
+
 module.exports = {
   actionEngine,
   actionEngineDrafts,
@@ -453,6 +516,11 @@ module.exports = {
   syncSupplyGraphIntermex,
   createSupplyGraphDemand,
   updateSupplyGraphDemand,
+  matchSupplyGraphDemand,
+  listSupplyGraphMatchRuns,
+  getSupplyGraphMatchRun,
+  listSupplyGraphDemandMatchRuns,
+  latestSupplyGraphDemandMatch,
   updateCaseStatus,
   updateWorkItem,
   workQueueService,

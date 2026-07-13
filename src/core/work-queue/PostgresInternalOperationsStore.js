@@ -95,7 +95,10 @@ class PostgresInternalOperationsStore {
   }
 
   async syncRecommendations(recommendations, context = {}) {
-    return this.withTransaction(async (client) => {
+    return this.withTransaction((client) => this.syncRecommendationsWithClient(client, recommendations, context));
+  }
+
+  async syncRecommendationsWithClient(client, recommendations, context = {}) {
       const summary = {
         scannedRecommendations: recommendations.length,
         createdWorkItems: 0,
@@ -216,7 +219,6 @@ class PostgresInternalOperationsStore {
         summary.items.push(camel(row));
       }
       return summary;
-    });
   }
 
   async listWorkItems(filters = {}) {
