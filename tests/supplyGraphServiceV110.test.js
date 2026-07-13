@@ -5,6 +5,7 @@ const {
   emptyState,
   sha256,
 } = require('../src/core/supplygraph');
+const { jsonSafe, safeCamel } = require('../src/core/supplygraph/SupplyGraphStore');
 const { MemoryInternalOperationsStore } = require('../src/core/work-queue/MemoryInternalOperationsStore');
 
 const config = {
@@ -140,5 +141,13 @@ describe('SupplyGraph data foundation v1.10', () => {
       externalActionsBlocked: true,
     });
     expect(status.metrics).toMatchObject({ supplierCount: 1, catalogItemCount: 190, offerSnapshotCount: 190 });
+  });
+
+  test('PostgreSQL date values serialize as ISO strings instead of empty objects', () => {
+    expect(jsonSafe({ observedAt: new Date('2026-07-11T05:12:18.000Z') })).toEqual({
+      observedAt: '2026-07-11T05:12:18.000Z',
+    });
+    expect(safeCamel({ latest_supplier_observation: new Date('2026-07-11T05:12:18.000Z') }))
+      .toEqual({ latestSupplierObservation: '2026-07-11T05:12:18.000Z' });
   });
 });
