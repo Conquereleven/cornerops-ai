@@ -4,6 +4,10 @@
 
 Accept the shared source-of-truth contract, distinguish commercial and planning inventory, harden the candidate Supabase project, and preserve a one-way masked read boundary.
 
+## Joint Gate A2
+
+The target CornerMex commerce foundation is live in isolated Railway staging and the empty target Supabase project. Data migration and production cutover have not started. CornerOps keeps its existing limited read-only source and has no connection or write path to the target project. Marketing Intelligence is `marketing_v1_16_internal_only_unblocked`; external publishing remains blocked.
+
 ## CornerMex track
 
 1. **CM-1 Supabase Commerce Foundation:** confirm active/target projects, Auth, products, inventory, orders, payments, RLS, Storage and environment separation.
@@ -14,7 +18,7 @@ Accept the shared source-of-truth contract, distinguish commercial and planning 
 
 ## CornerOps track
 
-1. **CO-1.16 Marketing Intelligence:** blocked until A1 passes.
+1. **CO-1.16 Marketing Intelligence:** internal-only work unblocked after A2; external publishing remains blocked.
 2. **CO-1.17 Seller Network Completion**
 3. **CO-1.18 Basket Optimizer**
 4. **CO-1.19 Landed Cost and MarginQuote**
