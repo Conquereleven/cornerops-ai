@@ -1,4 +1,4 @@
-const { materializeRecommendations } = require('./RecommendationMaterializer');
+const { materializeProgramStateRecommendations, materializeRecommendations } = require('./RecommendationMaterializer');
 
 class WorkQueueService {
   constructor({ actionEngineService, config = {}, store } = {}) {
@@ -33,6 +33,18 @@ class WorkQueueService {
     });
   }
 
+  async syncProgramState(state, { actorId = 'cornerops-program-adapter', correlationId } = {}) {
+    const recommendations = materializeProgramStateRecommendations(state);
+    return this.store.syncRecommendations(recommendations, {
+      sourceType: 'cornermex_program_state',
+      sourceId: state.evidenceChecksum || null,
+      actorType: 'system',
+      actorId,
+      correlationId: correlationId || state.evidenceChecksum || undefined,
+      metadata: { classification: state.status, sanitized: true },
+    });
+  }
+
   async list(filters) { return this.store.listWorkItems(filters); }
   async get(id) { return this.store.getWorkItem(id); }
   async update(id, command, context) { return this.store.updateWorkItem(id, command, context); }
@@ -41,14 +53,14 @@ class WorkQueueService {
 
   async listDrafts(filters = {}) {
     const items = await this.store.listWorkItems({ ...filters, limit: filters.limit || 100 });
-    return items.filter((item) => item.safePayload?.sendStatus === 'not_sent').map((item) => ({
+    return items.filter((item) => ['not_sent', 'DRAFT_NOT_SENT'].includes(item.safePayload?.sendStatus)).map((item) => ({
       id: item.id,
       workItemId: item.id,
       type: item.safePayload.draftType || item.actionType,
       title: item.title,
       content: item.safePayload.content,
       status: item.status,
-      sendStatus: 'not_sent',
+      sendStatus: 'DRAFT_NOT_SENT',
       externalSendAllowed: false,
       approvalRequired: item.approvalRequired,
       approvalStatus: item.approvalStatus,

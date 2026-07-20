@@ -121,8 +121,8 @@ describe('Telegram Operator + CornerMex Flow Engine v1.2', () => {
     const service = new CornerMexMessageDraftService({ auditLogService });
     const whatsapp = await service.createDraft({ channel: 'whatsapp', text: 'quote #123', requestId: 'draft-test' });
     const email = await service.createDraft({ channel: 'email', text: 'lead #456', requestId: 'draft-test-email' });
-    expect(whatsapp.draft.sendStatus).toBe('not_sendable_in_v1.2');
-    expect(email.draft.sendStatus).toBe('not_sendable_in_v1.2');
+    expect(whatsapp.draft.sendStatus).toBe('DRAFT_NOT_SENT');
+    expect(email.draft.sendStatus).toBe('DRAFT_NOT_SENT');
     expect(auditLogService.record).toHaveBeenCalledTimes(2);
   });
 

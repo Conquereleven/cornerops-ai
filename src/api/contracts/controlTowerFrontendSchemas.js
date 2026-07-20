@@ -1,4 +1,4 @@
-const CONTROL_TOWER_FRONTEND_VERSION = 'v1.9';
+const CONTROL_TOWER_FRONTEND_VERSION = 'v1.16';
 
 const CONTROL_TOWER_FRONTEND_SECTIONS = [
   'status',
@@ -12,6 +12,8 @@ const CONTROL_TOWER_FRONTEND_SECTIONS = [
   'drafts',
   'actions',
   'work-queue',
+  'capabilities',
+  'environment-doctor',
 ];
 
 const SECRET_KEY_PATTERN = /(token|secret|password|service[_-]?role|api[_-]?key|anon[_-]?key|bot[_-]?token|webhook[_-]?secret)/i;

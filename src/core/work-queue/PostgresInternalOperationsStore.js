@@ -374,7 +374,7 @@ class PostgresInternalOperationsStore {
          count(*) filter (where status=any($1) and priority in ('critical','high'))::int as high_priority_work_items,
          count(*) filter (where completed_at >= now()-interval '7 days')::int as completed_this_week,
          min(created_at) filter (where status=any($1)) as oldest_unresolved_at,
-         count(*) filter (where status=any($1) and safe_payload->>'sendStatus'='not_sent')::int as drafts_awaiting_review
+         count(*) filter (where status=any($1) and safe_payload->>'sendStatus' in ('not_sent','DRAFT_NOT_SENT'))::int as drafts_awaiting_review
        from ${this.table('work_items')}`,
       [OPEN_WORK_ITEM_STATUSES],
     );

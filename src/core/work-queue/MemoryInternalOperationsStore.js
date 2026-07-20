@@ -129,7 +129,7 @@ class MemoryInternalOperationsStore {
   createWorkItem(recommendation) {
     const timestamp = now();
     return {
-      id: randomUUID(),
+      id: recommendation.stableId || randomUUID(),
       idempotencyKey: recommendation.idempotencyKey,
       sourceType: recommendation.sourceType || 'action_engine',
       sourceId: recommendation.sourceId || null,
@@ -316,7 +316,7 @@ class MemoryInternalOperationsStore {
       openWorkItems: open.length,
       highPriorityWorkItems: open.filter((item) => ['critical', 'high'].includes(item.priority)).length,
       pendingApprovals: this.state.approvals.filter((item) => item.status === 'pending').length,
-      draftsAwaitingReview: open.filter((item) => item.safePayload?.sendStatus === 'not_sent').length,
+      draftsAwaitingReview: open.filter((item) => ['not_sent', 'DRAFT_NOT_SENT'].includes(item.safePayload?.sendStatus)).length,
       completedThisWeek: this.state.workItems.filter(
         (item) => item.completedAt && Date.parse(item.completedAt) >= weekAgo,
       ).length,

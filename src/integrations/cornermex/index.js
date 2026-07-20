@@ -14,6 +14,7 @@ const {
   CornerMexCatalogReadModelReportService,
   DEFAULT_CATALOG_CANDIDATE_SOURCES,
 } = require('./CornerMexCatalogReadModelReportService');
+const { CornerMexProgramStateService, PROGRAM_STATES } = require('./CornerMexProgramStateService');
 const {
   CornerMexSupabaseReadOnlyRepository,
   ENTITY_NAMES,
@@ -23,6 +24,7 @@ const {
 
 module.exports = {
   CornerMexCatalogReadModelReportService,
+  CornerMexProgramStateService,
   CornerMexSupabaseReadOnlyClient,
   CornerMexSupabaseReadOnlyConfig,
   CornerMexSupabaseReadOnlyRepository,
@@ -31,6 +33,7 @@ module.exports = {
   DEFAULT_READ_VIEW_TABLES,
   ENTITY_NAMES,
   LEGACY_ENTITY_TABLES,
+  PROGRAM_STATES,
   SOURCE_MODES,
   SUPABASE_STATUS,
   TABLE_AVAILABILITY,

@@ -65,5 +65,7 @@ router.get('/frontend/v1/telegram', controller.frontendTelegram);
 router.get('/frontend/v1/drafts', controller.frontendDrafts);
 router.get('/frontend/v1/actions', controller.frontendActions);
 router.get('/frontend/v1/work-queue', controller.frontendWorkQueue);
+router.get('/frontend/v1/capabilities', controller.frontendCapabilities);
+router.get('/frontend/v1/environment-doctor', controller.frontendEnvironmentDoctor);
 
 module.exports = router;

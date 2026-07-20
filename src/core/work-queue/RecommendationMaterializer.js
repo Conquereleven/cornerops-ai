@@ -20,6 +20,42 @@ const buildIdempotencyKey = (action = {}) => {
   return `${safeKeyPart(raw)}:${suffix}`;
 };
 
+const materializeProgramStateRecommendations = (state = {}) => {
+  const sourceSha = state.observedSha || state.observedRef || 'unavailable';
+  const evidenceChecksum = state.evidenceChecksum || 'unavailable';
+  const entries = [
+    ...(state.blockers || []).map((value) => ({ value, kind: 'blocker', priority: 'high', approvalRequired: false })),
+    ...(state.nextActions || []).map((value) => ({ value, kind: 'next_action', priority: 'medium', approvalRequired: /approve|decision|founder/i.test(String(value)) })),
+  ];
+  return entries.map((entry) => {
+    const raw = `cornermex_program_state:${sourceSha}:${evidenceChecksum}:${entry.kind}:${entry.value}`;
+    const digest = crypto.createHash('sha256').update(raw).digest('hex');
+    return {
+      stableId: `cmps-${digest.slice(0, 24)}`,
+      idempotencyKey: `cornermex_program_state:${digest}`,
+      sourceType: 'cornermex_program_state',
+      sourceId: evidenceChecksum,
+      sourceFlow: 'cornermex_program_governance',
+      actionType: entry.kind,
+      title: String(entry.value),
+      priority: entry.priority,
+      ownerType: 'founder',
+      ownerId: 'founder',
+      status: entry.approvalRequired ? 'queued_for_approval' : 'recommended',
+      approvalRequired: entry.approvalRequired,
+      evidence: {
+        sourceRepository: state.sourceRepository,
+        sourceSha,
+        evidenceChecksum,
+        evidenceTimestamp: state.evidenceTimestamp,
+        conditionActive: true,
+        writesBlocked: true,
+        externalSendsBlocked: true,
+      },
+    };
+  });
+};
+
 const materializeRecommendations = (actionState = {}, { operatingStage } = {}) => (
   (actionState.recommendedActions || []).map((action) => {
     const isDraft = /draft|quote|message|intro/i.test(action.type || '');
@@ -49,11 +85,11 @@ const materializeRecommendations = (actionState = {}, { operatingStage } = {}) =
       safePayload: isDraft ? {
         draftType: action.type,
         content: action.description,
-        sendStatus: 'not_sent',
+        sendStatus: 'DRAFT_NOT_SENT',
         externalSendAllowed: false,
       } : {},
     };
   })
 );
 
-module.exports = { buildIdempotencyKey, materializeRecommendations, sourceFlowFor };
+module.exports = { buildIdempotencyKey, materializeProgramStateRecommendations, materializeRecommendations, sourceFlowFor };
