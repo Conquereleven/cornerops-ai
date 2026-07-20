@@ -64,8 +64,8 @@ const workQueueService = new WorkQueueService({
   store: internalOperationsStore,
 });
 const cornerMexProgramStateService = new CornerMexProgramStateService({
-  evidenceRoot: process.env.CORNERMEX_PROGRAM_EVIDENCE_ROOT,
-  maxAgeMs: Number(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS) || 86400000,
+  evidenceRoot: env.cornermexProgramEvidenceRoot,
+  maxAgeMs: env.cornermexProgramEvidenceMaxAgeMs,
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
 const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });

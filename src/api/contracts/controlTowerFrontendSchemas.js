@@ -28,6 +28,7 @@ const maskString = (value) => {
 
 const sanitizeContractValue = (value) => {
   if (Array.isArray(value)) return value.map((item) => sanitizeContractValue(item));
+  if (typeof value === 'string') return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   if (!value || typeof value !== 'object') return value;
   return Object.entries(value).reduce((acc, [key, nested]) => {
     if (SECRET_KEY_PATTERN.test(key)) {

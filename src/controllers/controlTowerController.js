@@ -74,8 +74,8 @@ const controlTowerFrontendLiveStatusService = new LiveControlTowerStatusService(
   config: env,
 });
 const cornerMexProgramStateService = new CornerMexProgramStateService({
-  evidenceRoot: process.env.CORNERMEX_PROGRAM_EVIDENCE_ROOT,
-  maxAgeMs: Number(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS) || 86400000,
+  evidenceRoot: env.cornermexProgramEvidenceRoot,
+  maxAgeMs: env.cornermexProgramEvidenceMaxAgeMs,
 });
 const canonicalInputPackService = new CanonicalInputPackService();
 

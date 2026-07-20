@@ -15,6 +15,7 @@ const {
   DEFAULT_CATALOG_CANDIDATE_SOURCES,
 } = require('./CornerMexCatalogReadModelReportService');
 const { CornerMexProgramStateService, PROGRAM_STATES } = require('./CornerMexProgramStateService');
+const { CornerMexProgramEvidenceNormalizer } = require('./CornerMexProgramEvidenceNormalizer');
 const {
   CornerMexSupabaseReadOnlyRepository,
   ENTITY_NAMES,
@@ -25,6 +26,7 @@ const {
 module.exports = {
   CornerMexCatalogReadModelReportService,
   CornerMexProgramStateService,
+  CornerMexProgramEvidenceNormalizer,
   CornerMexSupabaseReadOnlyClient,
   CornerMexSupabaseReadOnlyConfig,
   CornerMexSupabaseReadOnlyRepository,

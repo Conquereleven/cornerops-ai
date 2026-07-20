@@ -4,6 +4,7 @@ const safeKeyPart = (value) => String(value || 'unknown')
   .toLowerCase()
   .replace(/[^a-z0-9_-]+/g, '_')
   .slice(0, 120);
+const normalizeCondition = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
 
 const sourceFlowFor = (action = {}) => {
   if (action.id?.includes('quote_follow_up')) return 'quote_follow_up_flow';
@@ -24,17 +25,16 @@ const materializeProgramStateRecommendations = (state = {}) => {
   const sourceSha = state.observedSha || state.observedRef || 'unavailable';
   const evidenceChecksum = state.evidenceChecksum || 'unavailable';
   const entries = [
-    ...(state.blockers || []).map((value) => ({ value, kind: 'blocker', priority: 'high', approvalRequired: false })),
-    ...(state.nextActions || []).map((value) => ({ value, kind: 'next_action', priority: 'medium', approvalRequired: /approve|decision|founder/i.test(String(value)) })),
+    ...(Array.isArray(state.blockers) ? state.blockers : []).map((value) => ({ value, kind: 'blocker', priority: 'high', approvalRequired: false })),
+    ...(Array.isArray(state.nextActions) ? state.nextActions : []).map((value) => ({ value, kind: 'next_action', priority: 'medium', approvalRequired: /approve|decision|founder/i.test(String(value)) })),
   ];
   return entries.map((entry) => {
-    const raw = `cornermex_program_state:${sourceSha}:${evidenceChecksum}:${entry.kind}:${entry.value}`;
+    const raw = `${state.sourceRepository || 'unknown'}:${entry.kind}:${normalizeCondition(entry.value)}`;
     const digest = crypto.createHash('sha256').update(raw).digest('hex');
     return {
-      stableId: `cmps-${digest.slice(0, 24)}`,
       idempotencyKey: `cornermex_program_state:${digest}`,
       sourceType: 'cornermex_program_state',
-      sourceId: evidenceChecksum,
+      sourceId: state.sourceRepository || null,
       sourceFlow: 'cornermex_program_governance',
       actionType: entry.kind,
       title: String(entry.value),
@@ -48,6 +48,7 @@ const materializeProgramStateRecommendations = (state = {}) => {
         sourceSha,
         evidenceChecksum,
         evidenceTimestamp: state.evidenceTimestamp,
+        schemaVersions: state.schemaVersions,
         conditionActive: true,
         writesBlocked: true,
         externalSendsBlocked: true,

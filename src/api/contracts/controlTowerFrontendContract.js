@@ -266,8 +266,11 @@ class ControlTowerFrontendContract {
   async founderDaily(report) {
     const supabase = supabaseSummary(report);
     const programState = await this.programState();
-    const packs = this.canonicalInputPackService?.validate?.() || { status: 'canonical_input_pack_missing', blockers: [] };
-    const priorityTasks = [...(programState.blockers || []), ...(programState.nextActions || [])];
+    const quoteQueue = this.canonicalInputPackService?.buildQuoteQueue?.() || { status: 'canonical_input_pack_missing', wiringStatus: 'unavailable', items: [] };
+    const packs = quoteQueue;
+    const programBlockers = Array.isArray(programState.blockers) ? programState.blockers : [];
+    const programNextActions = Array.isArray(programState.nextActions) ? programState.nextActions : [];
+    const priorityTasks = [...programBlockers, ...programNextActions];
     return this.envelope('founder-daily', report, {
       headline: `CornerMex program state: ${programState.status}.`,
       sourceMode: pickSourceMode(report.cornerMexLovableConnector?.sourceMode, 'repo_discovered'),
@@ -282,13 +285,13 @@ class ControlTowerFrontendContract {
       deploymentGovernance: programState.governance || null,
       readiness: programState.readiness || 'unavailable',
       pendingPrs: programState.pendingPrs || [],
-      blockers: programState.blockers || [],
-      decisionsNeeded: (programState.nextActions || []).filter((item) => /approve|decision|founder/i.test(String(item))),
+      blockers: programBlockers,
+      decisionsNeeded: programNextActions.filter((item) => /approve|decision|founder/i.test(String(item))),
       priorityTasks,
       b2bPipeline: { status: packs.status, accountCount: packs.b2bAccountCount || 0 },
-      catalogAndQuoteQueue: { status: packs.status, skuCount: packs.skuCount || 0, quotes: [] },
+      catalogAndQuoteQueue: { status: packs.status, wiringStatus: quoteQueue.wiringStatus || 'wired_read_only_fail_closed', skuCount: packs.skuCount || 0, quotes: quoteQueue.items || [], sendStatus: 'DRAFT_NOT_SENT', externalSendAllowed: false },
       evidence: { timestamp: programState.evidenceTimestamp, freshness: programState.freshness, checksum: programState.evidenceChecksum },
-      urgentActions: programState.nextActions || [],
+      urgentActions: programNextActions,
       flowSummary: report.cornerMexFlowEngine?.availableFlows || [],
       blocked: this.blockedCapabilities(),
     });
@@ -460,6 +463,7 @@ class ControlTowerFrontendContract {
   }
 
   async drafts(report) {
+    const quoteQueue = this.canonicalInputPackService?.buildQuoteQueue?.() || { status: 'canonical_input_pack_missing', items: [] };
     const persistentDrafts = this.workQueueService?.listDrafts
       ? await this.workQueueService.listDrafts({ limit: 100 })
       : [];
@@ -485,6 +489,7 @@ class ControlTowerFrontendContract {
       sendStatus: 'DRAFT_NOT_SENT',
       localOnly: true,
       items: persistentDrafts,
+      canonicalQuoteQueue: { status: quoteQueue.status, wiringStatus: quoteQueue.wiringStatus || 'wired_read_only_fail_closed', items: quoteQueue.items, sendStatus: 'DRAFT_NOT_SENT', externalSendAllowed: false },
       recommendedDraftSources: (actionState.recommendedActions || []).slice(0, 10).map((action) => ({
         id: action.id,
         type: action.type,
@@ -538,6 +543,7 @@ class ControlTowerFrontendContract {
 
   async capabilities(report) {
     const programState = await this.programState();
+    const quoteQueue = this.canonicalInputPackService?.buildQuoteQueue?.() || { status: 'canonical_input_pack_missing' };
     return this.envelope('capabilities', report, {
       cornerMexProgramState: programState.status,
       readOnlyAdapter: true,
@@ -545,6 +551,10 @@ class ControlTowerFrontendContract {
       blocked: this.blockedCapabilities(),
       approvalsAuthorizeExternalExecution: false,
       draftsAlways: 'DRAFT_NOT_SENT',
+      canonicalSchemas: programState.schemaVersions,
+      runtimeReadiness: programState.readiness || 'unavailable',
+      canonicalInputPackStatus: quoteQueue.status,
+      quoteQueueWiringStatus: quoteQueue.wiringStatus || 'wired_read_only_fail_closed',
     }, { sourceMode: 'canonical_read_only', warnings: programState.warnings || [] });
   }
 
@@ -557,6 +567,11 @@ class ControlTowerFrontendContract {
       sourceRepository: programState.sourceRepository,
       routes: programState.routes,
       productionAutoDeploy: programState.productionAutoDeploy,
+      schemaVersions: programState.schemaVersions,
+      readiness: programState.readiness || 'unavailable',
+      sourceSha: programState.observedSha || null,
+      configuration: programState.configuration,
+      blockers: programState.blockers,
       safety: this.safetySummary(report),
     }, { sourceMode: 'canonical_read_only', warnings: programState.warnings || [] });
   }

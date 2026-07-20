@@ -30,6 +30,9 @@ const parseCsv = (value) =>
 
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
+  cornermexProgramEvidenceRoot: process.env.CORNERMEX_PROGRAM_EVIDENCE_ROOT || '',
+  cornermexProgramEvidenceMaxAgeMs: parseInteger(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS, 86400000, { min: 1, max: 604800000 }),
+  cornermexProgramEvidenceMaxAgeValid: process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS === undefined || (/^\d+$/.test(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS) && Number(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS) >= 1 && Number(process.env.CORNERMEX_PROGRAM_EVIDENCE_MAX_AGE_MS) <= 604800000),
   port: parsePort(process.env.PORT),
   bindHost: process.env.CORNEROPS_BIND_HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'),
   openaiApiKey: process.env.OPENAI_API_KEY || '',

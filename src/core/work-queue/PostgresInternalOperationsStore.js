@@ -161,15 +161,16 @@ class PostgresInternalOperationsStore {
           );
           row = existing.rows[0];
           if (OPEN_WORK_ITEM_STATUSES.includes(row.status)) {
-            if (row.evidence?.conditionActive === false) {
-              const refreshed = await client.query(
-                `update ${this.table('work_items')}
-                 set evidence=coalesce(evidence,'{}'::jsonb) || '{"conditionActive":true}'::jsonb,
-                     updated_at=now(), version=version+1
-                 where id=$1 returning *`,
-                [row.id],
-              );
-              row = refreshed.rows[0];
+            const returned = row.evidence?.conditionActive === false;
+            const refreshed = await client.query(
+              `update ${this.table('work_items')}
+               set evidence=coalesce(evidence,'{}'::jsonb) || $2::jsonb,
+                   source_id=$3, updated_at=now(), version=version+1
+               where id=$1 returning *`,
+              [row.id, json({ ...(recommendation.evidence || {}), conditionActive: true }), recommendation.sourceId || row.source_id],
+            );
+            row = refreshed.rows[0];
+            if (returned) {
               await this.appendAudit(client, {
                 eventType: 'work_item_condition_returned', entityType: 'work_item',
                 entityId: row.id, ...context,

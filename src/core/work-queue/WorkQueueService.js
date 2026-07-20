@@ -37,7 +37,7 @@ class WorkQueueService {
     const recommendations = materializeProgramStateRecommendations(state);
     return this.store.syncRecommendations(recommendations, {
       sourceType: 'cornermex_program_state',
-      sourceId: state.evidenceChecksum || null,
+      sourceId: state.sourceRepository || null,
       actorType: 'system',
       actorId,
       correlationId: correlationId || state.evidenceChecksum || undefined,
