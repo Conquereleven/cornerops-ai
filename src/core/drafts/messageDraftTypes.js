@@ -7,7 +7,7 @@ const MESSAGE_DRAFT_TYPES = Object.freeze({
 });
 
 const MESSAGE_DRAFT_SEND_STATUS = Object.freeze({
-  NOT_SENDABLE: 'not_sendable_in_v1.2',
+  NOT_SENDABLE: 'DRAFT_NOT_SENT',
 });
 
 module.exports = {

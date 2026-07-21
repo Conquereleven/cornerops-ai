@@ -76,10 +76,12 @@ class MemoryInternalOperationsStore {
         (candidate) => candidate.idempotencyKey === recommendation.idempotencyKey,
       );
       if (item && OPEN_WORK_ITEM_STATUSES.includes(item.status)) {
-        if (item.evidence?.conditionActive === false) {
-          item.evidence = { ...(item.evidence || {}), conditionActive: true };
-          item.updatedAt = now();
-          item.version += 1;
+        const returned = item.evidence?.conditionActive === false;
+        item.evidence = { ...(item.evidence || {}), ...(recommendation.evidence || {}), conditionActive: true };
+        item.sourceId = recommendation.sourceId || item.sourceId;
+        item.updatedAt = now();
+        item.version += 1;
+        if (returned) {
           this.appendAudit({
             eventType: 'work_item_condition_returned',
             entityType: 'work_item',
@@ -316,7 +318,7 @@ class MemoryInternalOperationsStore {
       openWorkItems: open.length,
       highPriorityWorkItems: open.filter((item) => ['critical', 'high'].includes(item.priority)).length,
       pendingApprovals: this.state.approvals.filter((item) => item.status === 'pending').length,
-      draftsAwaitingReview: open.filter((item) => item.safePayload?.sendStatus === 'not_sent').length,
+      draftsAwaitingReview: open.filter((item) => ['not_sent', 'DRAFT_NOT_SENT'].includes(item.safePayload?.sendStatus)).length,
       completedThisWeek: this.state.workItems.filter(
         (item) => item.completedAt && Date.parse(item.completedAt) >= weekAgo,
       ).length,

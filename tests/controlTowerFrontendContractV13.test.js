@@ -130,7 +130,7 @@ describe('Control Tower Frontend Contract v1.3', () => {
     expect(telegram.data.founderOnly).toBe(true);
     expect(telegram.data.allowedUsersCount).toBe(1);
     expect(drafts.approvalRequired).toBe(true);
-    expect(drafts.data.sendStatus).toBe('not_sendable_in_current_version');
+    expect(drafts.data.sendStatus).toBe('DRAFT_NOT_SENT');
     expect(drafts.data.persistence).toBe('not_configured');
     expect(drafts.data.recommendedDraftSources).toEqual([]);
   });

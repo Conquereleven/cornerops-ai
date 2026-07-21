@@ -4,6 +4,7 @@ const safeKeyPart = (value) => String(value || 'unknown')
   .toLowerCase()
   .replace(/[^a-z0-9_-]+/g, '_')
   .slice(0, 120);
+const normalizeCondition = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
 
 const sourceFlowFor = (action = {}) => {
   if (action.id?.includes('quote_follow_up')) return 'quote_follow_up_flow';
@@ -18,6 +19,42 @@ const buildIdempotencyKey = (action = {}) => {
   const raw = `${sourceFlowFor(action)}:${action.type || 'internal_task'}:${action.id || action.title}`;
   const suffix = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 16);
   return `${safeKeyPart(raw)}:${suffix}`;
+};
+
+const materializeProgramStateRecommendations = (state = {}) => {
+  const sourceSha = state.observedSha || state.observedRef || 'unavailable';
+  const evidenceChecksum = state.evidenceChecksum || 'unavailable';
+  const entries = [
+    ...(Array.isArray(state.blockers) ? state.blockers : []).map((value) => ({ value, kind: 'blocker', priority: 'high', approvalRequired: false })),
+    ...(Array.isArray(state.nextActions) ? state.nextActions : []).map((value) => ({ value, kind: 'next_action', priority: 'medium', approvalRequired: /approve|decision|founder/i.test(String(value)) })),
+  ];
+  return entries.map((entry) => {
+    const raw = `${state.sourceRepository || 'unknown'}:${entry.kind}:${normalizeCondition(entry.value)}`;
+    const digest = crypto.createHash('sha256').update(raw).digest('hex');
+    return {
+      idempotencyKey: `cornermex_program_state:${digest}`,
+      sourceType: 'cornermex_program_state',
+      sourceId: state.sourceRepository || null,
+      sourceFlow: 'cornermex_program_governance',
+      actionType: entry.kind,
+      title: String(entry.value),
+      priority: entry.priority,
+      ownerType: 'founder',
+      ownerId: 'founder',
+      status: entry.approvalRequired ? 'queued_for_approval' : 'recommended',
+      approvalRequired: entry.approvalRequired,
+      evidence: {
+        sourceRepository: state.sourceRepository,
+        sourceSha,
+        evidenceChecksum,
+        evidenceTimestamp: state.evidenceTimestamp,
+        schemaVersions: state.schemaVersions,
+        conditionActive: true,
+        writesBlocked: true,
+        externalSendsBlocked: true,
+      },
+    };
+  });
 };
 
 const materializeRecommendations = (actionState = {}, { operatingStage } = {}) => (
@@ -49,11 +86,11 @@ const materializeRecommendations = (actionState = {}, { operatingStage } = {}) =
       safePayload: isDraft ? {
         draftType: action.type,
         content: action.description,
-        sendStatus: 'not_sent',
+        sendStatus: 'DRAFT_NOT_SENT',
         externalSendAllowed: false,
       } : {},
     };
   })
 );
 
-module.exports = { buildIdempotencyKey, materializeRecommendations, sourceFlowFor };
+module.exports = { buildIdempotencyKey, materializeProgramStateRecommendations, materializeRecommendations, sourceFlowFor };

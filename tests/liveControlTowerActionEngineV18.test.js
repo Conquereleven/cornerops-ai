@@ -156,7 +156,7 @@ describe('Live Control Tower + Action Engine v1.8', () => {
     expect(result.status).toBe('success');
     expect(result.persistence).toBe('not_configured');
     expect(result.drafts.length).toBeGreaterThan(0);
-    expect(result.drafts.every((draft) => draft.sendStatus === 'not_sendable_in_current_version')).toBe(true);
+    expect(result.drafts.every((draft) => draft.sendStatus === 'DRAFT_NOT_SENT')).toBe(true);
     expect(result.safety.externalSendsBlocked).toBe(true);
   });
 

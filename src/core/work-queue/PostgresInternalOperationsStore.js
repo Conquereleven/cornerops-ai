@@ -161,15 +161,16 @@ class PostgresInternalOperationsStore {
           );
           row = existing.rows[0];
           if (OPEN_WORK_ITEM_STATUSES.includes(row.status)) {
-            if (row.evidence?.conditionActive === false) {
-              const refreshed = await client.query(
-                `update ${this.table('work_items')}
-                 set evidence=coalesce(evidence,'{}'::jsonb) || '{"conditionActive":true}'::jsonb,
-                     updated_at=now(), version=version+1
-                 where id=$1 returning *`,
-                [row.id],
-              );
-              row = refreshed.rows[0];
+            const returned = row.evidence?.conditionActive === false;
+            const refreshed = await client.query(
+              `update ${this.table('work_items')}
+               set evidence=coalesce(evidence,'{}'::jsonb) || $2::jsonb,
+                   source_id=$3, updated_at=now(), version=version+1
+               where id=$1 returning *`,
+              [row.id, json({ ...(recommendation.evidence || {}), conditionActive: true }), recommendation.sourceId || row.source_id],
+            );
+            row = refreshed.rows[0];
+            if (returned) {
               await this.appendAudit(client, {
                 eventType: 'work_item_condition_returned', entityType: 'work_item',
                 entityId: row.id, ...context,
@@ -374,7 +375,7 @@ class PostgresInternalOperationsStore {
          count(*) filter (where status=any($1) and priority in ('critical','high'))::int as high_priority_work_items,
          count(*) filter (where completed_at >= now()-interval '7 days')::int as completed_this_week,
          min(created_at) filter (where status=any($1)) as oldest_unresolved_at,
-         count(*) filter (where status=any($1) and safe_payload->>'sendStatus'='not_sent')::int as drafts_awaiting_review
+         count(*) filter (where status=any($1) and safe_payload->>'sendStatus' in ('not_sent','DRAFT_NOT_SENT'))::int as drafts_awaiting_review
        from ${this.table('work_items')}`,
       [OPEN_WORK_ITEM_STATUSES],
     );

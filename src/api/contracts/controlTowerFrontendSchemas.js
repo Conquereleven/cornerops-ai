@@ -1,4 +1,4 @@
-const CONTROL_TOWER_FRONTEND_VERSION = 'v1.9';
+const CONTROL_TOWER_FRONTEND_VERSION = 'v1.16';
 
 const CONTROL_TOWER_FRONTEND_SECTIONS = [
   'status',
@@ -12,6 +12,8 @@ const CONTROL_TOWER_FRONTEND_SECTIONS = [
   'drafts',
   'actions',
   'work-queue',
+  'capabilities',
+  'environment-doctor',
 ];
 
 const SECRET_KEY_PATTERN = /(token|secret|password|service[_-]?role|api[_-]?key|anon[_-]?key|bot[_-]?token|webhook[_-]?secret)/i;
@@ -26,6 +28,7 @@ const maskString = (value) => {
 
 const sanitizeContractValue = (value) => {
   if (Array.isArray(value)) return value.map((item) => sanitizeContractValue(item));
+  if (typeof value === 'string') return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   if (!value || typeof value !== 'object') return value;
   return Object.entries(value).reduce((acc, [key, nested]) => {
     if (SECRET_KEY_PATTERN.test(key)) {

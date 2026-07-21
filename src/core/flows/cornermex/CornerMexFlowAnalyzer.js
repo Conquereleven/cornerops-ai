@@ -24,7 +24,7 @@ class CornerMexFlowAnalyzer {
       sourceMode,
       readOnly: true,
       writesBlocked: true,
-      sendStatus: 'not_sendable_in_v1.2',
+      sendStatus: 'DRAFT_NOT_SENT',
     }));
 
     const warnings = [

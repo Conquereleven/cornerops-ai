@@ -8,6 +8,7 @@ const { IntelligenceService } = require('./IntelligenceService');
 const { LiveControlTowerStatusService } = require('./LiveControlTowerStatusService');
 const { OperatingStageEngine } = require('./OperatingStageEngine');
 const { ProductActivationEngine } = require('./ProductActivationEngine');
+const { CanonicalInputPackService, QUOTE_STATUSES } = require('./CanonicalInputPackService');
 const types = require('./intelligenceTypes');
 
 module.exports = {
@@ -20,6 +21,8 @@ module.exports = {
   LiveControlTowerStatusService,
   OperatingStageEngine,
   ProductActivationEngine,
+  CanonicalInputPackService,
+  QUOTE_STATUSES,
   ...engine,
   ...types,
 };

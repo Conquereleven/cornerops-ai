@@ -1,5 +1,6 @@
 const data = require('../core/data');
 const env = require('../config/env');
+const { CornerMexProgramStateService } = require('../integrations/cornermex');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
 const {
   ActionEngineService,
@@ -61,6 +62,10 @@ const workQueueService = new WorkQueueService({
   actionEngineService,
   config: env,
   store: internalOperationsStore,
+});
+const cornerMexProgramStateService = new CornerMexProgramStateService({
+  evidenceRoot: env.cornermexProgramEvidenceRoot,
+  maxAgeMs: env.cornermexProgramEvidenceMaxAgeMs,
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
 const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });
@@ -299,9 +304,17 @@ const syncWorkQueue = async (req, res, next) => {
   try {
     const context = actorContext(req);
     const result = await workQueueService.sync({ ...context, requestId: requestId(req, 'work-queue-sync-v1.9') });
+    const programState = await cornerMexProgramStateService.read();
+    const programSync = await workQueueService.syncProgramState(programState, context).catch(() => ({
+      status: 'unavailable',
+      createdWorkItems: 0,
+      blocker: 'cornerops_internal_persistence_unavailable',
+    }));
     return res.status(202).json({
       status: 'success',
       ...result,
+      programState: { status: programState.status, evidenceChecksum: programState.evidenceChecksum },
+      programSync,
       executedExternalAction: false,
       productionMutationsBlocked: true,
       externalSendsBlocked: true,

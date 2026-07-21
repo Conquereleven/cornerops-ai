@@ -19,6 +19,8 @@ class EnvironmentDoctorService {
       this.item('telegram_status', 'Telegram status', configured(this.config.telegramOperatorAllowedChatIds) ? 'ok' : 'warning', 'Telegram is optional and founder-only.', 'Configure founder Telegram allowlist for live bot use.'),
       this.item('openclaw_status', 'OpenClaw status', this.config.openclawEnabled ? 'warning' : 'ok', 'OpenClaw execution is not part of v1.8.', 'Keep OPENCLAW_ENABLED=false until its sprint.'),
       this.item('fallback_mock_usage', 'Fallback/mock usage', this.config.corneropsCornermexConnectorMode === 'mock' ? 'warning' : 'ok', 'Real read-only should avoid mock fallback when configured.', 'Set connector mode to real/read-only once Supabase is configured.'),
+      this.item('cornermex_program_evidence_root', 'Canonical program evidence configured', configured(this.config.cornermexProgramEvidenceRoot) ? 'ok' : 'fail', 'Only configuration presence is reported; the path is never exposed.', 'Configure the canonical program evidence directory.'),
+      this.item('cornermex_program_evidence_max_age', 'Canonical evidence maximum age valid', this.config.cornermexProgramEvidenceMaxAgeValid !== false ? 'ok' : 'warning', 'Maximum age must be finite, positive, and no more than seven days.', 'Use a value from 1 through 604800000 milliseconds.'),
     ];
     const failed = checks.filter((check) => check.status === 'fail');
     const warnings = checks.filter((check) => check.status === 'warning');

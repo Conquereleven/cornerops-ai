@@ -129,7 +129,7 @@ describe('CornerOps persistent Work Queue v1.9 domain', () => {
     await workQueue.sync();
     const drafts = await workQueue.listDrafts();
     expect(drafts).toHaveLength(1);
-    expect(drafts[0]).toMatchObject({ sendStatus: 'not_sent', externalSendAllowed: false });
+    expect(drafts[0]).toMatchObject({ sendStatus: 'DRAFT_NOT_SENT', externalSendAllowed: false });
   });
 
   test('new service instances retain shared store state like a durable adapter restart', async () => {

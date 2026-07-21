@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "joint-program-state-v1",
+  "system": "cornermex",
+  "generatedAt": "2026-07-20T00:01:26Z",
+  "authority": {
+    "repository": "Conquereleven/corner-mex-uae",
+    "expectedMainSha": "d470b7b57f6d625a7d60337ad16a59080c1bb37d",
+    "observedMainSha": "d470b7b57f6d625a7d60337ad16a59080c1bb37d",
+    "mainIdentityStatus": "verified"
+  },
+  "evidence": {
+    "class": "verified_live",
+    "source": "GitHub, Railway CLI and Railway UI read-only discovery followed by one bounded production auto-deploy governance change",
+    "sourceIdentity": "github:d470b7b57f6d625a7d60337ad16a59080c1bb37d;railway-project:06d2ecdd-3c03-4480-8299-48c539595a94;staging-deployment:1efd468e-8449-4495-a1f2-442984943b40;production-deployment:bac2a5b3-0b8a-4243-8046-531113a4ca18;db1:d9495376-339d-44dd-9c8a-db0f7b451f96;db2:wlrfknmrhowldygmvtvn;db3:nhxpujypqxbjiqqddxqt",
+    "observedAt": "2026-07-20T00:01:26Z",
+    "freshUntil": "2026-07-27T00:01:26Z"
+  },
+  "platforms": {
+    "railway": {
+      "projectId": "06d2ecdd-3c03-4480-8299-48c539595a94",
+      "status": "governance_remediated_readiness_degraded",
+      "sourceCommit": "d470b7b57f6d625a7d60337ad16a59080c1bb37d",
+      "governanceModel": "automatic_staging_manual_production",
+      "stagingAutoDeploy": true,
+      "productionAutoDeploy": false,
+      "deploymentCreatedByGovernanceChange": false
+    },
+    "databases": [
+      {
+        "role": "DB1_LEGACY",
+        "platform": "lovable_cloud",
+        "projectRef": "d9495376-339d-44dd-9c8a-db0f7b451f96"
+      },
+      {
+        "role": "DB2_CANONICAL",
+        "platform": "supabase",
+        "projectRef": "wlrfknmrhowldygmvtvn"
+      },
+      {
+        "role": "DB3_CORNEROPS_SOURCE",
+        "platform": "supabase",
+        "projectRef": "nhxpujypqxbjiqqddxqt"
+      }
+    ],
+    "supabase": {
+      "status": "NOT_REVERIFIED_NO_WRITE",
+      "projectRef": "wlrfknmrhowldygmvtvn",
+      "activeMigrationCount": 4,
+      "writePerformed": false
+    },
+    "lovable": {
+      "role": "live_legacy_production_rollback_anchor",
+      "writePerformed": false
+    }
+  },
+  "readiness": {
+    "freshLiveReadOnlyPreflight": false,
+    "independentReviewOfRemediationHead": true,
+    "reviewedRemediationHeadSha": "33f2231443172b1956c5adf2b609a3e0bb02daab",
+    "declaredReady": false,
+    "reviewIdentity": "github-pr-review:PRR_kwDOS0HV_c8AAAABGeXgdA",
+    "currentP0RemediationReview": {
+      "complete": false,
+      "reviewedHeadSha": null,
+      "reviewer": "Sonnet"
+    },
+    "currentGovernanceRemediationReview": {
+      "complete": false,
+      "reviewedHeadSha": null,
+      "reviewer": "independent_reviewer"
+    },
+    "runtime": {
+      "stagingHealth": "ok",
+      "stagingReadiness": "degraded_missing_CORNERMEX_COMMERCE_MODEL",
+      "productionInstance": "RUNNING",
+      "productionReadiness": "degraded_required_variables_absent"
+    }
+  },
+  "program": {
+    "activeSprint": "PR10_RAILWAY_AUTODEPLOY_GOVERNANCE",
+    "owner": "Codex",
+    "reviewer": "independent_reviewer",
+    "blockers": [
+      "Runtime readiness is degraded: staging reports missing CORNERMEX_COMMERCE_MODEL and production lacks all three readiness variables.",
+      "The prior successful Railway deployments are REMOVED history entries, so rollback requires a controlled rebuild from the recorded SHA.",
+      "The governance remediation branch requires independent review before merge.",
+      "Public commerce capabilities remain unauthorized and disabled."
+    ],
+    "nextActions": [
+      "Review the focused governance PR at its exact head.",
+      "Under separate authorization, restore the required Railway readiness variables and repeat health/readiness verification.",
+      "Before any future production activation, record an applicable Founder decision ID, exact source SHA and verified rollback target."
+    ]
+  },
+  "safety": {
+    "writesBlocked": true,
+    "externalSendsBlocked": true,
+    "customerImpactBlocked": true
+  }
+}

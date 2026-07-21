@@ -1,0 +1,21 @@
+{
+  "sourceRepository": "Conquereleven/corner-mex-uae",
+  "sourceCommit": "a173dfc6d5b0d8b62710a1ce604d6df9ea63c373",
+  "capturedAt": "2026-07-20T01:23:29Z",
+  "sanitizedStatus": "verbatim_reviewed_no_secrets_pii_credentials_or_private_urls",
+  "reasonForInclusion": "Regression coverage against the independently reviewed canonical CornerMex program evidence contracts.",
+  "fixtures": [
+    {
+      "originalPath": "docs/program/CURRENT_STATE.json",
+      "fixturePath": "joint-program-state-v1.json",
+      "schemaVersion": "joint-program-state-v1",
+      "sha256": "a1130ee419e48f39936ab3df7b8f19a03ddf68c43ae8cdcf4b153852b95351e7"
+    },
+    {
+      "originalPath": "docs/program/DEPLOYMENT_REGISTRY.json",
+      "fixturePath": "deployment-registry-v2.json",
+      "schemaVersion": "cornermex-deployment-registry-v2",
+      "sha256": "b2f3efc9d5b45730128ee6fadc8f892153460460ade0a250838c451ee9016474"
+    }
+  ]
+}

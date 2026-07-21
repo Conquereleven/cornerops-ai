@@ -12,7 +12,7 @@ class MessageDraftPolicy {
       allowed: warnings.length === 0,
       dryRun: true,
       sendAllowed: false,
-      sendStatus: 'not_sendable_in_v1.2',
+      sendStatus: 'DRAFT_NOT_SENT',
       warnings,
     };
   }

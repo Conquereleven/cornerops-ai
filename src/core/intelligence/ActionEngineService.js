@@ -86,7 +86,7 @@ class ActionEngineService {
       title: action.title,
       body: action.description,
       status: 'drafted',
-      sendStatus: 'not_sendable_in_current_version',
+      sendStatus: 'DRAFT_NOT_SENT',
       persistence: 'not_configured',
       approvalRequired: action.approvalRequired !== false,
       externalSendBlocked: true,

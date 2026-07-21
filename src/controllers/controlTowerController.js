@@ -22,7 +22,9 @@ const {
   LiveControlTowerStatusService,
   OperatingStageEngine,
   ProductActivationEngine,
+  CanonicalInputPackService,
 } = require('../core/intelligence');
+const { CornerMexProgramStateService } = require('../integrations/cornermex');
 const operatorChannel = require('../core/operator-channel');
 const { ControlTowerFrontendContract } = require('../api/contracts/controlTowerFrontendContract');
 const intelligenceController = require('./intelligenceController');
@@ -71,6 +73,11 @@ const controlTowerFrontendLiveStatusService = new LiveControlTowerStatusService(
   productActivationEngine: controlTowerFrontendProductActivationEngine,
   config: env,
 });
+const cornerMexProgramStateService = new CornerMexProgramStateService({
+  evidenceRoot: env.cornermexProgramEvidenceRoot,
+  maxAgeMs: env.cornermexProgramEvidenceMaxAgeMs,
+});
+const canonicalInputPackService = new CanonicalInputPackService();
 
 const controlTowerFrontendContract = new ControlTowerFrontendContract({
   approvalCenterService,
@@ -84,6 +91,8 @@ const controlTowerFrontendContract = new ControlTowerFrontendContract({
   messageDraftService: controlTowerFrontendDraftService,
   workQueueService: intelligenceController.workQueueService,
   approvalEngineService: intelligenceController.approvalEngineService,
+  programStateService: cornerMexProgramStateService,
+  canonicalInputPackService,
 });
 
 const status = async (req, res, next) => {
@@ -304,6 +313,8 @@ module.exports = {
   frontendStatus: frontendSection('status'),
   frontendTelegram: frontendSection('telegram'),
   frontendWorkQueue: frontendSection('work-queue'),
+  frontendCapabilities: frontendSection('capabilities'),
+  frontendEnvironmentDoctor: frontendSection('environment-doctor'),
   rateLimits,
   rejections,
   rejectDryRun: approvalDecision('reject'),
