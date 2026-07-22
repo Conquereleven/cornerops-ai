@@ -32,6 +32,16 @@ create table if not exists cornerops_internal.commercial_transition_events (
   payment_capture_performed boolean not null default false check (payment_capture_performed=false),
   cornermex_write_performed boolean not null default false check (cornermex_write_performed=false),
   created_at timestamptz not null default now(),
+  constraint commercial_external_fulfillment_evidence_required check (
+    entity_type <> 'fulfillment'
+    or new_state not in ('INTERMEX_HANDOFF_CONFIRMED','ACCEPTED_BY_INTERMEX','PICKING','PACKED','HANDED_TO_CARRIER','IN_TRANSIT','DELIVERED','DELIVERY_FAILED','RETURNED')
+    or (evidence ? 'sourceType' and evidence ? 'actor' and evidence ? 'evidenceTimestamp' and evidence ? 'checksum')
+  ),
+  constraint commercial_settlement_evidence_required check (
+    entity_type <> 'payment'
+    or new_state not in ('BANK_TRANSFER_SETTLEMENT_CONFIRMED','COD_REMITTED_CONFIRMED')
+    or (evidence ? 'sourceType' and evidence ? 'evidenceTimestamp' and evidence ? 'checksum')
+  ),
   foreign key(entity_type, entity_stable_key)
     references cornerops_internal.commercial_entities(entity_type, stable_key)
 );

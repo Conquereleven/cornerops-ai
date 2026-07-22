@@ -1,13 +1,18 @@
 const { createHash, randomUUID } = require('crypto');
 const { CommercialInputPackService } = require('./CommercialInputPackService');
 const {
-  EXCEPTION_STATES, EXCEPTION_TYPES, FULFILLMENT_STATES, OPPORTUNITY_STATES,
-  ORDER_STATES, PAYMENT_METHODS, QUOTE_STATES, UNKNOWN_VALUES, commercialError, transitions,
+  BANK_TRANSFER_STATES, COD_PAYMENT_STATES, EXCEPTION_SEVERITY_DEFAULTS, EXCEPTION_STATES, EXCEPTION_TYPES,
+  EXTERNAL_FULFILLMENT_STATES, FULFILLMENT_STATES, INVENTORY_STATUSES,
+  OPPORTUNITY_STATES, ORDER_STATES, PAYMENT_METHODS, QUOTE_STATES, UNKNOWN_VALUES,
+  commercialError, transitions,
 } = require('./commercialTypes');
 
 const now = () => new Date().toISOString();
 const stableId = (prefix, value) => `${prefix}-${createHash('sha256').update(String(value)).digest('hex').slice(0, 20)}`;
 const knownNumber = (value) => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const validTimestamp = (value) => Boolean(value) && Number.isFinite(Date.parse(value));
+const evidenceChecksum = (evidence) => createHash('sha256').update(JSON.stringify(evidence || {})).digest('hex');
+const normalizeCondition = (value) => String(value || 'condition').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 const requiredActor = (context) => {
   if (!String(context?.actorId || '').trim()) throw commercialError('Actor is required.', 'COMMERCIAL_ACTOR_REQUIRED');
 };
@@ -34,7 +39,7 @@ class CommercialOperationsService {
     if (!this.workQueueService?.syncCommercial) return null;
     return this.workQueueService.syncCommercial([{
       sourceType: 'commercial_operations',
-      sourceId: recommendation.sourceId,
+      sourceId: `commercial_operations:${recommendation.entityType}:${recommendation.entityId}:${normalizeCondition(recommendation.conditionKind)}`,
       sourceFlow: recommendation.sourceFlow,
       actionType: recommendation.actionType,
       idempotencyKey: recommendation.idempotencyKey,
@@ -42,9 +47,41 @@ class CommercialOperationsService {
       description: recommendation.description,
       priority: recommendation.priority || 'medium',
       approvalRequired: Boolean(recommendation.approvalRequired),
-      evidence: { ...(recommendation.evidence || {}), conditionActive: true, commercialInternalOnly: true },
+      evidence: { ...(recommendation.evidence || {}), conditionActive: recommendation.conditionActive !== false, commercialInternalOnly: true },
       safePayload: { ...(recommendation.safePayload || {}), externalSendAllowed: false, paymentCaptureAllowed: false, cornerMexWriteAllowed: false },
     }], context);
+  }
+  shippingRate(input = {}) {
+    const emirate = String(input.destinationEmirate || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (!emirate) return { amount: 'unknown', source: 'not_provided', rateStatus: 'unknown', fallbackApplied: false };
+    const rate = this.config.corneropsCommercialShippingRatesAed?.[emirate];
+    if (knownNumber(rate) && (!input.cod || this.config.corneropsCommercialShippingCodCompatible === true)) {
+      return { amount: rate, source: 'configured_emirate_rate', emirate, rateStatus: 'known', fallbackApplied: false, configurationVersion: this.config.corneropsCommercialShippingConfigVersion || 'unknown' };
+    }
+    const fallback = this.config.corneropsCommercialShippingFallbackAed;
+    if (this.config.corneropsCommercialShippingFallbackEnabled && knownNumber(fallback) && (!input.cod || this.config.corneropsCommercialShippingCodCompatible === true)) {
+      return { amount: fallback, source: 'explicit_configured_fallback', emirate, rateStatus: 'known_fallback', fallbackApplied: true, fallbackReason: 'destination_rate_unconfigured', configurationVersion: this.config.corneropsCommercialShippingConfigVersion || 'unknown' };
+    }
+    return { amount: 'unknown', source: 'not_provided', emirate, rateStatus: 'unknown', fallbackApplied: false, warning: input.cod ? 'cod_rate_not_configured' : 'destination_rate_unconfigured' };
+  }
+  inventoryEvidence(input = {}) {
+    const requested = String(input.status || 'UNKNOWN').toUpperCase();
+    if (!INVENTORY_STATUSES.includes(requested)) throw commercialError('Inventory status is invalid.', 'INVENTORY_STATUS_INVALID');
+    if (!input.observedAt && !input.reportedAt) return { status: requested === 'UNAVAILABLE' ? 'UNAVAILABLE' : 'CONFIRMATION_REQUIRED', source: input.source || 'not_provided', observedAt: null, reportedAt: null, quantity: input.quantity ?? 'unknown', unitBasis: input.unitBasis || 'unknown', verificationStatus: 'unknown', checksum: null };
+    const observedAt = input.observedAt || input.reportedAt;
+    if (!validTimestamp(observedAt) || (input.reportedAt && !validTimestamp(input.reportedAt))) throw commercialError('Inventory timestamp is invalid.', 'INVENTORY_TIMESTAMP_INVALID');
+    const threshold = this.config.corneropsCommercialInventoryEvidenceStaleAfterHours || 24;
+    const stale = Date.now() - Date.parse(observedAt) > threshold * 3600000;
+    const status = stale ? 'STALE' : requested;
+    const safe = { status, source: input.source || 'manually_reported', observedAt, reportedAt: input.reportedAt || null, intermexSkuReference: input.intermexSkuReference || 'unknown', quantity: input.quantity ?? 'unknown', unitBasis: input.unitBasis || 'unknown', verificationStatus: input.verificationStatus || 'pending_confirmation' };
+    return { ...safe, checksum: input.checksum || evidenceChecksum(safe) };
+  }
+  attributableEvidence(command, current, context) {
+    const evidence = command.evidence;
+    if (!evidence || !String(evidence.sourceType || '').trim() || !String(evidence.actor || context.actorId || '').trim() || !validTimestamp(evidence.evidenceTimestamp)) {
+      throw commercialError('External fulfillment milestone requires attributable evidence.', 'FULFILLMENT_EXTERNAL_EVIDENCE_REQUIRED', 422);
+    }
+    return { sourceType: evidence.sourceType, sourceReference: evidence.sourceReference || 'not_provided', actor: evidence.actor || context.actorId, recordedTimestamp: now(), evidenceTimestamp: evidence.evidenceTimestamp, checksum: evidence.checksum || evidenceChecksum(evidence), previousState: current.status, newState: command.status, orderId: current.orderId, intermexReference: evidence.intermexReference || current.intermexFulfillmentReference || 'unknown', carrierReference: evidence.carrierReference || current.carrierReference || 'unknown', reason: command.reason || 'not_provided', verificationStatus: evidence.verificationStatus || 'evidence_confirmed' };
   }
   transitionContext(command, context) {
     const reason = command.reason || context.reason;
@@ -120,14 +157,15 @@ class CommercialOperationsService {
     const lines = [];
     for (const line of input.lineItems || []) {
       const sku = await this.store.get('sku', line.skuId);
-      lines.push({ ...line, skuName: sku?.name || 'unknown', commercialStatus: sku?.commercialStatus || 'unknown', costSource: line.costSource || 'not_provided', priceSource: line.priceSource || 'not_provided', costObservedAt: line.costObservedAt || null, priceApprovedBy: line.priceApprovedBy || null, marginAmount: line.marginAmount ?? 'unknown', marginPercent: line.marginPercent ?? 'unknown', commercialEvidenceStatus: line.commercialEvidenceStatus || 'pending_verification' });
+      lines.push({ ...line, skuName: sku?.name || 'unknown', commercialStatus: sku?.commercialStatus || 'unknown', inventoryEvidence: this.inventoryEvidence(line.inventoryEvidence || { status: line.inventoryStatus || 'UNKNOWN' }), costSource: line.costSource || 'not_provided', priceSource: line.priceSource || 'not_provided', costObservedAt: line.costObservedAt || null, priceApprovedBy: line.priceApprovedBy || null, marginAmount: line.marginAmount ?? 'unknown', marginPercent: line.marginPercent ?? 'unknown', commercialEvidenceStatus: line.commercialEvidenceStatus || 'pending_verification' });
     }
-    const shipping = knownNumber(input.shipping) ? input.shipping
-      : input.shippingRule === 'default_local_uae' ? this.config.corneropsCommercialDefaultLocalShippingAed : 'unknown';
-    const shippingSource = knownNumber(input.shipping) ? input.shippingSource || 'not_provided'
-      : input.shippingRule === 'default_local_uae' ? 'configured_default_local_shipping' : 'not_provided';
+    const shippingRate = knownNumber(input.shipping)
+      ? { amount: input.shipping, source: input.shippingSource || 'not_provided', rateStatus: 'provided', fallbackApplied: false }
+      : this.shippingRate({ destinationEmirate: input.destinationEmirate, cod: input.paymentMethod === 'CASH_ON_DELIVERY' });
+    const shipping = shippingRate.amount;
+    const shippingSource = shippingRate.source;
     const totals = this.quoteTotals({ ...input, shipping, lineItems: lines });
-    return this.store.create('quote', quoteId, { quoteId, accountId: input.accountId, opportunityId: input.opportunityId, lineItems: lines, currency: input.currency || 'unknown', ...totals, shippingSource, validUntil: input.validUntil || null, paymentTerms: input.paymentTerms || 'not_provided', deliveryTerms: input.deliveryTerms || 'not_provided', evidenceStatus: input.evidenceStatus || 'pending_verification', approvalStatus: 'pending', sendStatus: 'DRAFT_NOT_SENT', status: 'DRAFT_NOT_SENT' }, context);
+    return this.store.create('quote', quoteId, { quoteId, accountId: input.accountId, opportunityId: input.opportunityId, lineItems: lines, currency: input.currency || 'unknown', ...totals, shippingSource, shippingRate, destinationEmirate: input.destinationEmirate || 'unknown', validUntil: input.validUntil || null, paymentTerms: input.paymentTerms || 'not_provided', deliveryTerms: input.deliveryTerms || 'not_provided', evidenceStatus: input.evidenceStatus || 'pending_verification', approvalStatus: 'pending', sendStatus: 'DRAFT_NOT_SENT', status: 'DRAFT_NOT_SENT' }, context);
   }
   async transitionQuote(quoteId, command, context = {}) {
     this.assertEnabled(); requiredActor(context);
@@ -141,7 +179,7 @@ class CommercialOperationsService {
       return { ...quote, status: command.status, approvalStatus: command.status === 'APPROVED_INTERNAL' ? 'approved' : quote.approvalStatus, sendStatus: command.status === 'SENT_MANUALLY_CONFIRMED' ? 'SENT_MANUALLY_CONFIRMED' : quote.sendStatus, sentAt: command.sentAt || quote.sentAt || null, sentBy: command.status === 'SENT_MANUALLY_CONFIRMED' ? context.actorId : quote.sentBy || null };
     }, transitionContext);
     if (result?.status === 'READY_FOR_REVIEW') await this.queue({
-      sourceId: quoteId, sourceFlow: 'commercial_quote_review', actionType: 'approve_commercial_quote',
+      entityType: 'quote', entityId: quoteId, conditionKind: 'quote_review', sourceFlow: 'commercial_quote_review', actionType: 'approve_commercial_quote',
       idempotencyKey: `commercial:quote-review:${quoteId}`, title: `Review commercial quote ${quoteId}`,
       priority: 'high', approvalRequired: true, evidence: { quoteId },
     }, context);
@@ -169,6 +207,12 @@ class CommercialOperationsService {
   async transitionOrder(orderId, command, context = {}) {
     this.assertEnabled(); requiredActor(context);
     if (!ORDER_STATES.includes(command.status)) throw commercialError('Order status is invalid.', 'ORDER_STATUS_INVALID');
+    if (command.status === 'PAID') {
+      const order = await this.store.get('order', orderId);
+      const payments = (await this.store.list('payment')).filter((payment) => payment.orderId === orderId && ['COD_REMITTED_CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'CONFIRMED'].includes(payment.status));
+      const settledTotal = payments.reduce((sum, payment) => sum + payment.amount, 0);
+      if (!order || !knownNumber(order.total) || settledTotal < order.total) throw commercialError('Order cannot be paid without fully verified settlement evidence.', 'ORDER_PAYMENT_SETTLEMENT_REQUIRED', 409);
+    }
     const transitionContext = this.transitionContext(command, context);
     const result = await this.store.update('order', orderId, (order) => {
       requireTransition('order', order.status, command.status);
@@ -176,9 +220,9 @@ class CommercialOperationsService {
     }, transitionContext);
     if (result?.status === 'ORDER_CONFIRMED') {
       const fulfillmentId = stableId('fulfillment', orderId);
-      await this.store.create('fulfillment', fulfillmentId, { fulfillmentId, orderId, provider: 'not_provided', trackingReference: null, assignedTo: context.actorId, status: 'WAITING_PAYMENT', expectedDispatchAt: null, dispatchedAt: null, deliveredAt: null, blockers: ['payment_pending'], notes: null, handoffConfirmedBy: null, handoffConfirmedAt: null }, context);
+      await this.store.create('fulfillment', fulfillmentId, { fulfillmentId, orderId, cornerMexOrderReference: result.cornerMexOrderReference || orderId, intermexFulfillmentReference: 'unknown', intermexHandoffReference: 'unknown', carrierReference: 'unknown', warehouseEvidenceReference: 'unknown', carrierEvidenceReference: 'unknown', commercialOwner: { party: 'CornerMex', truthStatus: 'configured' }, warehouseCustodian: { party: 'Intermex UAE', truthStatus: 'configured', integrationMode: 'manual_evidence_only' }, carrierProvider: { party: 'unknown', truthStatus: 'unknown' }, assignedTo: context.actorId, status: 'WAITING_PAYMENT', expectedDispatchAt: null, dispatchedAt: null, deliveredAt: null, blockers: ['payment_pending'], notes: null, intermexHandoffConfirmedBy: null, intermexHandoffConfirmedAt: null }, context);
       await this.queue({
-        sourceId: orderId, sourceFlow: 'commercial_order_fulfillment', actionType: 'prepare_commercial_fulfillment',
+        entityType: 'order', entityId: orderId, conditionKind: 'fulfillment_preparation', sourceFlow: 'commercial_order_fulfillment', actionType: 'prepare_commercial_fulfillment',
         idempotencyKey: `commercial:fulfillment:${orderId}`, title: `Prepare fulfillment for ${orderId}`,
         priority: 'high', approvalRequired: false, evidence: { orderId, fulfillmentId },
       }, context);
@@ -186,7 +230,7 @@ class CommercialOperationsService {
     if (result?.status === 'PAID') {
       const fulfillmentId = stableId('fulfillment', orderId);
       const fulfillment = await this.store.get('fulfillment', fulfillmentId);
-      if (fulfillment?.status === 'WAITING_PAYMENT') await this.store.update('fulfillment', fulfillmentId, (item) => ({ ...item, status: 'READY_TO_PICK', blockers: [] }), { ...context, reason: 'payment_confirmed' });
+      if (fulfillment?.status === 'WAITING_PAYMENT') await this.store.update('fulfillment', fulfillmentId, (item) => ({ ...item, status: 'READY_FOR_INTERMEX_HANDOFF', blockers: [] }), { ...context, reason: 'payment_confirmed_internal_readiness_only' });
     }
     return result;
   }
@@ -195,16 +239,37 @@ class CommercialOperationsService {
     const order = await this.store.get('order', orderId);
     if (!order) throw commercialError('Order not found.', 'ORDER_NOT_FOUND', 404);
     if (!PAYMENT_METHODS.includes(input.method)) throw commercialError('Payment method is invalid.', 'PAYMENT_METHOD_INVALID');
-    if (!['PENDING_VERIFICATION', 'CONFIRMED', 'REJECTED'].includes(input.status || 'PENDING_VERIFICATION')) throw commercialError('Payment status is invalid.', 'PAYMENT_STATUS_INVALID');
+    const allowedStates = input.method === 'CASH_ON_DELIVERY' ? COD_PAYMENT_STATES : input.method === 'BANK_TRANSFER' ? BANK_TRANSFER_STATES : ['PENDING_VERIFICATION', 'CONFIRMED', 'REJECTED'];
+    const defaultStatus = input.method === 'CASH_ON_DELIVERY' ? 'COD_PENDING_COLLECTION' : input.method === 'BANK_TRANSFER' ? 'BANK_TRANSFER_PENDING_VERIFICATION' : 'PENDING_VERIFICATION';
+    const paymentStatus = input.status || defaultStatus;
+    if (!allowedStates.includes(paymentStatus)) throw commercialError('Payment status is invalid for this method.', 'PAYMENT_STATUS_INVALID');
     if (!knownNumber(input.amount) || input.amount <= 0 || input.currency !== order.currency) throw commercialError('Payment amount/currency is invalid.', 'PAYMENT_RECORD_INVALID');
-    if (input.status === 'CONFIRMED' && !input.evidence) throw commercialError('Confirmed payment requires evidence.', 'PAYMENT_EVIDENCE_REQUIRED');
+    const settled = paymentStatus === 'COD_REMITTED_CONFIRMED' || paymentStatus === 'BANK_TRANSFER_SETTLEMENT_CONFIRMED' || paymentStatus === 'CONFIRMED';
+    if (settled && (!input.evidence || !validTimestamp(input.evidence.evidenceTimestamp))) throw commercialError('Verified settlement requires attributable evidence.', 'PAYMENT_EVIDENCE_REQUIRED');
+    if (input.method === 'CASH_ON_DELIVERY' && ['COD_COLLECTED_PENDING_REMITTANCE', 'COD_REMITTANCE_PENDING_VERIFICATION', 'COD_REMITTED_CONFIRMED', 'COD_DISCREPANCY'].includes(paymentStatus)) {
+      const required = ['amountExpected', 'amountCollected', 'amountRemitted'];
+      if (required.some((field) => !knownNumber(input[field]))) throw commercialError('COD collection/remittance amounts are required.', 'COD_REMITTANCE_EVIDENCE_REQUIRED');
+      if (paymentStatus === 'COD_REMITTED_CONFIRMED' && (input.amountRemitted !== input.amountExpected || input.amountCollected !== input.amountExpected)) throw commercialError('COD remittance does not reconcile.', 'COD_REMITTANCE_DISCREPANCY', 409);
+    }
     const paymentId = input.paymentId || stableId('payment', input.idempotencyKey || `${orderId}:${input.reference || input.amount}`);
-    const result = await this.store.create('payment', paymentId, { paymentId, orderId, method: input.method, amount: input.amount, currency: input.currency, status: input.status || 'PENDING_VERIFICATION', reference: input.reference || 'not_provided', capturePerformed: false, sensitiveFinancialDataStored: false, evidence: input.evidence || null, confirmedBy: input.status === 'CONFIRMED' ? context.actorId : null, confirmedAt: input.status === 'CONFIRMED' ? now() : null }, context);
-    if (result.created && input.status === 'CONFIRMED') {
-      const payments = (await this.store.list('payment')).filter((payment) => payment.orderId === orderId && payment.status === 'CONFIRMED');
+    const safePaymentEvidence = input.evidence ? { sourceType: input.evidence.sourceType || 'not_provided', evidenceTimestamp: input.evidence.evidenceTimestamp, checksum: input.evidence.checksum || evidenceChecksum(input.evidence), verificationStatus: input.evidence.verificationStatus || 'pending_verification' } : null;
+    const payload = { paymentId, orderId, method: input.method, amount: input.amount, currency: input.currency, status: paymentStatus, reference: input.reference ? 'stored_sensitive_reference_redacted' : 'not_provided', collectionReferencePresent: Boolean(input.collectionReference), collector: input.collector || 'unknown', amountExpected: input.amountExpected ?? 'unknown', amountCollected: input.amountCollected ?? 'unknown', amountRemitted: input.amountRemitted ?? 'unknown', remittanceReferencePresent: Boolean(input.remittanceReference), discrepancyReason: input.discrepancyReason || null, capturePerformed: false, sensitiveFinancialDataStored: false, evidence: safePaymentEvidence, confirmedBy: settled ? context.actorId : null, confirmedAt: settled ? now() : null };
+    const existing = await this.store.get('payment', paymentId);
+    let result;
+    if (existing) {
+      if (existing.orderId !== orderId || existing.method !== input.method || existing.currency !== input.currency) throw commercialError('Payment identity does not match the existing record.', 'PAYMENT_IDENTITY_CONFLICT', 409);
+      if (existing.status === paymentStatus) result = { record: existing, created: false };
+      else {
+        requireTransition(input.method === 'CASH_ON_DELIVERY' ? 'paymentCod' : 'paymentBank', existing.status, paymentStatus);
+        result = { record: await this.store.update('payment', paymentId, (record) => ({ ...record, ...payload }), { ...context, reason: context.reason || 'payment_evidence_updated', evidence: safePaymentEvidence || context.evidence }), created: false };
+      }
+    } else result = await this.store.create('payment', paymentId, payload, { ...context, evidence: safePaymentEvidence || context.evidence });
+    if (settled) {
+      const payments = (await this.store.list('payment')).filter((payment) => payment.orderId === orderId && ['COD_REMITTED_CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'CONFIRMED'].includes(payment.status));
       const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const target = totalPaid >= order.total ? 'PAID' : 'PAYMENT_PARTIAL';
-      if ((transitions.order[order.status] || []).includes(target)) await this.transitionOrder(orderId, { status: target, reason: 'confirmed_payment_recorded', evidence: { paymentId } }, context);
+      const currentOrder = await this.store.get('order', orderId);
+      if ((transitions.order[currentOrder.status] || []).includes(target)) await this.transitionOrder(orderId, { status: target, reason: 'confirmed_payment_recorded', evidence: { paymentId } }, context);
     }
     return result;
   }
@@ -217,11 +282,11 @@ class CommercialOperationsService {
     const existing = await this.store.get('fulfillment', fulfillmentId);
     if (existing) {
       if (existing.status === 'WAITING_PAYMENT' && (order.paymentMethod === 'CASH_ON_DELIVERY' || order.status === 'PAID')) {
-        return { record: await this.store.update('fulfillment', fulfillmentId, (item) => ({ ...item, status: 'READY_TO_PICK', blockers: [] }), { ...context, reason: 'fulfillment_released' }), created: false };
+        return { record: await this.store.update('fulfillment', fulfillmentId, (item) => ({ ...item, status: 'READY_FOR_INTERMEX_HANDOFF', blockers: [] }), { ...context, reason: 'internal_fulfillment_released_for_manual_intermex_handoff' }), created: false };
       }
       return { record: existing, created: false };
     }
-    return this.store.create('fulfillment', fulfillmentId, { fulfillmentId, orderId, provider: input.provider || 'not_provided', trackingReference: input.trackingReference || null, assignedTo: input.assignedTo || context.actorId, status: order.paymentMethod === 'CASH_ON_DELIVERY' || order.status === 'PAID' ? 'READY_TO_PICK' : 'WAITING_PAYMENT', expectedDispatchAt: input.expectedDispatchAt || null, dispatchedAt: null, deliveredAt: null, blockers: [], notes: input.notes || null, handoffConfirmedBy: null, handoffConfirmedAt: null }, context);
+    return this.store.create('fulfillment', fulfillmentId, { fulfillmentId, orderId, cornerMexOrderReference: input.cornerMexOrderReference || orderId, intermexFulfillmentReference: input.intermexFulfillmentReference || 'unknown', intermexHandoffReference: input.intermexHandoffReference || 'unknown', carrierReference: input.carrierReference || 'unknown', warehouseEvidenceReference: input.warehouseEvidenceReference || 'unknown', carrierEvidenceReference: input.carrierEvidenceReference || 'unknown', commercialOwner: { party: 'CornerMex', truthStatus: 'configured' }, warehouseCustodian: { party: 'Intermex UAE', truthStatus: 'configured', integrationMode: 'manual_evidence_only' }, carrierProvider: { party: input.carrierProvider || 'unknown', truthStatus: input.carrierProvider ? 'manually_reported' : 'unknown' }, assignedTo: input.assignedTo || context.actorId, status: order.paymentMethod === 'CASH_ON_DELIVERY' || order.status === 'PAID' ? 'READY_FOR_INTERMEX_HANDOFF' : 'WAITING_PAYMENT', expectedDispatchAt: input.expectedDispatchAt || null, dispatchedAt: null, deliveredAt: null, blockers: [], notes: input.notes || null, intermexHandoffConfirmedBy: null, intermexHandoffConfirmedAt: null }, context);
   }
   async transitionFulfillment(fulfillmentId, command, context = {}) {
     this.assertEnabled(); requiredActor(context);
@@ -229,8 +294,10 @@ class CommercialOperationsService {
     const transitionContext = this.transitionContext(command, context);
     const result = await this.store.update('fulfillment', fulfillmentId, (fulfillment) => {
       requireTransition('fulfillment', fulfillment.status, command.status);
-      if (command.status === 'HANDED_TO_CARRIER' && !command.evidence) throw commercialError('Manual handoff requires evidence.', 'FULFILLMENT_HANDOFF_EVIDENCE_REQUIRED');
-      return { ...fulfillment, status: command.status, trackingReference: command.trackingReference || fulfillment.trackingReference, handoffConfirmedBy: command.status === 'HANDED_TO_CARRIER' ? context.actorId : fulfillment.handoffConfirmedBy, handoffConfirmedAt: command.status === 'HANDED_TO_CARRIER' ? now() : fulfillment.handoffConfirmedAt, dispatchedAt: command.status === 'HANDED_TO_CARRIER' ? now() : fulfillment.dispatchedAt, deliveredAt: command.status === 'DELIVERED' ? now() : fulfillment.deliveredAt };
+      const attributable = EXTERNAL_FULFILLMENT_STATES.includes(command.status) ? this.attributableEvidence(command, fulfillment, context) : null;
+      if (attributable) transitionContext.evidence = attributable;
+      if (['READY_TO_PICK', 'PICKING', 'PACKED'].includes(command.status) && !['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'READY_TO_PICK', 'PICKING'].includes(fulfillment.status)) throw commercialError('Intermex confirmation or acceptance is required before warehouse execution.', 'INTERMEX_HANDOFF_CONFIRMATION_REQUIRED', 409);
+      return { ...fulfillment, status: command.status, intermexFulfillmentReference: command.intermexFulfillmentReference || attributable?.intermexReference || fulfillment.intermexFulfillmentReference, intermexHandoffReference: command.intermexHandoffReference || fulfillment.intermexHandoffReference, carrierReference: command.carrierReference || attributable?.carrierReference || fulfillment.carrierReference, warehouseEvidenceReference: attributable && !['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.warehouseEvidenceReference, carrierEvidenceReference: attributable && ['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.carrierEvidenceReference, lastEvidence: attributable || fulfillment.lastEvidence || null, intermexHandoffConfirmedBy: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? context.actorId : fulfillment.intermexHandoffConfirmedBy, intermexHandoffConfirmedAt: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? now() : fulfillment.intermexHandoffConfirmedAt, dispatchedAt: command.status === 'HANDED_TO_CARRIER' ? now() : fulfillment.dispatchedAt, deliveredAt: command.status === 'DELIVERED' ? now() : fulfillment.deliveredAt };
     }, transitionContext);
     if (result?.status === 'DELIVERY_FAILED') await this.createException({ type: 'DELIVERY_FAILED', entityType: 'fulfillment', entityId: fulfillmentId, severity: 'high', owner: result.assignedTo, blocker: 'delivery_failed', recommendedAction: 'Review carrier evidence and contact plan manually.' }, context);
     return result;
@@ -239,11 +306,12 @@ class CommercialOperationsService {
     this.assertEnabled(); requiredActor(context);
     if (!EXCEPTION_TYPES.includes(input.type)) throw commercialError('Exception type is invalid.', 'EXCEPTION_TYPE_INVALID');
     const key = stableId('exception', `${input.type}:${input.entityType}:${input.entityId}`);
-    const result = await this.store.create('exception', key, { exceptionId: key, type: input.type, entityType: input.entityType, entityId: input.entityId, severity: input.severity || 'medium', owner: input.owner || context.actorId, status: 'OPEN', blocker: input.blocker || 'not_provided', recommendedAction: input.recommendedAction || 'Founder review required.', resolvedAt: null, resolution: null }, context);
+    const severity = input.severity || EXCEPTION_SEVERITY_DEFAULTS[input.type] || 'medium';
+    const result = await this.store.create('exception', key, { exceptionId: key, type: input.type, entityType: input.entityType, entityId: input.entityId, severity, owner: input.owner || context.actorId, status: 'OPEN', blocker: input.blocker || 'not_provided', recommendedAction: input.recommendedAction || 'Founder review required.', resolvedAt: null, resolution: null }, context);
     await this.queue({
-      sourceId: key, sourceFlow: 'commercial_exception', actionType: 'resolve_commercial_exception',
+      entityType: 'exception', entityId: key, conditionKind: input.type, sourceFlow: 'commercial_exception', actionType: 'resolve_commercial_exception',
       idempotencyKey: `commercial:exception:${key}`, title: `Resolve ${input.type} for ${input.entityId}`,
-      priority: input.severity === 'critical' ? 'critical' : input.severity === 'high' ? 'high' : 'medium',
+      priority: severity === 'critical' ? 'critical' : severity === 'high' ? 'high' : 'medium',
       approvalRequired: ['PAYMENT_MISMATCH', 'INVENTORY_UNKNOWN', 'OUT_OF_STOCK'].includes(input.type),
       evidence: { exceptionId: key, entityType: input.entityType, entityId: input.entityId },
     }, context);
@@ -253,7 +321,11 @@ class CommercialOperationsService {
     this.assertEnabled(); requiredActor(context);
     if (!EXCEPTION_STATES.includes(command.status)) throw commercialError('Exception status is invalid.', 'EXCEPTION_STATUS_INVALID');
     if (['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) && (!command.reason || !command.evidence)) throw commercialError('Exception closure requires reason and evidence.', 'EXCEPTION_RESOLUTION_EVIDENCE_REQUIRED');
-    return this.store.update('exception', exceptionId, (item) => ({ ...item, status: command.status, resolvedAt: ['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) ? now() : null, resolution: command.reason || null }), { ...context, reason: command.reason, evidence: command.evidence });
+    const result = await this.store.update('exception', exceptionId, (item) => ({ ...item, status: command.status, resolvedAt: ['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) ? now() : null, resolution: command.reason || null }), { ...context, reason: command.reason, evidence: command.evidence });
+    if (result && ['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) && this.workQueueService?.resolveCommercial) {
+      await this.workQueueService.resolveCommercial(`commercial:exception:${exceptionId}`, { ...context, reason: command.reason });
+    }
+    return result;
   }
   async dailyClose(input, context = {}) {
     this.assertEnabled(); requiredActor(context);
@@ -269,7 +341,9 @@ class CommercialOperationsService {
       ordersCreated: orders.length,
       ordersConfirmed: orders.filter((item) => item.status !== 'ORDER_DRAFT').length,
       ordersPaid: orders.filter((item) => ['PAID', 'READY_FOR_FULFILLMENT', 'FULFILLING', 'SHIPPED', 'DELIVERED'].includes(item.status)).length,
-      cashCollected: payments.filter((item) => item.status === 'CONFIRMED').reduce((sum, item) => sum + item.amount, 0),
+      cashCollected: payments.filter((item) => ['CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'COD_REMITTED_CONFIRMED'].includes(item.status)).reduce((sum, item) => sum + item.amount, 0),
+      codCollectedNotRemitted: payments.filter((item) => ['COD_COLLECTED_PENDING_REMITTANCE', 'COD_REMITTANCE_PENDING_VERIFICATION'].includes(item.status)).length,
+      codDiscrepancies: payments.filter((item) => item.status === 'COD_DISCREPANCY').length,
       ordersFulfilled: fulfillments.filter((item) => ['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED'].includes(item.status)).length,
       ordersShipped: fulfillments.filter((item) => ['IN_TRANSIT', 'DELIVERED'].includes(item.status)).length,
       ordersDelivered: fulfillments.filter((item) => item.status === 'DELIVERED').length,
@@ -281,14 +355,18 @@ class CommercialOperationsService {
   }
   async summary() {
     const [accounts, skus, opportunities, quotes, orders, payments, fulfillments, exceptions] = await Promise.all(['account', 'sku', 'opportunity', 'quote', 'order', 'payment', 'fulfillment', 'exception'].map((kind) => this.store.list(kind)));
-    const confirmedPayments = payments.filter((payment) => payment.status === 'CONFIRMED');
+    const confirmedPayments = payments.filter((payment) => ['CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'COD_REMITTED_CONFIRMED'].includes(payment.status));
+    const inventoryEvidence = quotes.flatMap((quote) => quote.lineItems || []).map((line) => line.inventoryEvidence || { status: 'UNKNOWN' });
     return {
       accounts: accounts.length, skus: skus.length, opportunities: opportunities.length, quotes: quotes.length, orders: orders.length,
       revenueConfirmed: orders.filter((order) => order.status === 'DELIVERED').reduce((sum, order) => sum + (knownNumber(order.total) ? order.total : 0), 0),
       revenuePending: orders.filter((order) => !['DELIVERED', 'CANCELLED'].includes(order.status)).reduce((sum, order) => sum + (knownNumber(order.total) ? order.total : 0), 0),
       cashCollected: confirmedPayments.reduce((sum, payment) => sum + payment.amount, 0),
       codExposure: orders.filter((order) => order.paymentMethod === 'CASH_ON_DELIVERY' && order.status !== 'DELIVERED').reduce((sum, order) => sum + (knownNumber(order.total) ? order.total : 0), 0),
-      inventoryUnknownExposure: quotes.filter((quote) => quote.lineItems.some((line) => line.inventoryStatus === 'unknown' || line.inventoryStatus === undefined)).length,
+      inventoryUnknownExposure: inventoryEvidence.filter((item) => ['UNKNOWN', 'CONFIRMATION_REQUIRED'].includes(item.status)).length,
+      staleInventoryEvidence: inventoryEvidence.filter((item) => item.status === 'STALE').length,
+      codCollectedNotRemitted: payments.filter((item) => ['COD_COLLECTED_PENDING_REMITTANCE', 'COD_REMITTANCE_PENDING_VERIFICATION'].includes(item.status)).length,
+      codDiscrepancies: payments.filter((item) => item.status === 'COD_DISCREPANCY').length,
       fulfillment: fulfillments.length, openExceptions: exceptions.filter((item) => !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
       writesInternalOnly: true, externalSendsBlocked: true, paymentCaptureBlocked: true,
     };
@@ -303,6 +381,15 @@ class CommercialOperationsService {
       quotesAwaitingApproval: quotes.filter((item) => item.status === 'READY_FOR_REVIEW').length,
       ordersAwaitingPayment: orders.filter((item) => ['PAYMENT_PENDING', 'PAYMENT_PARTIAL', 'ORDER_CONFIRMED'].includes(item.status)).length,
       ordersReadyForFulfillment: orders.filter((item) => item.status === 'READY_FOR_FULFILLMENT').length,
+      ordersReadyForIntermexHandoff: fulfillments.filter((item) => item.status === 'READY_FOR_INTERMEX_HANDOFF').length,
+      intermexHandoffsPending: fulfillments.filter((item) => item.status === 'INTERMEX_HANDOFF_PENDING').length,
+      intermexHandoffsConfirmed: fulfillments.filter((item) => item.status === 'INTERMEX_HANDOFF_CONFIRMED').length,
+      ordersAcceptedByIntermex: fulfillments.filter((item) => item.status === 'ACCEPTED_BY_INTERMEX').length,
+      ordersPicking: fulfillments.filter((item) => item.status === 'PICKING').length,
+      ordersPacked: fulfillments.filter((item) => item.status === 'PACKED').length,
+      ordersAwaitingCarrierHandoff: fulfillments.filter((item) => item.status === 'PACKED').length,
+      missingTrackingReferences: fulfillments.filter((item) => ['HANDED_TO_CARRIER', 'IN_TRANSIT'].includes(item.status) && ['unknown', null].includes(item.carrierReference)).length,
+      criticalFulfillmentBlockers: exceptions.filter((item) => item.severity === 'critical' && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status) && ['fulfillment', 'order'].includes(item.entityType)).length,
       ordersDelayed: fulfillments.filter((item) => ['BLOCKED', 'DELIVERY_FAILED'].includes(item.status)).length,
       deliveriesFailed: fulfillments.filter((item) => item.status === 'DELIVERY_FAILED').length,
       nextFiveFounderDecisions: exceptions.filter((item) => !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).sort((a, b) => ({ critical: 4, high: 3, medium: 2, low: 1 }[b.severity] - { critical: 4, high: 3, medium: 2, low: 1 }[a.severity])).slice(0, 5).map((item) => ({ exceptionId: item.exceptionId, type: item.type, recommendedAction: item.recommendedAction })),

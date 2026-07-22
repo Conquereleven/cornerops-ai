@@ -5,6 +5,8 @@ Status: `PROPOSED_NOT_APPLIED`.
 The migration `20260722010000_cornerops_commercial_operations_v117a.sql` is private to
 `cornerops_internal`. It adds a versioned commercial entity store and append-only transition
 evidence. It does not read or write CornerMex tables and grants no access to public Supabase roles.
+The transition table fails closed when external Intermex/carrier fulfillment states or settled
+payment states lack attributable evidence metadata. The SQL remains review-only and unapplied.
 
 ## Forward
 

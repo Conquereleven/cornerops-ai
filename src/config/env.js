@@ -27,6 +27,12 @@ const parseCsv = (value) =>
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+const parseShippingRates = (value) => {
+  try {
+    const parsed = JSON.parse(value || '{}');
+    return Object.fromEntries(Object.entries(parsed).filter(([, amount]) => Number.isFinite(amount) && amount >= 0));
+  } catch (_error) { return {}; }
+};
 
 const baseEnv = {
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -670,10 +676,14 @@ const baseEnv = {
   corneropsCommercialDemoEnabled: parseBoolean(
     process.env.CORNEROPS_COMMERCIAL_DEMO_ENABLED,
   ),
-  corneropsCommercialDefaultLocalShippingAed: parseInteger(
-    process.env.CORNEROPS_COMMERCIAL_DEFAULT_LOCAL_SHIPPING_AED,
-    15,
-    { min: 0, max: 100000 },
+  corneropsCommercialShippingRatesAed: parseShippingRates(process.env.CORNEROPS_COMMERCIAL_SHIPPING_RATES_AED),
+  corneropsCommercialShippingFallbackEnabled: parseBoolean(process.env.CORNEROPS_COMMERCIAL_SHIPPING_FALLBACK_ENABLED),
+  corneropsCommercialShippingFallbackAed: process.env.CORNEROPS_COMMERCIAL_SHIPPING_FALLBACK_AED === undefined
+    ? null : parseInteger(process.env.CORNEROPS_COMMERCIAL_SHIPPING_FALLBACK_AED, null, { min: 0, max: 100000 }),
+  corneropsCommercialShippingCodCompatible: parseBoolean(process.env.CORNEROPS_COMMERCIAL_SHIPPING_COD_COMPATIBLE),
+  corneropsCommercialShippingConfigVersion: process.env.CORNEROPS_COMMERCIAL_SHIPPING_CONFIG_VERSION || 'unconfigured',
+  corneropsCommercialInventoryEvidenceStaleAfterHours: parseInteger(
+    process.env.CORNEROPS_COMMERCIAL_INVENTORY_EVIDENCE_STALE_AFTER_HOURS, 24, { min: 1, max: 720 },
   ),
   supplyGraphEnabled: parseBoolean(process.env.SUPPLYGRAPH_ENABLED),
   supplyGraphIntermexSyncEnabled: parseBoolean(process.env.SUPPLYGRAPH_INTERMEX_SYNC_ENABLED),

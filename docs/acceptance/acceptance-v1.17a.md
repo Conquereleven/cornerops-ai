@@ -11,6 +11,11 @@ Base: `8ae0d4966edfbc70c9da1b561b87eb7114e23a2c`
 - Opportunity, quote, order, payment, fulfillment, exception and Daily Close contracts.
 - Deterministic totals and evidence gates; unknown commercial facts remain unknown.
 - Stable order, payment, fulfillment, exception, Work Queue and approval keys.
+- Independent Work Queue reconciliation scopes for quote, order/fulfillment and exception conditions.
+- Explicit CornerMex commercial-owner, Intermex warehouse-custodian and separate carrier roles.
+- Manual evidence-gated Intermex handoff and warehouse lifecycle; no automated integration.
+- Separate COD collection/remittance and Bank Transfer settlement semantics.
+- Destination-aware shipping and freshness-bounded inventory evidence.
 - Commercial Founder Daily separates quotes, pending revenue, confirmed revenue and cash.
 - Existing Command Center extended with commercial modules; no second dashboard.
 - Private PostgreSQL migration proposed with forward/rollback instructions; not applied.
@@ -19,7 +24,7 @@ Base: `8ae0d4966edfbc70c9da1b561b87eb7114e23a2c`
 ## Human boundary
 
 Humans may create and approve internal records, export a quote, confirm a manual send, record
-payment evidence, confirm 3PL handoff and resolve exceptions with evidence. CornerOps cannot send
+payment evidence, record Intermex/carrier milestones with attributable evidence and resolve exceptions with evidence. CornerOps cannot send
 email/WhatsApp, capture/refund money, buy inventory, create shipments, contact another party,
 activate products, change external prices or write CornerMex.
 
@@ -35,4 +40,22 @@ Production activation is deferred. It requires separate migration approval, gran
 rolled-back forbidden-operation probes, business input review and explicit enablement of
 `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED`. No platform action belongs to this PR.
 
-Final status: `implementation_complete_pending_exact_head_review_and_deferred_migration`
+## Remediation status
+
+Sonnet exact-head findings on Work Queue reconciliation, Intermex roles/lifecycle, external
+evidence, COD remittance, destination shipping, exception taxonomy and inventory freshness are
+implemented and covered by focused regression tests. The migration remains review-only and
+unapplied; real Intermex references, carrier configuration, rates and inventory reports remain
+founder-provided.
+
+Final status: `remediation_complete_pending_sonnet_exact_head_rereview`
+
+## Final validation
+
+- Focused remediation: 2 suites / 41 tests passed.
+- Focused commercial API: aggregate 3 suites / 44 tests passed.
+- Backend: 128 suites passed of 129; 1 skipped. 685 tests passed of 687; 2 skipped.
+- Frontend: 8 files / 16 tests passed.
+- Lint: 612 JavaScript files passed; typecheck and build passed.
+- Migration SHA-256: `b02289c58433175b7490c66503e82dedb58948019c6f1d39c5470848639f5dfa`.
+- Migrations applied, deployments, platform writes and external sends: zero.
