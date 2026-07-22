@@ -5,7 +5,8 @@ const now = () => new Date().toISOString();
 
 class MemoryCommercialOperationsStore {
   constructor({ state } = {}) {
-    this.state = state || { entities: [], transitions: [], auditEvents: [] };
+    this.state = state || { entities: [], transitions: [], auditEvents: [], evidenceRegistry: [] };
+    this.state.evidenceRegistry ||= [];
   }
   async health() { return { healthy: true, provider: 'memory_test_only', durable: false }; }
   async get(kind, stableKey) { return clone(this.state.entities.find((item) => item.kind === kind && item.stableKey === stableKey)?.payload || null); }
@@ -41,6 +42,13 @@ class MemoryCommercialOperationsStore {
     return event;
   }
   async listTransitions(filters = {}) { return clone(this.state.transitions.filter((item) => (!filters.entityType || item.entityType === filters.entityType) && (!filters.entityId || item.entityId === filters.entityId))); }
+  async claimEvidence(record) {
+    const existing = this.state.evidenceRegistry.find((item) => item.evidenceFingerprint === record.evidenceFingerprint);
+    if (existing) return { record: clone(existing), created: false };
+    this.state.evidenceRegistry.push(clone(record));
+    return { record: clone(record), created: true };
+  }
+  async listEvidence() { return clone(this.state.evidenceRegistry); }
 }
 
 module.exports = { MemoryCommercialOperationsStore };

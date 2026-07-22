@@ -92,6 +92,35 @@ class PostgresCommercialOperationsStore {
     );
     return result.rows.map(camel);
   }
+  async claimEvidence(record) {
+    return this.internalStore.withTransaction(async (client) => {
+      const inserted = await client.query(
+        `insert into ${this.table('commercial_evidence_registry')}
+         (evidence_fingerprint,evidence_id,source_type,source_reference,evidence_unit_reference,
+          subject_type,subject_id,order_id,fulfillment_id,payment_method,previous_state,new_state,
+          amount_minor,currency,evidence_timestamp,checksum,verification_status,actor_id,result_entity_id)
+         values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+         on conflict(evidence_fingerprint) do nothing returning *`,
+        [record.evidenceFingerprint, record.evidenceId, record.sourceType, record.sourceReference,
+          record.evidenceUnitReference || null, record.subjectType, record.subjectId, record.orderId || null,
+          record.fulfillmentId || null, record.paymentMethod || null, record.previousState || null,
+          record.newState, record.amountMinor ?? null, record.currency || null, record.evidenceTimestamp,
+          record.checksum, record.verificationStatus, record.actor, record.resultEntityId || null],
+      );
+      if (inserted.rows[0]) return { record: camel(inserted.rows[0]), created: true };
+      const existing = await client.query(
+        `select * from ${this.table('commercial_evidence_registry')} where evidence_fingerprint=$1`,
+        [record.evidenceFingerprint],
+      );
+      return { record: camel(existing.rows[0]), created: false };
+    });
+  }
+  async listEvidence() {
+    const result = await this.internalStore.pool.query(
+      `select * from ${this.table('commercial_evidence_registry')} order by recorded_at desc limit 500`,
+    );
+    return result.rows.map(camel);
+  }
 }
 
 module.exports = { PostgresCommercialOperationsStore };

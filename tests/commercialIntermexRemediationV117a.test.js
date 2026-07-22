@@ -1,9 +1,14 @@
 const fixture = require('./fixtures/commercial/commercial-input-v117a.json');
+const { createHash } = require('crypto');
 const { CommercialOperationsService, MemoryCommercialOperationsStore } = require('../src/core/commercial');
 const { MemoryInternalOperationsStore, PostgresInternalOperationsStore, WorkQueueService } = require('../src/core/work-queue');
 
 const context = { actorId: 'founder-remediation', reason: 'verified_test_action', correlationId: 'r1-test' };
-const evidence = (sourceType = 'manual_warehouse_report') => ({ sourceType, sourceReference: 'safe-test-reference', actor: context.actorId, evidenceTimestamp: new Date().toISOString(), verificationStatus: 'evidence_confirmed' });
+let evidenceSequence = 0;
+const evidence = (binding, sourceType = 'manual_warehouse_report') => {
+  const sourceReference = `safe-test-reference-${++evidenceSequence}`;
+  return { ...binding, sourceType, sourceReference, actor: context.actorId, evidenceTimestamp: new Date().toISOString(), checksum: createHash('sha256').update(sourceReference).digest('hex'), verificationStatus: 'evidence_confirmed' };
+};
 
 const harness = async ({ workQueue = false, config = {} } = {}) => {
   const store = new MemoryCommercialOperationsStore();
@@ -70,7 +75,7 @@ describe('CO-1.17A-R1 Intermex fulfillment evidence', () => {
     const { service, opportunity } = await harness();
     const order = await createOrder(service, opportunity);
     const fulfillment = (await service.createFulfillment(order.orderId, {}, context)).record;
-    await expect(service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: evidence() }, context)).rejects.toMatchObject({ code: 'COMMERCIAL_TRANSITION_INVALID' });
+    await expect(service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: evidence({}) }, context)).rejects.toMatchObject({ code: 'COMMERCIAL_TRANSITION_INVALID' });
   });
 
   test.each(['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'DELIVERED', 'DELIVERY_FAILED'])('%s requires attributable evidence', async (target) => {
@@ -86,7 +91,8 @@ describe('CO-1.17A-R1 payment, shipping and inventory truth', () => {
     const order = await createOrder(service, opportunity);
     const fulfillment = (await service.createFulfillment(order.orderId, {}, context)).record;
     for (const status of ['INTERMEX_HANDOFF_PENDING', 'INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'READY_TO_PICK', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED']) {
-      await service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: ['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED'].includes(status) ? evidence() : undefined }, context);
+      const current = await store.get('fulfillment', fulfillment.fulfillmentId);
+      await service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: ['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED'].includes(status) ? evidence({ subjectType: 'fulfillment', subjectId: fulfillment.fulfillmentId, orderId: order.orderId, fulfillmentId: fulfillment.fulfillmentId, previousState: current.status, newState: status }) : undefined }, context);
     }
     expect((await store.get('order', order.orderId)).status).toBe('ORDER_CONFIRMED');
     expect((await service.summary()).cashCollected).toBe(0);
@@ -102,9 +108,10 @@ describe('CO-1.17A-R1 payment, shipping and inventory truth', () => {
     await service.recordPayment(order.orderId, { ...base, paymentId: 'cod-lifecycle', status: 'COD_DISCREPANCY', amountRemitted: 20, discrepancyReason: 'partial_remittance' }, context);
     expect((await store.get('order', order.orderId)).status).toBe('ORDER_CONFIRMED');
     await service.recordPayment(order.orderId, { ...base, paymentId: 'cod-lifecycle', status: 'COD_REMITTANCE_PENDING_VERIFICATION', amountRemitted: 35 }, context);
-    await service.recordPayment(order.orderId, { ...base, paymentId: 'cod-lifecycle', status: 'COD_REMITTED_CONFIRMED', amountRemitted: 35, evidence: evidence('carrier_remittance') }, context);
+    await service.recordPayment(order.orderId, { ...base, paymentId: 'cod-lifecycle', status: 'COD_REMITTED_CONFIRMED', amountRemitted: 35, previousState: 'COD_REMITTANCE_PENDING_VERIFICATION', evidence: evidence({ subjectType: 'payment', subjectId: `${order.orderId}:CASH_ON_DELIVERY:COD_REMITTED_CONFIRMED`, orderId: order.orderId, paymentMethod: 'CASH_ON_DELIVERY', previousState: 'COD_REMITTANCE_PENDING_VERIFICATION', newState: 'COD_REMITTED_CONFIRMED', amount: 35, currency: 'AED' }, 'carrier_remittance') }, context);
     expect((await store.get('order', order.orderId)).status).toBe('PAID');
-    expect((await store.listTransitions({ entityType: 'payment', entityId: 'cod-lifecycle' })).map((item) => item.newState)).toEqual(['COD_PENDING_COLLECTION', 'COD_COLLECTED_PENDING_REMITTANCE', 'COD_DISCREPANCY', 'COD_REMITTANCE_PENDING_VERIFICATION', 'COD_REMITTED_CONFIRMED']);
+    expect((await store.listTransitions({ entityType: 'payment', entityId: 'cod-lifecycle' })).map((item) => item.newState)).toEqual(['COD_PENDING_COLLECTION', 'COD_COLLECTED_PENDING_REMITTANCE', 'COD_DISCREPANCY', 'COD_REMITTANCE_PENDING_VERIFICATION']);
+    expect((await service.list('payment')).some((item) => item.status === 'COD_REMITTED_CONFIRMED')).toBe(true);
   });
 
   test('bank receipt pending does not settle, verified settlement does', async () => {
@@ -112,7 +119,7 @@ describe('CO-1.17A-R1 payment, shipping and inventory truth', () => {
     const order = await createOrder(service, opportunity, 'BANK_TRANSFER');
     await service.recordPayment(order.orderId, { paymentId: 'bank-lifecycle', method: 'BANK_TRANSFER', amount: 35, currency: 'AED', status: 'BANK_TRANSFER_PENDING_VERIFICATION' }, context);
     expect((await store.get('order', order.orderId)).status).toBe('ORDER_CONFIRMED');
-    await service.recordPayment(order.orderId, { paymentId: 'bank-lifecycle', method: 'BANK_TRANSFER', amount: 35, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: evidence('bank_settlement') }, context);
+    await service.recordPayment(order.orderId, { paymentId: 'bank-lifecycle', method: 'BANK_TRANSFER', amount: 35, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', previousState: 'BANK_TRANSFER_PENDING_VERIFICATION', evidence: evidence({ subjectType: 'payment', subjectId: `${order.orderId}:BANK_TRANSFER:BANK_TRANSFER_SETTLEMENT_CONFIRMED`, orderId: order.orderId, paymentMethod: 'BANK_TRANSFER', previousState: 'BANK_TRANSFER_PENDING_VERIFICATION', newState: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', amount: 35, currency: 'AED' }, 'bank_settlement') }, context);
     expect((await store.get('order', order.orderId)).status).toBe('PAID');
   });
 

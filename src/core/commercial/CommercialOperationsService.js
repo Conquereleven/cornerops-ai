@@ -1,5 +1,6 @@
 const { createHash, randomUUID } = require('crypto');
 const { CommercialInputPackService } = require('./CommercialInputPackService');
+const { CommercialEvidenceIntegrityService, moneyToMinor } = require('./CommercialEvidenceIntegrityService');
 const {
   BANK_TRANSFER_STATES, COD_PAYMENT_STATES, EXCEPTION_SEVERITY_DEFAULTS, EXCEPTION_STATES, EXCEPTION_TYPES,
   EXTERNAL_FULFILLMENT_STATES, FULFILLMENT_STATES, INVENTORY_STATUSES,
@@ -23,11 +24,12 @@ const requireTransition = (kind, current, next) => {
 };
 
 class CommercialOperationsService {
-  constructor({ store, workQueueService, approvalEngineService, inputPackService = new CommercialInputPackService(), config = {} } = {}) {
+  constructor({ store, workQueueService, approvalEngineService, inputPackService = new CommercialInputPackService(), evidenceIntegrityService = new CommercialEvidenceIntegrityService(), config = {} } = {}) {
     this.store = store;
     this.workQueueService = workQueueService;
     this.approvalEngineService = approvalEngineService;
     this.inputPackService = inputPackService;
+    this.evidenceIntegrityService = evidenceIntegrityService;
     this.config = config;
   }
   assertEnabled() {
@@ -77,11 +79,30 @@ class CommercialOperationsService {
     return { ...safe, checksum: input.checksum || evidenceChecksum(safe) };
   }
   attributableEvidence(command, current, context) {
-    const evidence = command.evidence;
-    if (!evidence || !String(evidence.sourceType || '').trim() || !String(evidence.actor || context.actorId || '').trim() || !validTimestamp(evidence.evidenceTimestamp)) {
-      throw commercialError('External fulfillment milestone requires attributable evidence.', 'FULFILLMENT_EXTERNAL_EVIDENCE_REQUIRED', 422);
+    try {
+      return this.evidenceIntegrityService.validate(command.evidence, {
+        subjectType: 'fulfillment', subjectId: current.fulfillmentId, orderId: current.orderId,
+        fulfillmentId: current.fulfillmentId, previousState: current.status, newState: command.status,
+      }, context.actorId);
+    } catch (error) {
+      if (error.code === 'COMMERCIAL_EVIDENCE_REQUIRED' || error.code === 'COMMERCIAL_EVIDENCE_SOURCE_REQUIRED') {
+        throw commercialError('External fulfillment milestone requires attributable evidence.', 'FULFILLMENT_EXTERNAL_EVIDENCE_REQUIRED', 422);
+      }
+      throw error;
     }
-    return { sourceType: evidence.sourceType, sourceReference: evidence.sourceReference || 'not_provided', actor: evidence.actor || context.actorId, recordedTimestamp: now(), evidenceTimestamp: evidence.evidenceTimestamp, checksum: evidence.checksum || evidenceChecksum(evidence), previousState: current.status, newState: command.status, orderId: current.orderId, intermexReference: evidence.intermexReference || current.intermexFulfillmentReference || 'unknown', carrierReference: evidence.carrierReference || current.carrierReference || 'unknown', reason: command.reason || 'not_provided', verificationStatus: evidence.verificationStatus || 'evidence_confirmed' };
+  }
+  async claimEvidence(evidence, resultEntityId, context) {
+    const candidate = { ...evidence, amountMinor: evidence.amount == null ? null : moneyToMinor(evidence.amount), resultEntityId };
+    const claimed = await this.store.claimEvidence(candidate);
+    if (claimed.created) return { retry: false, record: claimed.record };
+    const existing = claimed.record;
+    const fields = ['subjectType', 'subjectId', 'orderId', 'fulfillmentId', 'paymentMethod', 'previousState', 'newState', 'amountMinor', 'currency'];
+    if (fields.some((field) => String(existing[field] ?? '') !== String(candidate[field] ?? ''))) {
+      await this.createException({ type: 'EVIDENCE_REPLAY_CONFLICT', entityType: candidate.subjectType, entityId: candidate.subjectId, severity: 'critical', blocker: 'commercial_evidence_replay_conflict', recommendedAction: 'Quarantine the conflicting evidence and reconcile the source assertion manually.' }, context);
+      if (candidate.subjectType === 'payment') await this.createException({ type: 'PAYMENT_DUPLICATE_REMITTANCE', entityType: 'payment', entityId: resultEntityId, severity: 'critical', blocker: 'duplicate_remittance_conflict', recommendedAction: 'Verify the remittance once; do not recognize additional cash.' }, context);
+      throw commercialError('Evidence fingerprint is already bound to a different assertion.', 'COMMERCIAL_EVIDENCE_REPLAY_CONFLICT', 409);
+    }
+    return { retry: true, record: existing };
   }
   transitionContext(command, context) {
     const reason = command.reason || context.reason;
@@ -243,33 +264,77 @@ class CommercialOperationsService {
     const defaultStatus = input.method === 'CASH_ON_DELIVERY' ? 'COD_PENDING_COLLECTION' : input.method === 'BANK_TRANSFER' ? 'BANK_TRANSFER_PENDING_VERIFICATION' : 'PENDING_VERIFICATION';
     const paymentStatus = input.status || defaultStatus;
     if (!allowedStates.includes(paymentStatus)) throw commercialError('Payment status is invalid for this method.', 'PAYMENT_STATUS_INVALID');
-    if (!knownNumber(input.amount) || input.amount <= 0 || input.currency !== order.currency) throw commercialError('Payment amount/currency is invalid.', 'PAYMENT_RECORD_INVALID');
+    const amountMinor = moneyToMinor(input.amount);
+    if (String(input.currency || '').toUpperCase() !== String(order.currency || '').toUpperCase()) {
+      await this.createException({ type: 'PAYMENT_CURRENCY_MISMATCH', entityType: 'order', entityId: orderId, blocker: 'payment_currency_mismatch', recommendedAction: 'Review the remittance currency manually; no cash was recognized.' }, context);
+      throw commercialError('Payment currency does not match the order.', 'PAYMENT_CURRENCY_MISMATCH', 409);
+    }
+    const currency = String(input.currency).toUpperCase();
     const settled = paymentStatus === 'COD_REMITTED_CONFIRMED' || paymentStatus === 'BANK_TRANSFER_SETTLEMENT_CONFIRMED' || paymentStatus === 'CONFIRMED';
-    if (settled && (!input.evidence || !validTimestamp(input.evidence.evidenceTimestamp))) throw commercialError('Verified settlement requires attributable evidence.', 'PAYMENT_EVIDENCE_REQUIRED');
     if (input.method === 'CASH_ON_DELIVERY' && ['COD_COLLECTED_PENDING_REMITTANCE', 'COD_REMITTANCE_PENDING_VERIFICATION', 'COD_REMITTED_CONFIRMED', 'COD_DISCREPANCY'].includes(paymentStatus)) {
       const required = ['amountExpected', 'amountCollected', 'amountRemitted'];
       if (required.some((field) => !knownNumber(input[field]))) throw commercialError('COD collection/remittance amounts are required.', 'COD_REMITTANCE_EVIDENCE_REQUIRED');
-      if (paymentStatus === 'COD_REMITTED_CONFIRMED' && (input.amountRemitted !== input.amountExpected || input.amountCollected !== input.amountExpected)) throw commercialError('COD remittance does not reconcile.', 'COD_REMITTANCE_DISCREPANCY', 409);
+      required.forEach((field) => moneyToMinor(input[field], { allowZero: true }));
+      if (paymentStatus === 'COD_REMITTED_CONFIRMED' && (moneyToMinor(input.amountRemitted, { allowZero: true }) !== moneyToMinor(input.amountExpected) || moneyToMinor(input.amountCollected, { allowZero: true }) !== moneyToMinor(input.amountExpected))) throw commercialError('COD remittance does not reconcile.', 'COD_REMITTANCE_DISCREPANCY', 409);
     }
-    const paymentId = input.paymentId || stableId('payment', input.idempotencyKey || `${orderId}:${input.reference || input.amount}`);
-    const safePaymentEvidence = input.evidence ? { sourceType: input.evidence.sourceType || 'not_provided', evidenceTimestamp: input.evidence.evidenceTimestamp, checksum: input.evidence.checksum || evidenceChecksum(input.evidence), verificationStatus: input.evidence.verificationStatus || 'pending_verification' } : null;
-    const payload = { paymentId, orderId, method: input.method, amount: input.amount, currency: input.currency, status: paymentStatus, reference: input.reference ? 'stored_sensitive_reference_redacted' : 'not_provided', collectionReferencePresent: Boolean(input.collectionReference), collector: input.collector || 'unknown', amountExpected: input.amountExpected ?? 'unknown', amountCollected: input.amountCollected ?? 'unknown', amountRemitted: input.amountRemitted ?? 'unknown', remittanceReferencePresent: Boolean(input.remittanceReference), discrepancyReason: input.discrepancyReason || null, capturePerformed: false, sensitiveFinancialDataStored: false, evidence: safePaymentEvidence, confirmedBy: settled ? context.actorId : null, confirmedAt: settled ? now() : null };
+    let paymentId = input.paymentId || stableId('payment', input.idempotencyKey || `${orderId}:${input.reference || input.amount}`);
+    let safePaymentEvidence = null;
+    let evidenceClaim = null;
+    if (settled) {
+      try {
+        safePaymentEvidence = this.evidenceIntegrityService.validate(input.evidence, {
+          subjectType: 'payment', subjectId: `${orderId}:${input.method}:${paymentStatus}`, orderId,
+          paymentMethod: input.method, previousState: input.previousState || 'UNRECORDED', newState: paymentStatus,
+          amount: input.amount, currency,
+        }, context.actorId);
+      } catch (error) {
+        if (['COMMERCIAL_EVIDENCE_REQUIRED', 'COMMERCIAL_EVIDENCE_SOURCE_REQUIRED'].includes(error.code)) {
+          throw commercialError('Verified settlement requires attributable evidence.', 'PAYMENT_EVIDENCE_REQUIRED', 422);
+        }
+        throw error;
+      }
+      paymentId = stableId('payment', safePaymentEvidence.evidenceFingerprint);
+      evidenceClaim = await this.claimEvidence(safePaymentEvidence, paymentId, context);
+      if (evidenceClaim.retry) {
+        const prior = await this.store.get('payment', evidenceClaim.record.resultEntityId || paymentId);
+        if (prior) return { record: prior, created: false, idempotentRetry: true };
+      }
+    }
+    const settledPayments = (await this.store.list('payment')).filter((payment) => payment.orderId === orderId && ['COD_REMITTED_CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'CONFIRMED'].includes(payment.status));
+    const totalPaidMinor = settledPayments.reduce((sum, payment) => sum + moneyToMinor(payment.amount), 0);
+    const orderTotalMinor = moneyToMinor(order.total);
+    const overpaymentMinor = settled ? Math.max(0, totalPaidMinor + amountMinor - orderTotalMinor) : 0;
+    const effectiveStatus = overpaymentMinor > 0
+      ? (input.method === 'CASH_ON_DELIVERY' ? 'COD_DISCREPANCY' : input.method === 'BANK_TRANSFER' ? 'BANK_TRANSFER_DISCREPANCY' : 'REJECTED')
+      : paymentStatus;
+    const payload = { paymentId, callerPaymentIdIgnoredForSettlement: settled && Boolean(input.paymentId), orderId, method: input.method, amount: input.amount, amountMinor, currency, status: effectiveStatus, reference: input.reference ? 'stored_sensitive_reference_redacted' : 'not_provided', collectionReferencePresent: Boolean(input.collectionReference), collector: input.collector || 'unknown', amountExpected: input.amountExpected ?? 'unknown', amountCollected: input.amountCollected ?? 'unknown', amountRemitted: input.amountRemitted ?? 'unknown', remittanceReferencePresent: Boolean(input.remittanceReference), discrepancyReason: overpaymentMinor > 0 ? 'payment_overpayment' : input.discrepancyReason || null, overpaymentAmount: overpaymentMinor / 100, capturePerformed: false, sensitiveFinancialDataStored: false, evidence: safePaymentEvidence, evidenceFingerprint: safePaymentEvidence?.evidenceFingerprint || null, confirmedBy: settled && !overpaymentMinor ? context.actorId : null, confirmedAt: settled && !overpaymentMinor ? now() : null };
     const existing = await this.store.get('payment', paymentId);
     let result;
     if (existing) {
-      if (existing.orderId !== orderId || existing.method !== input.method || existing.currency !== input.currency) throw commercialError('Payment identity does not match the existing record.', 'PAYMENT_IDENTITY_CONFLICT', 409);
+      if (existing.orderId !== orderId || existing.method !== input.method || existing.currency !== currency) throw commercialError('Payment identity does not match the existing record.', 'PAYMENT_IDENTITY_CONFLICT', 409);
       if (existing.status === paymentStatus) result = { record: existing, created: false };
       else {
         requireTransition(input.method === 'CASH_ON_DELIVERY' ? 'paymentCod' : 'paymentBank', existing.status, paymentStatus);
         result = { record: await this.store.update('payment', paymentId, (record) => ({ ...record, ...payload }), { ...context, reason: context.reason || 'payment_evidence_updated', evidence: safePaymentEvidence || context.evidence }), created: false };
       }
     } else result = await this.store.create('payment', paymentId, payload, { ...context, evidence: safePaymentEvidence || context.evidence });
+    if (overpaymentMinor > 0) {
+      await this.createException({ type: 'PAYMENT_OVERPAYMENT', entityType: 'payment', entityId: paymentId, severity: 'high', blocker: 'payment_overpayment', recommendedAction: 'Reconcile excess remittance manually; excess was not recognized as cash.' }, context);
+      return result;
+    }
     if (settled) {
       const payments = (await this.store.list('payment')).filter((payment) => payment.orderId === orderId && ['COD_REMITTED_CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'CONFIRMED'].includes(payment.status));
       const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const target = totalPaid >= order.total ? 'PAID' : 'PAYMENT_PARTIAL';
       const currentOrder = await this.store.get('order', orderId);
-      if ((transitions.order[currentOrder.status] || []).includes(target)) await this.transitionOrder(orderId, { status: target, reason: 'confirmed_payment_recorded', evidence: { paymentId } }, context);
+      if ((transitions.order[currentOrder.status] || []).includes(target)) {
+        try {
+          await this.transitionOrder(orderId, { status: target, reason: 'confirmed_payment_recorded', evidence: { paymentId } }, context);
+        } catch (error) {
+          const racedOrder = await this.store.get('order', orderId);
+          if (error.code !== 'COMMERCIAL_TRANSITION_INVALID' || racedOrder?.status !== target) throw error;
+        }
+      }
     }
     return result;
   }
@@ -291,13 +356,24 @@ class CommercialOperationsService {
   async transitionFulfillment(fulfillmentId, command, context = {}) {
     this.assertEnabled(); requiredActor(context);
     if (!FULFILLMENT_STATES.includes(command.status)) throw commercialError('Fulfillment status is invalid.', 'FULFILLMENT_STATUS_INVALID');
+    const current = await this.store.get('fulfillment', fulfillmentId);
+    if (!current) throw commercialError('Fulfillment not found.', 'FULFILLMENT_NOT_FOUND', 404);
+    if (current.status !== command.status) requireTransition('fulfillment', current.status, command.status);
+    if (['READY_TO_PICK', 'PICKING', 'PACKED'].includes(command.status) && !['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'READY_TO_PICK', 'PICKING'].includes(current.status)) throw commercialError('Intermex confirmation or acceptance is required before warehouse execution.', 'INTERMEX_HANDOFF_CONFIRMATION_REQUIRED', 409);
     const transitionContext = this.transitionContext(command, context);
+    const evidenceCurrent = current.status === command.status ? { ...current, status: command.evidence?.previousState } : current;
+    const attributable = EXTERNAL_FULFILLMENT_STATES.includes(command.status) ? this.attributableEvidence(command, evidenceCurrent, context) : null;
+    if (attributable) {
+      const claim = await this.claimEvidence(attributable, fulfillmentId, context);
+      if (claim.retry) {
+        if (current.status === command.status) return current;
+        if (current.status !== attributable.previousState) throw commercialError('Evidence retry no longer matches fulfillment state.', 'COMMERCIAL_EVIDENCE_REPLAY_CONFLICT', 409);
+      }
+      transitionContext.evidence = attributable;
+    }
     const result = await this.store.update('fulfillment', fulfillmentId, (fulfillment) => {
       requireTransition('fulfillment', fulfillment.status, command.status);
-      const attributable = EXTERNAL_FULFILLMENT_STATES.includes(command.status) ? this.attributableEvidence(command, fulfillment, context) : null;
-      if (attributable) transitionContext.evidence = attributable;
-      if (['READY_TO_PICK', 'PICKING', 'PACKED'].includes(command.status) && !['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'READY_TO_PICK', 'PICKING'].includes(fulfillment.status)) throw commercialError('Intermex confirmation or acceptance is required before warehouse execution.', 'INTERMEX_HANDOFF_CONFIRMATION_REQUIRED', 409);
-      return { ...fulfillment, status: command.status, intermexFulfillmentReference: command.intermexFulfillmentReference || attributable?.intermexReference || fulfillment.intermexFulfillmentReference, intermexHandoffReference: command.intermexHandoffReference || fulfillment.intermexHandoffReference, carrierReference: command.carrierReference || attributable?.carrierReference || fulfillment.carrierReference, warehouseEvidenceReference: attributable && !['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.warehouseEvidenceReference, carrierEvidenceReference: attributable && ['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.carrierEvidenceReference, lastEvidence: attributable || fulfillment.lastEvidence || null, intermexHandoffConfirmedBy: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? context.actorId : fulfillment.intermexHandoffConfirmedBy, intermexHandoffConfirmedAt: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? now() : fulfillment.intermexHandoffConfirmedAt, dispatchedAt: command.status === 'HANDED_TO_CARRIER' ? now() : fulfillment.dispatchedAt, deliveredAt: command.status === 'DELIVERED' ? now() : fulfillment.deliveredAt };
+      return { ...fulfillment, status: command.status, intermexFulfillmentReference: command.intermexFulfillmentReference || fulfillment.intermexFulfillmentReference, intermexHandoffReference: command.intermexHandoffReference || fulfillment.intermexHandoffReference, carrierReference: command.carrierReference || fulfillment.carrierReference, warehouseEvidenceReference: attributable && !['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.warehouseEvidenceReference, carrierEvidenceReference: attributable && ['HANDED_TO_CARRIER', 'IN_TRANSIT', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNED'].includes(command.status) ? attributable.sourceReference : fulfillment.carrierEvidenceReference, lastEvidence: attributable || fulfillment.lastEvidence || null, intermexHandoffConfirmedBy: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? context.actorId : fulfillment.intermexHandoffConfirmedBy, intermexHandoffConfirmedAt: command.status === 'INTERMEX_HANDOFF_CONFIRMED' ? now() : fulfillment.intermexHandoffConfirmedAt, dispatchedAt: command.status === 'HANDED_TO_CARRIER' ? now() : fulfillment.dispatchedAt, deliveredAt: command.status === 'DELIVERED' ? now() : fulfillment.deliveredAt };
     }, transitionContext);
     if (result?.status === 'DELIVERY_FAILED') await this.createException({ type: 'DELIVERY_FAILED', entityType: 'fulfillment', entityId: fulfillmentId, severity: 'high', owner: result.assignedTo, blocker: 'delivery_failed', recommendedAction: 'Review carrier evidence and contact plan manually.' }, context);
     return result;
@@ -331,7 +407,8 @@ class CommercialOperationsService {
     this.assertEnabled(); requiredActor(context);
     const exceptions = await this.store.list('exception');
     const critical = exceptions.filter((item) => item.severity === 'critical' && item.status === 'OPEN');
-    if (input.closeStatus === 'CLOSED' && critical.length) throw commercialError('Critical exceptions must be acknowledged before close.', 'DAILY_CLOSE_CRITICAL_EXCEPTION', 409);
+    const integrityBlockers = exceptions.filter((item) => ['EVIDENCE_REPLAY_CONFLICT', 'PAYMENT_DUPLICATE_REMITTANCE', 'PAYMENT_OVERPAYMENT', 'PAYMENT_CURRENCY_MISMATCH', 'EVIDENCE_TIMESTAMP_INVALID', 'EVIDENCE_CHECKSUM_INVALID'].includes(item.type) && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status));
+    if (input.closeStatus === 'CLOSED' && (critical.length || integrityBlockers.length)) throw commercialError('Critical or financial-integrity exceptions must be resolved before close.', 'DAILY_CLOSE_CRITICAL_EXCEPTION', 409);
     const date = input.date || now().slice(0, 10);
     const [quotes, orders, payments, fulfillments] = await Promise.all(['quote', 'order', 'payment', 'fulfillment'].map((kind) => this.store.list(kind)));
     const summary = {
@@ -350,6 +427,8 @@ class CommercialOperationsService {
       deliveryFailures: fulfillments.filter((item) => item.status === 'DELIVERY_FAILED').length,
       openExceptions: exceptions.filter((item) => !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
       unresolvedPaymentIssues: exceptions.filter((item) => ['PAYMENT_OVERDUE', 'PAYMENT_MISMATCH'].includes(item.type) && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
+      evidenceReplayConflicts: exceptions.filter((item) => item.type === 'EVIDENCE_REPLAY_CONFLICT' && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
+      paymentIntegrityBlockers: integrityBlockers.length,
     };
     return this.store.create('daily_close', date, { date, closeStatus: input.closeStatus || 'OPEN', closedBy: input.closeStatus === 'CLOSED' ? context.actorId : null, closedAt: input.closeStatus === 'CLOSED' ? now() : null, notes: input.notes || null, unresolvedItems: input.unresolvedItems || [], metrics: summary }, context);
   }
@@ -367,6 +446,8 @@ class CommercialOperationsService {
       staleInventoryEvidence: inventoryEvidence.filter((item) => item.status === 'STALE').length,
       codCollectedNotRemitted: payments.filter((item) => ['COD_COLLECTED_PENDING_REMITTANCE', 'COD_REMITTANCE_PENDING_VERIFICATION'].includes(item.status)).length,
       codDiscrepancies: payments.filter((item) => item.status === 'COD_DISCREPANCY').length,
+      evidenceReplayConflicts: exceptions.filter((item) => item.type === 'EVIDENCE_REPLAY_CONFLICT' && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
+      paymentIntegrityBlockers: exceptions.filter((item) => ['PAYMENT_DUPLICATE_REMITTANCE', 'PAYMENT_OVERPAYMENT', 'PAYMENT_CURRENCY_MISMATCH'].includes(item.type) && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
       fulfillment: fulfillments.length, openExceptions: exceptions.filter((item) => !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status)).length,
       writesInternalOnly: true, externalSendsBlocked: true, paymentCaptureBlocked: true,
     };

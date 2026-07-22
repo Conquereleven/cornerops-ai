@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('crypto');
 const fixture = require('./fixtures/commercial/commercial-input-v117a.json');
 const {
   CommercialInputPackService, CommercialOperationsService, MemoryCommercialOperationsStore,
@@ -7,7 +8,11 @@ const {
 const { ApprovalEngineService, MemoryInternalOperationsStore, WorkQueueService } = require('../src/core/work-queue');
 
 const context = { actorId: 'founder-test', reason: 'test', evidence: { approved: true }, correlationId: 'commercial-test' };
-const externalEvidence = (sourceType = 'manual_warehouse_report') => ({ sourceType, sourceReference: 'safe-test-reference', actor: 'founder-test', evidenceTimestamp: new Date().toISOString(), verificationStatus: 'evidence_confirmed' });
+let evidenceSequence = 0;
+const externalEvidence = (binding, sourceType = 'manual_warehouse_report') => {
+  const sourceReference = `safe-test-reference-${++evidenceSequence}`;
+  return { ...binding, sourceType, sourceReference, actor: 'founder-test', evidenceTimestamp: new Date().toISOString(), checksum: createHash('sha256').update(sourceReference).digest('hex'), verificationStatus: 'evidence_confirmed' };
+};
 const make = async () => {
   const store = new MemoryCommercialOperationsStore();
   const service = new CommercialOperationsService({ store, config: { corneropsCommercialOperationsEnabled: true } });
@@ -129,15 +134,15 @@ describe('CO-1.17A payments, fulfillment and close', () => {
   test('partial and paid transitions follow confirmed evidence', async () => {
     const { service, store, order } = await orderHarness();
     await service.transitionOrder(order.orderId, { status: 'PAYMENT_PENDING' }, context);
-    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: 5, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence('bank_settlement'), reference: 'partial' }, context);
+    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: 5, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence({ subjectType: 'payment', subjectId: `${order.orderId}:BANK_TRANSFER:BANK_TRANSFER_SETTLEMENT_CONFIRMED`, orderId: order.orderId, paymentMethod: 'BANK_TRANSFER', previousState: 'UNRECORDED', newState: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', amount: 5, currency: 'AED' }, 'bank_settlement'), reference: 'partial' }, context);
     expect((await store.get('order', order.orderId)).status).toBe('PAYMENT_PARTIAL');
-    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: 30, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence('bank_settlement'), reference: 'balance' }, context);
+    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: 30, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence({ subjectType: 'payment', subjectId: `${order.orderId}:BANK_TRANSFER:BANK_TRANSFER_SETTLEMENT_CONFIRMED`, orderId: order.orderId, paymentMethod: 'BANK_TRANSFER', previousState: 'UNRECORDED', newState: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', amount: 30, currency: 'AED' }, 'bank_settlement'), reference: 'balance' }, context);
     expect((await store.get('order', order.orderId)).status).toBe('PAID');
   });
   test('fulfillment is one-per-order and rejects premature fulfillment', async () => {
     const { service, order } = await orderHarness();
     await expect(service.createFulfillment(order.orderId, {}, context)).rejects.toMatchObject({ code: 'FULFILLMENT_ORDER_NOT_READY' });
-    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: order.total, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence('bank_settlement'), reference: 'full' }, context);
+    await service.recordPayment(order.orderId, { method: 'BANK_TRANSFER', amount: order.total, currency: 'AED', status: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', evidence: externalEvidence({ subjectType: 'payment', subjectId: `${order.orderId}:BANK_TRANSFER:BANK_TRANSFER_SETTLEMENT_CONFIRMED`, orderId: order.orderId, paymentMethod: 'BANK_TRANSFER', previousState: 'UNRECORDED', newState: 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', amount: order.total, currency: 'AED' }, 'bank_settlement'), reference: 'full' }, context);
     const first = await service.createFulfillment(order.orderId, {}, context);
     const second = await service.createFulfillment(order.orderId, {}, context);
     expect(first.created).toBe(false);
@@ -148,9 +153,10 @@ describe('CO-1.17A payments, fulfillment and close', () => {
     const { service, store, order } = await orderHarness('CASH_ON_DELIVERY');
     const fulfillment = (await service.createFulfillment(order.orderId, {}, context)).record;
     for (const status of ['INTERMEX_HANDOFF_PENDING', 'INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'READY_TO_PICK', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT']) {
-      await service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: ['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT'].includes(status) ? externalEvidence() : undefined }, context);
+      const current = await store.get('fulfillment', fulfillment.fulfillmentId);
+      await service.transitionFulfillment(fulfillment.fulfillmentId, { status, evidence: ['INTERMEX_HANDOFF_CONFIRMED', 'ACCEPTED_BY_INTERMEX', 'PICKING', 'PACKED', 'HANDED_TO_CARRIER', 'IN_TRANSIT'].includes(status) ? externalEvidence({ subjectType: 'fulfillment', subjectId: fulfillment.fulfillmentId, orderId: order.orderId, fulfillmentId: fulfillment.fulfillmentId, previousState: current.status, newState: status }) : undefined }, context);
     }
-    await service.transitionFulfillment(fulfillment.fulfillmentId, { status: 'DELIVERY_FAILED', evidence: externalEvidence('carrier_report') }, context);
+    await service.transitionFulfillment(fulfillment.fulfillmentId, { status: 'DELIVERY_FAILED', evidence: externalEvidence({ subjectType: 'fulfillment', subjectId: fulfillment.fulfillmentId, orderId: order.orderId, fulfillmentId: fulfillment.fulfillmentId, previousState: 'IN_TRANSIT', newState: 'DELIVERY_FAILED' }, 'carrier_report') }, context);
     expect(await service.list('exception')).toHaveLength(1);
     const exception = (await service.list('exception'))[0];
     await expect(service.transitionException(exception.exceptionId, { status: 'RESOLVED', reason: 'reviewed' }, context)).rejects.toMatchObject({ code: 'EXCEPTION_RESOLUTION_EVIDENCE_REQUIRED' });
@@ -217,6 +223,9 @@ describe('CO-1.17A migration and safety boundary', () => {
   test('migration stays private, is not self-applied and protects transition evidence', () => {
     expect(migration).toContain('cornerops_internal.commercial_entities');
     expect(migration).toContain('commercial_transition_events_append_only');
+    expect(migration).toContain('commercial_evidence_registry_append_only');
+    expect(migration).toContain('evidence_fingerprint text not null unique');
+    expect(migration).toContain("checksum ~ '^[a-f0-9]{64}$'");
     expect(migration).toContain('from public, anon, authenticated, service_role');
     expect(migration).toContain('external_send_performed=false');
     expect(migration).toContain('payment_capture_performed=false');

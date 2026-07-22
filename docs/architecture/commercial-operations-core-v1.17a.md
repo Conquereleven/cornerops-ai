@@ -8,6 +8,28 @@ PostgreSQL remains authoritative. `commercial_entities` stores current internal 
 entity type and stable key. `commercial_transition_events` and the existing audit log preserve the
 actor, timestamp, previous state, new state, reason and sanitized evidence.
 
+## Evidence integrity
+
+Fulfillment and settlement facts use one canonical evidence validator. The envelope binds source,
+subject, order/fulfillment/payment, transition, amount/currency when applicable, evidence time,
+SHA-256 checksum and server receipt time. Checksums are exactly 64 hexadecimal characters and are
+stored lowercase. Evidence more than five minutes in the future is rejected, and `recordedAt` is
+always server controlled.
+
+The evidence fingerprint is SHA-256 over normalized `sourceType`, `sourceReference`, optional
+`evidenceUnitReference`, and checksum. Actor, request ID, caller payment ID and receipt time cannot
+create a new operational or economic identity. PostgreSQL enforces one immutable fingerprint in
+`commercial_evidence_registry`. An exact retry reuses the original result without another
+transition or cash event. Reuse against another subject, transition, amount, currency or payment
+method fails closed as `COMMERCIAL_EVIDENCE_REPLAY_CONFLICT` and creates a stable internal
+integrity exception.
+
+COD and Bank Transfer settlement identity derives from real evidence, not caller `paymentId`.
+Amounts are validated as integer minor units: positive, finite and at most two decimal places.
+Currency must match the order. Overpayment enters discrepancy with `PAYMENT_OVERPAYMENT`; excess
+does not count as normal cash and no refund is attempted. A shared document may support separate
+orders only through distinct evidence-unit references.
+
 ## Contracts
 
 Accounts and SKUs use the fields defined by the Commercial Input Pack. Unknown costs, prices,

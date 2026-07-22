@@ -48,14 +48,24 @@ implemented and covered by focused regression tests. The migration remains revie
 unapplied; real Intermex references, carrier configuration, rates and inventory reports remain
 founder-provided.
 
-Final status: `remediation_complete_pending_sonnet_exact_head_rereview`
+R3 adds canonical evidence subject binding and a durable anti-replay registry. Exact retries reuse
+the accepted fulfillment/payment result. Conflicting reuse across orders, fulfillment records,
+states, amounts, currencies or methods is rejected and surfaced as a stable exception. COD and
+Bank Transfer identity no longer depends on caller `paymentId`; validated integer minor units back
+settlement arithmetic, and overpayment remains a non-cash discrepancy. Founder Daily and Daily
+Close expose integrity blockers without raw financial references.
+
+Final status: `cornerops_v1_17a_evidence_integrity_ready_for_sonnet_rereview`
 
 ## Final validation
 
 - Focused remediation: 2 suites / 41 tests passed.
 - Focused commercial API: aggregate 3 suites / 44 tests passed.
-- Backend: 128 suites passed of 129; 1 skipped. 685 tests passed of 687; 2 skipped.
+- R3 adversarial memory suite: 1 suite / 33 tests passed.
+- R3 disposable PostgreSQL suite: 1 suite / 3 tests passed, including concurrent duplicate
+  remittance, append-only probes and runtime-grant introspection.
+- Backend: 129 suites passed of 131; 2 skipped. 724 tests passed of 729; 5 skipped.
 - Frontend: 8 files / 16 tests passed.
-- Lint: 612 JavaScript files passed; typecheck and build passed.
-- Migration SHA-256: `b02289c58433175b7490c66503e82dedb58948019c6f1d39c5470848639f5dfa`.
+- Lint: 615 JavaScript files passed; typecheck and build passed.
+- Migration SHA-256: `afa0d41f51f098d8f70762ff6df4b26336c4fb742621321a8a64f7b1282430c2`.
 - Migrations applied, deployments, platform writes and external sends: zero.
