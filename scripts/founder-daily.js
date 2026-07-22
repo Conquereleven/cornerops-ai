@@ -3,6 +3,17 @@ const actions = require('../src/core/actions');
 const controlTower = require('../src/core/control-tower');
 const operator = require('../src/core/operator');
 const { FounderFirstRunService } = require('../src/core/setup/FounderFirstRunService');
+const env = require('../src/config/env');
+const { createInternalOperationsStore } = require('../src/core/work-queue');
+const { CommercialOperationsService, PostgresCommercialOperationsStore, UnavailableCommercialOperationsStore } = require('../src/core/commercial');
+
+const createCommercialService = () => {
+  const internalStore = createInternalOperationsStore(env);
+  const store = internalStore.pool
+    ? new PostgresCommercialOperationsStore({ internalStore })
+    : new UnavailableCommercialOperationsStore();
+  return new CommercialOperationsService({ config: env, store });
+};
 
 const createService = () => new FounderFirstRunService({
   actions,
@@ -14,6 +25,11 @@ const createService = () => new FounderFirstRunService({
 
 const main = async () => {
   const result = await createService().runDaily();
+  result.commercialOperations = await createCommercialService().founderDaily();
+  result.commercialOperations.activationStatus = env.corneropsCommercialOperationsEnabled
+    ? 'enabled_internal_only' : 'configuration_required';
+  result.commercialOperations.externalSendsBlocked = true;
+  result.commercialOperations.paymentCaptureBlocked = true;
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (result.setup.status === 'blocked') process.exitCode = 1;
 };

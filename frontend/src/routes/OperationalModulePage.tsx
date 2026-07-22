@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, ShieldCheck } from 'lucide-react';
 import { moduleByKey, type ModuleKey } from '../config/moduleRegistry';
-import { getControlTowerFrontend, type FrontendEnvelope } from '../lib/api';
+import { getCommercialSection, getControlTowerFrontend, type FrontendEnvelope } from '../lib/api';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { liveReadOnlyState, unavailableState, type FrontendDataState } from '../lib/dataState';
 
@@ -15,6 +15,13 @@ const sectionByModule:Partial<Record<ModuleKey,string>>={
 };
 const disabledModules=new Set<ModuleKey>(['product-activation','promotions']);
 const configModules=new Set<ModuleKey>(['campaigns','analytics']);
+const commercialSection:Partial<Record<ModuleKey,string>>={
+  'commercial-overview':'founder-daily','commercial-accounts':'accounts',
+  'commercial-opportunities':'opportunities','commercial-quotes':'quotes',
+  'commercial-orders':'orders','commercial-payments':'payments',
+  'commercial-fulfillment':'fulfillments','commercial-deliveries':'fulfillments',
+  'commercial-exceptions':'exceptions','commercial-daily-close':'daily-closes',
+};
 const primitive=(value:unknown)=>['string','number','boolean'].includes(typeof value);
 
 function DataSummary({data}:{data:Record<string,unknown>}){
@@ -30,7 +37,7 @@ export function OperationalModulePage({moduleKey}:{moduleKey:ModuleKey}){
   const [error,setError]=useState('');
   const [loading,setLoading]=useState(true);
   const token=sessionStorage.getItem('cornerops-console-token')||'';
-  const load=useCallback(async()=>{setLoading(true);try{const result=await getControlTowerFrontend(sectionByModule[moduleKey]||'status',token);setEnvelope(result);setState(disabledModules.has(moduleKey)?{...liveReadOnlyState('configuration'),status:'disabled',reasonCode:'CAPABILITY_DISABLED'}:configModules.has(moduleKey)?{...liveReadOnlyState('configuration'),status:'configuration_required',reasonCode:'MARKETING_PERSISTENCE_DEFERRED_V1_16'}:liveReadOnlyState(moduleKey==='work-queue'?'internal_work_queue':moduleKey==='approvals'?'internal_approval_engine':moduleKey==='audit-log'?'internal_audit':'cornerops_api'));setError('');}catch(reason){setEnvelope(undefined);setState(unavailableState(reason instanceof Error&&/401|403/.test(reason.message)?'OPERATOR_AUTH_REQUIRED':'API_UNAVAILABLE'));setError(reason instanceof Error?reason.message:'Module unavailable.');}finally{setLoading(false);}},[moduleKey,token]);
+  const load=useCallback(async()=>{setLoading(true);try{const section=commercialSection[moduleKey];const result=section?await getCommercialSection(section,token):await getControlTowerFrontend(sectionByModule[moduleKey]||'status',token);setEnvelope(result);setState(disabledModules.has(moduleKey)?{...liveReadOnlyState('configuration'),status:'disabled',reasonCode:'CAPABILITY_DISABLED'}:configModules.has(moduleKey)?{...liveReadOnlyState('configuration'),status:'configuration_required',reasonCode:'MARKETING_PERSISTENCE_DEFERRED_V1_16'}:liveReadOnlyState(section?'internal_commercial_operations':moduleKey==='work-queue'?'internal_work_queue':moduleKey==='approvals'?'internal_approval_engine':moduleKey==='audit-log'?'internal_audit':'cornerops_api'));setError('');}catch(reason){setEnvelope(undefined);setState(unavailableState(reason instanceof Error&&/401|403/.test(reason.message)?'OPERATOR_AUTH_REQUIRED':'API_UNAVAILABLE'));setError(reason instanceof Error?reason.message:'Module unavailable.');}finally{setLoading(false);}},[moduleKey,token]);
   useEffect(()=>{void load()},[load]);
   const statusLabel=useMemo(()=>loading?'loading':state.status,[loading,state.status]);
   return <div className="module-page"><header className="page-title"><div><span className="eyebrow">{definition.group}</span><h1>{definition.label}</h1><p>{definition.description}</p></div><div className="module-header-actions"><StatusBadge tone={state.status==='live_read_only'?'green':state.status==='unavailable'||state.status==='error'?'red':'amber'}>{statusLabel}</StatusBadge><StatusBadge tone="blue">{state.source}</StatusBadge><button onClick={()=>void load()} disabled={loading}><RefreshCw size={14} className={loading?'spin':''}/>Refresh</button></div></header>

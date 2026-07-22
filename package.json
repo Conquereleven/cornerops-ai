@@ -89,6 +89,7 @@
     "supplygraph:capture-wave1": "node scripts/capture-wave1-catalogs-v1.14.js",
     "founder:setup-check": "node scripts/founder-setup-check.js",
     "founder:daily": "node scripts/founder-daily.js",
+    "demo:commercial-operations": "node scripts/demo-commercial-operations-v1.17a.js",
     "founder:review": "node scripts/founder-review.js",
     "state:backup": "node scripts/backup-local-state.js",
     "state:export-summary": "node scripts/export-local-state-summary.js",

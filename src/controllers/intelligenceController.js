@@ -28,6 +28,11 @@ const {
   SupplierEvidenceStore,
   AuthorizedSellerNetworkService,
 } = require('../core/supplygraph');
+const {
+  CommercialOperationsService,
+  PostgresCommercialOperationsStore,
+  UnavailableCommercialOperationsStore,
+} = require('../core/commercial');
 
 const flowEngine = new CornerMexFlowEngine({
   auditLogService: data.auditLogService,
@@ -68,6 +73,15 @@ const cornerMexProgramStateService = new CornerMexProgramStateService({
   maxAgeMs: env.cornermexProgramEvidenceMaxAgeMs,
 });
 const approvalEngineService = new ApprovalEngineService({ store: internalOperationsStore });
+const commercialStore = internalOperationsStore.pool
+  ? new PostgresCommercialOperationsStore({ internalStore: internalOperationsStore })
+  : new UnavailableCommercialOperationsStore();
+const commercialOperationsService = new CommercialOperationsService({
+  approvalEngineService,
+  config: env,
+  store: commercialStore,
+  workQueueService,
+});
 const supplyGraphStore = new SupplyGraphStore({ internalStore: internalOperationsStore });
 const supplierEvidenceResolver = new SupplierEvidenceResolver();
 const supplierEvidenceStore = new SupplierEvidenceStore({
@@ -264,6 +278,71 @@ const actorContext = (req) => ({
   actorId: req.founderActionAuth?.actorId || 'founder',
   correlationId: req.get('x-correlation-id') || requestId(req, `work-queue-${Date.now()}`),
 });
+
+const commercialEnvelope = (data, status = 'success') => ({
+  status,
+  sourceMode: data?.persistence?.healthy ? 'internal_postgres' : 'configuration_required',
+  readOnly: false,
+  dryRun: false,
+  writesBlocked: false,
+  internalWritesOnly: true,
+  cornerMexWritesBlocked: true,
+  externalSendsBlocked: true,
+  paymentCaptureBlocked: true,
+  approvalRequired: true,
+  auditId: `audit-commercial-${Date.now()}`,
+  warnings: data?.persistence?.healthy ? [] : ['Commercial migration is proposed but not applied.'],
+  data,
+});
+
+const commercialStatus = async (_req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.status())); } catch (error) { return next(error); }
+};
+const commercialFounderDaily = async (_req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.founderDaily())); } catch (error) { return next(error); }
+};
+const listCommercialEntities = (kind) => async (_req, res, next) => {
+  try { return res.json(commercialEnvelope({ items: await commercialOperationsService.list(kind), entityType: kind })); } catch (error) { return next(error); }
+};
+const previewCommercialInput = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(commercialOperationsService.previewInputPack(req.body?.input, req.body || {}))); } catch (error) { return next(error); }
+};
+const confirmCommercialInput = async (req, res, next) => {
+  try { return res.status(201).json(commercialEnvelope(await commercialOperationsService.confirmInputPack(req.body?.input, req.body || {}, actorContext(req)))); } catch (error) { return next(error); }
+};
+const createCommercialOpportunity = async (req, res, next) => {
+  try { const result = await commercialOperationsService.createOpportunity(req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
+const createCommercialQuote = async (req, res, next) => {
+  try { const result = await commercialOperationsService.createQuote(req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
+const transitionCommercialQuote = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.transitionQuote(req.params.id, req.body || {}, actorContext(req)))); } catch (error) { return next(error); }
+};
+const exportCommercialQuote = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.exportQuote(req.params.id, req.body?.format || 'json', actorContext(req)))); } catch (error) { return next(error); }
+};
+const acceptCommercialQuote = async (req, res, next) => {
+  try { const result = await commercialOperationsService.acceptQuote(req.params.id, req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
+const transitionCommercialOrder = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.transitionOrder(req.params.id, req.body || {}, actorContext(req)))); } catch (error) { return next(error); }
+};
+const recordCommercialPayment = async (req, res, next) => {
+  try { const result = await commercialOperationsService.recordPayment(req.params.id, req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
+const createCommercialFulfillment = async (req, res, next) => {
+  try { const result = await commercialOperationsService.createFulfillment(req.params.id, req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
+const transitionCommercialFulfillment = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.transitionFulfillment(req.params.id, req.body || {}, actorContext(req)))); } catch (error) { return next(error); }
+};
+const transitionCommercialException = async (req, res, next) => {
+  try { return res.json(commercialEnvelope(await commercialOperationsService.transitionException(req.params.id, req.body || {}, actorContext(req)))); } catch (error) { return next(error); }
+};
+const closeCommercialDay = async (req, res, next) => {
+  try { const result = await commercialOperationsService.dailyClose(req.body || {}, actorContext(req)); return res.status(result.created ? 201 : 200).json(commercialEnvelope(result)); } catch (error) { return next(error); }
+};
 
 const parseWorkQueueFilters = (query = {}) => ({
   status: query.status,
@@ -636,4 +715,29 @@ module.exports = {
   updateWorkItem,
   workQueueService,
   workQueueStatus,
+  commercialOperationsService,
+  commercialStatus,
+  commercialFounderDaily,
+  commercialAccounts: listCommercialEntities('account'),
+  commercialSkus: listCommercialEntities('sku'),
+  commercialOpportunities: listCommercialEntities('opportunity'),
+  commercialQuotes: listCommercialEntities('quote'),
+  commercialOrders: listCommercialEntities('order'),
+  commercialPayments: listCommercialEntities('payment'),
+  commercialFulfillments: listCommercialEntities('fulfillment'),
+  commercialExceptions: listCommercialEntities('exception'),
+  commercialDailyCloses: listCommercialEntities('daily_close'),
+  previewCommercialInput,
+  confirmCommercialInput,
+  createCommercialOpportunity,
+  createCommercialQuote,
+  transitionCommercialQuote,
+  exportCommercialQuote,
+  acceptCommercialQuote,
+  transitionCommercialOrder,
+  recordCommercialPayment,
+  createCommercialFulfillment,
+  transitionCommercialFulfillment,
+  transitionCommercialException,
+  closeCommercialDay,
 };

@@ -1,5 +1,14 @@
 # CornerOps AI
 
+## Commercial Operations Core v1.17A
+
+CornerOps includes a disabled-by-default internal commercial loop for authorized accounts and SKUs,
+opportunities, evidence-gated quotes, orders, payment records, fulfillment, exceptions and Daily
+Close. It uses the existing operator/Founder Action boundary and private PostgreSQL architecture.
+It does not send messages, capture payments, create shipments or write to CornerMex. See
+`docs/architecture/commercial-operations-core-v1.17a.md` and run
+`npm run demo:commercial-operations` for the explicitly non-production demo.
+
 ## Product Roadmap
 
 - v1.15 Unified Command Center

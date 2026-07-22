@@ -45,6 +45,15 @@ class WorkQueueService {
     });
   }
 
+  async syncCommercial(recommendations, context = {}) {
+    return this.store.syncRecommendations(recommendations, {
+      sourceType: 'commercial_operations',
+      actorType: 'founder',
+      actorId: context.actorId || 'founder',
+      correlationId: context.correlationId,
+    });
+  }
+
   async list(filters) { return this.store.listWorkItems(filters); }
   async get(id) { return this.store.getWorkItem(id); }
   async update(id, command, context) { return this.store.updateWorkItem(id, command, context); }

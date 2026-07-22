@@ -664,6 +664,17 @@ const baseEnv = {
     8000,
     { min: 500, max: 30000 },
   ),
+  corneropsCommercialOperationsEnabled: parseBoolean(
+    process.env.CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED,
+  ),
+  corneropsCommercialDemoEnabled: parseBoolean(
+    process.env.CORNEROPS_COMMERCIAL_DEMO_ENABLED,
+  ),
+  corneropsCommercialDefaultLocalShippingAed: parseInteger(
+    process.env.CORNEROPS_COMMERCIAL_DEFAULT_LOCAL_SHIPPING_AED,
+    15,
+    { min: 0, max: 100000 },
+  ),
   supplyGraphEnabled: parseBoolean(process.env.SUPPLYGRAPH_ENABLED),
   supplyGraphIntermexSyncEnabled: parseBoolean(process.env.SUPPLYGRAPH_INTERMEX_SYNC_ENABLED),
   supplyGraphDemandIntakeEnabled: parseBoolean(process.env.SUPPLYGRAPH_DEMAND_INTAKE_ENABLED),
