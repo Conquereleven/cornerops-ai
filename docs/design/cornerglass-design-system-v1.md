@@ -2,7 +2,11 @@
 
 **Sprint:** CO-UX-1.1 — CornerGlass Command Center Prototype
 **Status:** visual prototype (draft). Does **not** authorize production rollout.
-**Preview route:** `/design/cornerglass-preview` (frontend-only, lazy-loaded, absent from the module registry).
+**Preview route:** `/design/cornerglass-preview` — **development-only**. The route is registered
+only when `import.meta.env.DEV` is true (Vite dev and tests); its dynamic import lives inside that
+branch so a production build dead-code-eliminates it. **The CornerGlass preview route is
+development-only and absent from production builds** — a production build emits no
+`CornerGlassPreview` JS chunk and no `cornerglass.css`. It is also absent from the module registry.
 
 ## Doctrine
 
@@ -92,9 +96,12 @@ were not replaced.
 
 - WCAG AA contrast for normal text; text and icons always opaque.
 - Visible `:focus-visible` ring (`--cg-focus`); outlines never removed without a replacement.
-- Command palette and detail panel: `role="dialog"` + `aria-modal`, focus trapped, Escape closes,
-  focus returns to the opener. Drawer: labeled modal dialog. Popovers: `role="dialog"` with a label,
-  non-modal, Escape/outside-click close.
+- Command palette, detail panel and drawer: `role="dialog"` + `aria-modal`, focus trapped, Escape
+  closes, focus returns to the opener. While any of these modals is open the background shell is
+  `inert` and `aria-hidden`, and body scroll is locked (previous `overflow` restored exactly on
+  close). Popovers: `role="dialog"` with a label, non-modal, Escape/outside-click close; outside-click
+  detection excludes the trigger's anchor so pressing the trigger performs one deterministic toggle
+  (no close-then-reopen race).
 - Status conveyed by icon + text + shape, never colour or transparency alone.
 - Critical alerts opaque. Usable at 320px width and 200% zoom.
 
@@ -105,7 +112,9 @@ were not replaced.
 - No backdrop blur on scrolling tables, large grids, long lists, logs, or entire page content.
 - Overlays do not cause layout shift; visual-state toggles are CSS/data-attribute driven to avoid
   unnecessary re-renders. Prefer CSS over JS for purely visual behaviour.
-- The preview is **lazy-loaded**, so production routes carry no additional bundle weight.
+- The preview is **development-only and lazy-loaded**: it is registered only under
+  `import.meta.env.DEV`, so a production build tree-shakes it entirely and carries no additional
+  bundle weight (no `CornerGlassPreview` chunk, no `cornerglass.css`).
 
 ## Reduced-motion behaviour
 

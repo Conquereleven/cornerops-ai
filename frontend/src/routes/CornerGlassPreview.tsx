@@ -2,7 +2,7 @@ import {
   AlertTriangle, Bell, Boxes, ChevronDown, CircleAlert, CircleCheck, CircleHelp,
   Command, Eye, FileText, Layers, Menu, PanelRightOpen, Radio, Server, ShieldCheck, Sparkles, UserRound,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '../styles/cornerglass.css';
 import {
   GlassCommandPalette, GlassDetailPanel, GlassDrawer, GlassPopover, GlassSurface, GlassToolbar,
@@ -52,7 +52,20 @@ export default function CornerGlassPreview() {
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [connectionOpen, setConnectionOpen] = useState(false);
 
+  const connectionAnchorRef = useRef<HTMLDivElement | null>(null);
+  const operatorAnchorRef = useRef<HTMLDivElement | null>(null);
+
   const closePalette = useCallback(() => setPaletteOpen(false), []);
+
+  // Truthful modal isolation: while any modal overlay is open the background shell is inert,
+  // hidden from the accessibility tree, and body scroll is locked (restored exactly on close).
+  const modalOpen = drawerOpen || paletteOpen || detailOpen;
+  useEffect(() => {
+    if (!modalOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [modalOpen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -83,7 +96,7 @@ export default function CornerGlassPreview() {
       data-testid="cornerglass-root"
     >
       <div className="cg-canvas">
-        <div className="cg-shell">
+        <div className="cg-shell" inert={modalOpen} aria-hidden={modalOpen || undefined}>
           {/* Desktop sidebar (glass) */}
           <GlassSurface as="aside" className="cg-sidebar cg-desktop-only" aria-label="Preview navigation">
             <div className="cg-brand">
@@ -113,22 +126,22 @@ export default function CornerGlassPreview() {
               <span className="cg-spacer" />
               <span className="cg-preview-badge"><Sparkles size={12} /> NON-PRODUCTION PREVIEW</span>
 
-              <div className="cg-popover-anchor">
+              <div className="cg-popover-anchor" ref={connectionAnchorRef}>
                 <button type="button" className="cg-toggle" aria-expanded={connectionOpen} onClick={() => setConnectionOpen((v) => !v)}>
                   <Server size={14} /> Connection <ChevronDown size={12} />
                 </button>
-                <GlassPopover open={connectionOpen} onClose={() => setConnectionOpen(false)} label="Connection status">
+                <GlassPopover open={connectionOpen} onClose={() => setConnectionOpen(false)} label="Connection status" anchorRef={connectionAnchorRef}>
                   <h3>Connection</h3>
                   <div className="cg-popover-row"><StatusChip tone="unknown">Backend</StatusChip><span className="cg-note">Preview — not wired to a live backend.</span></div>
                   <div className="cg-popover-row"><StatusChip tone="unknown">Latency</StatusChip><span className="cg-note">Unknown in preview.</span></div>
                 </GlassPopover>
               </div>
 
-              <div className="cg-popover-anchor">
+              <div className="cg-popover-anchor" ref={operatorAnchorRef}>
                 <button type="button" className="cg-toggle" aria-expanded={operatorOpen} onClick={() => setOperatorOpen((v) => !v)}>
                   <UserRound size={14} /> Operator <ChevronDown size={12} />
                 </button>
-                <GlassPopover open={operatorOpen} onClose={() => setOperatorOpen(false)} label="Operator menu">
+                <GlassPopover open={operatorOpen} onClose={() => setOperatorOpen(false)} label="Operator menu" anchorRef={operatorAnchorRef}>
                   <div className="cg-popover-row">
                     <span className="cg-avatar">OP</span>
                     <span><strong style={{ color: '#fff', fontSize: 11, display: 'block' }}>Preview Operator</strong><small className="cg-note">Read-only prototype</small></span>
