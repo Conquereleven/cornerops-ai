@@ -14,6 +14,7 @@ const INTERNAL_TABLES = Object.freeze([
   'supplier_onboarding_packages', 'supplier_onboarding_catalog_items', 'supplier_onboarding_applications',
   'seller_product_media', 'seller_inventory_ledger', 'seller_inventory_balances',
   'sourcing_supplier_coverage_results',
+  'commercial_entities', 'commercial_transition_events', 'commercial_evidence_registry',
 ]);
 const OPEN_WORK_ITEM_STATUSES = Object.freeze([
   'recommended', 'drafted', 'queued_for_approval', 'approved', 'in_progress',

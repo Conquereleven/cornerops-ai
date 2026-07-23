@@ -1,0 +1,37 @@
+{
+  "classification": "COMMERCIAL_DEMO_DATA_NOT_PRODUCTION",
+  "version": "commercial-input-v1.17a",
+  "accounts": [
+    {
+      "accountId": "demo-account-1", "legalName": "Demo Restaurant LLC", "displayName": "Demo Restaurant",
+      "accountType": "restaurant", "emirate": "Dubai", "city": "Dubai", "channel": "B2B",
+      "contactStatus": "restricted", "commercialStatus": "authorized", "owner": "founder-demo",
+      "priority": "high", "paymentTerms": "pending_verification", "deliveryTerms": "pending_verification",
+      "notes": "COMMERCIAL_DEMO_DATA_NOT_PRODUCTION", "source": "commercial_demo_fixture",
+      "updatedAt": "2026-07-22T00:00:00.000Z"
+    }
+  ],
+  "skus": [
+    {
+      "skuId": "demo-sku-tajin", "name": "Demo Tajin", "brand": "Tajin", "category": "seasoning",
+      "supplier": "demo_supplier", "supplierSku": "DEMO-1", "unit": "piece", "casePack": "12",
+      "costCurrency": "unknown", "unitCost": "unknown", "sellingCurrency": "AED", "suggestedB2BPrice": 10,
+      "minimumOrderQuantity": "pending_verification", "inventoryStatus": "unknown", "registrationStatus": "pending_verification",
+      "commercialStatus": "authorized", "source": "commercial_demo_fixture", "updatedAt": "2026-07-22T00:00:00.000Z"
+    },
+    {
+      "skuId": "demo-sku-pulparindo", "name": "Demo Pulparindo", "brand": "De la Rosa", "category": "candy",
+      "supplier": "demo_supplier", "supplierSku": "DEMO-2", "unit": "case", "casePack": "20",
+      "costCurrency": "unknown", "unitCost": "unknown", "sellingCurrency": "AED", "suggestedB2BPrice": 25,
+      "minimumOrderQuantity": "pending_verification", "inventoryStatus": "unknown", "registrationStatus": "pending_verification",
+      "commercialStatus": "authorized", "source": "commercial_demo_fixture", "updatedAt": "2026-07-22T00:00:00.000Z"
+    },
+    {
+      "skuId": "demo-sku-valentina", "name": "Demo Valentina", "brand": "Valentina", "category": "sauce",
+      "supplier": "demo_supplier", "supplierSku": "DEMO-3", "unit": "piece", "casePack": "12",
+      "costCurrency": "unknown", "unitCost": "unknown", "sellingCurrency": "AED", "suggestedB2BPrice": 12,
+      "minimumOrderQuantity": "pending_verification", "inventoryStatus": "unknown", "registrationStatus": "pending_verification",
+      "commercialStatus": "authorized", "source": "commercial_demo_fixture", "updatedAt": "2026-07-22T00:00:00.000Z"
+    }
+  ]
+}

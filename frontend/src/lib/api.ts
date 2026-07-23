@@ -140,6 +140,8 @@ export type FrontendEnvelope = {
 };
 export const getControlTowerFrontend = (section = '', token = '') =>
   intelligenceRequest<FrontendEnvelope>(`/api/control-tower/frontend/v1${section ? `/${section}` : ''}`, token);
+export const getCommercialSection = (section = 'status', token = '') =>
+  intelligenceRequest<FrontendEnvelope>(`/api/intelligence/commercial/${section}`, token);
 export const getControlTowerApprovals = (token = '') =>
   consoleRequest<ApprovalCenterResponse>('/api/control-tower/v0.8/approvals', token);
 export const decideApprovalDryRun = (id: string, decision: 'approve' | 'reject', token = '') =>

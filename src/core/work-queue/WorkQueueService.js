@@ -45,6 +45,33 @@ class WorkQueueService {
     });
   }
 
+  async syncCommercial(recommendations, context = {}) {
+    const aggregate = { scannedRecommendations: 0, createdWorkItems: 0, reusedWorkItems: 0, reopenedWorkItems: 0, skippedRecommendations: 0, errors: [], items: [] };
+    for (const recommendation of recommendations) {
+      const result = await this.store.syncRecommendations([recommendation], {
+        sourceType: 'commercial_operations',
+        sourceId: recommendation.sourceId,
+        actorType: 'founder',
+        actorId: context.actorId || 'founder',
+        correlationId: context.correlationId,
+      });
+      Object.keys(aggregate).forEach((key) => {
+        if (Array.isArray(aggregate[key])) aggregate[key].push(...(result[key] || []));
+        else aggregate[key] += result[key] || 0;
+      });
+    }
+    return aggregate;
+  }
+
+  async resolveCommercial(idempotencyKey, context = {}) {
+    const items = await this.store.listWorkItems({ limit: 100 });
+    const item = items.find((candidate) => candidate.idempotencyKey === idempotencyKey);
+    if (!item) return null;
+    return this.store.updateWorkItem(item.id, {
+      command: 'mark_manually_completed', version: item.version, reason: context.reason || 'commercial_condition_resolved',
+    }, { actorType: 'founder', actorId: context.actorId || 'founder', correlationId: context.correlationId });
+  }
+
   async list(filters) { return this.store.listWorkItems(filters); }
   async get(id) { return this.store.getWorkItem(id); }
   async update(id, command, context) { return this.store.updateWorkItem(id, command, context); }

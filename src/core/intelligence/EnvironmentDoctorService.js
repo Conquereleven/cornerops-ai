@@ -21,6 +21,8 @@ class EnvironmentDoctorService {
       this.item('fallback_mock_usage', 'Fallback/mock usage', this.config.corneropsCornermexConnectorMode === 'mock' ? 'warning' : 'ok', 'Real read-only should avoid mock fallback when configured.', 'Set connector mode to real/read-only once Supabase is configured.'),
       this.item('cornermex_program_evidence_root', 'Canonical program evidence configured', configured(this.config.cornermexProgramEvidenceRoot) ? 'ok' : 'fail', 'Only configuration presence is reported; the path is never exposed.', 'Configure the canonical program evidence directory.'),
       this.item('cornermex_program_evidence_max_age', 'Canonical evidence maximum age valid', this.config.cornermexProgramEvidenceMaxAgeValid !== false ? 'ok' : 'warning', 'Maximum age must be finite, positive, and no more than seven days.', 'Use a value from 1 through 604800000 milliseconds.'),
+      this.item('commercial_shipping_rates', 'Commercial destination shipping rates', Object.keys(this.config.corneropsCommercialShippingRatesAed || {}).length ? 'ok' : 'warning', 'Rates are destination-aware and may remain unknown.', 'Configure explicit Emirate rates; no UAE-wide default is assumed.'),
+      this.item('commercial_inventory_freshness', 'Commercial inventory freshness policy', Number.isInteger(this.config.corneropsCommercialInventoryEvidenceStaleAfterHours), 'Inventory evidence has a bounded staleness threshold.', 'Set CORNEROPS_COMMERCIAL_INVENTORY_EVIDENCE_STALE_AFTER_HOURS.'),
     ];
     const failed = checks.filter((check) => check.status === 'fail');
     const warnings = checks.filter((check) => check.status === 'warning');
