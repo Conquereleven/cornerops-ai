@@ -28,9 +28,42 @@ describePostgres('CO-1.17A-R3 disposable PostgreSQL evidence integrity', () => {
     expect((await store.list('payment')).filter((item) => item.orderId === orderId && item.status === 'COD_REMITTED_CONFIRMED').reduce((sum, item) => sum + item.amount, 0)).toBe(100);
   });
 
-  test('evidence registry rejects update and delete mutations', async () => {
-    await expect(internalStore.pool.query(`update cornerops_internal.commercial_evidence_registry set actor_id='other'`)).rejects.toMatchObject({ code: '42501' });
-    await expect(internalStore.pool.query(`delete from cornerops_internal.commercial_evidence_registry`)).rejects.toMatchObject({ code: '42501' });
+  test.each([
+    ['commercial_evidence_registry'],
+    ['commercial_transition_events'],
+  ])('%s rejects owner update and delete mutations', async (table) => {
+    const before = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.${table}`);
+    await expect(internalStore.pool.query(`update cornerops_internal.${table} set actor_id='other'`)).rejects.toMatchObject({ code: '42501' });
+    await expect(internalStore.pool.query(`delete from cornerops_internal.${table}`)).rejects.toMatchObject({ code: '42501' });
+    const after = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.${table}`);
+    expect(after.rows[0].count).toBe(before.rows[0].count);
+  });
+
+  test.each([
+    ['commercial_evidence_registry'],
+    ['commercial_transition_events'],
+  ])('owner truncate of %s is rejected and preserves rows', async (table) => {
+    const before = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.${table}`);
+    await expect(internalStore.pool.query(`truncate cornerops_internal.${table}`)).rejects.toMatchObject({
+      code: '42501', message: expect.stringContaining('immutable commercial evidence cannot be truncated'),
+    });
+    const after = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.${table}`);
+    expect(after.rows[0].count).toBe(before.rows[0].count);
+    expect(after.rows[0].count).toBeGreaterThan(0);
+  });
+
+  test('runtime truncate is rejected by privilege boundary and preserves evidence', async () => {
+    const before = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.commercial_evidence_registry`);
+    const client = await internalStore.pool.connect();
+    try {
+      await client.query('set role cornerops_internal_runtime');
+      await expect(client.query('truncate cornerops_internal.commercial_evidence_registry')).rejects.toMatchObject({ code: '42501' });
+    } finally {
+      await client.query('reset role');
+      client.release();
+    }
+    const after = await internalStore.pool.query(`select count(*)::int as count from cornerops_internal.commercial_evidence_registry`);
+    expect(after.rows[0].count).toBe(before.rows[0].count);
   });
 
   test('runtime role has select/insert but no update/delete/truncate privilege', async () => {
@@ -41,5 +74,14 @@ describePostgres('CO-1.17A-R3 disposable PostgreSQL evidence integrity', () => {
       has_table_privilege('cornerops_internal_runtime','cornerops_internal.commercial_evidence_registry','delete') as can_delete,
       has_table_privilege('cornerops_internal_runtime','cornerops_internal.commercial_evidence_registry','truncate') as can_truncate`);
     expect(result.rows[0]).toEqual({ can_select: true, can_insert: true, can_update: false, can_delete: false, can_truncate: false });
+  });
+
+  test.each(['anon', 'authenticated', 'service_role'])('%s has no immutable commercial table access', async (role) => {
+    const result = await internalStore.pool.query(`select
+      has_table_privilege($1,'cornerops_internal.commercial_evidence_registry','select') as evidence_select,
+      has_table_privilege($1,'cornerops_internal.commercial_evidence_registry','insert') as evidence_insert,
+      has_table_privilege($1,'cornerops_internal.commercial_transition_events','select') as transition_select,
+      has_table_privilege($1,'cornerops_internal.commercial_transition_events','insert') as transition_insert`, [role]);
+    expect(result.rows[0]).toEqual({ evidence_select: false, evidence_insert: false, transition_select: false, transition_insert: false });
   });
 });

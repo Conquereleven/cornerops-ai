@@ -7,6 +7,11 @@ The migration `20260722010000_cornerops_commercial_operations_v117a.sql` is priv
 evidence. It does not read or write CornerMex tables and grants no access to public Supabase roles.
 The transition table fails closed when external Intermex/carrier fulfillment states or settled
 payment states lack attributable evidence metadata. The SQL remains review-only and unapplied.
+Immutable transition history and the evidence registry reject `UPDATE`, `DELETE`, and statement-level
+`TRUNCATE`, including accidental owner execution. Runtime grants remain `SELECT/INSERT` only for
+these tables; this defense-in-depth change grants no additional access.
+
+Review checksum: `44cee38fe62e540b7bb12fea27ece4e424e448678ce47c497c268faeacd36705`.
 
 ## Forward
 

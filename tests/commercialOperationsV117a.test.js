@@ -224,6 +224,9 @@ describe('CO-1.17A migration and safety boundary', () => {
     expect(migration).toContain('cornerops_internal.commercial_entities');
     expect(migration).toContain('commercial_transition_events_append_only');
     expect(migration).toContain('commercial_evidence_registry_append_only');
+    expect(migration).toContain('commercial_transition_events_reject_truncate');
+    expect(migration).toContain('commercial_evidence_registry_reject_truncate');
+    expect(migration).toContain('before truncate');
     expect(migration).toContain('evidence_fingerprint text not null unique');
     expect(migration).toContain("checksum ~ '^[a-f0-9]{64}$'");
     expect(migration).toContain('from public, anon, authenticated, service_role');

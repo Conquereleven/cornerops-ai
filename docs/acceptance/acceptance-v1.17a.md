@@ -55,7 +55,13 @@ Bank Transfer identity no longer depends on caller `paymentId`; validated intege
 settlement arithmetic, and overpayment remains a non-cash discrepancy. Founder Daily and Daily
 Close expose integrity blockers without raw financial references.
 
-Final status: `cornerops_v1_17a_evidence_integrity_ready_for_sonnet_rereview`
+R5 closes the final owner-level defense-in-depth finding. Both immutable tables,
+`commercial_evidence_registry` and `commercial_transition_events`, reject statement-level
+`TRUNCATE` in addition to row-level `UPDATE` and `DELETE`. Runtime access remains limited to
+`SELECT/INSERT`; public API-facing roles retain no access. The review-only migration remains
+unapplied.
+
+Final status: `cornerops_pr78_truncate_hardening_ready_for_opus_review`
 
 ## Final validation
 
@@ -64,8 +70,12 @@ Final status: `cornerops_v1_17a_evidence_integrity_ready_for_sonnet_rereview`
 - R3 adversarial memory suite: 1 suite / 33 tests passed.
 - R3 disposable PostgreSQL suite: 1 suite / 3 tests passed, including concurrent duplicate
   remittance, append-only probes and runtime-grant introspection.
+- R5 disposable PostgreSQL suite: 1 suite / 10 tests passed, covering owner/runtime truncate,
+  owner update/delete, row preservation, valid inserts and API-role isolation.
+- PostgreSQL Work Queue parity: 2 tests passed; focused PostgreSQL aggregate: 3 suites / 29 tests.
 - Backend: 129 suites passed of 131; 2 skipped. 724 tests passed of 729; 5 skipped.
 - Frontend: 8 files / 16 tests passed.
 - Lint: 615 JavaScript files passed; typecheck and build passed.
-- Migration SHA-256: `afa0d41f51f098d8f70762ff6df4b26336c4fb742621321a8a64f7b1282430c2`.
+- Previous migration SHA-256: `afa0d41f51f098d8f70762ff6df4b26336c4fb742621321a8a64f7b1282430c2`.
+- Current migration SHA-256: `44cee38fe62e540b7bb12fea27ece4e424e448678ce47c497c268faeacd36705`.
 - Migrations applied, deployments, platform writes and external sends: zero.

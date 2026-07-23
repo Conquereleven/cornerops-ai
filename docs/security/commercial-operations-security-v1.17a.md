@@ -7,7 +7,8 @@
 - Stable keys and unique constraints prevent retry duplicates.
 - The evidence registry is private-schema only and append-only. The runtime role receives only
   `SELECT/INSERT`; database uniqueness arbitrates concurrent claims, while update, delete and
-  truncate are revoked and rejected by trigger.
+  truncate are revoked. Owner-level `UPDATE`, `DELETE`, and `TRUNCATE` are also rejected by
+  append-only triggers as defense in depth.
 - Evidence is strictly subject-bound. Source identifiers are normalized, bounded and stripped of
   control/markup delimiters. Raw evidence payloads, bank references and checksums are not exposed
   through general frontend summaries.

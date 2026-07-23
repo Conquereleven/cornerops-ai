@@ -93,6 +93,9 @@ create index if not exists commercial_evidence_order_idx
 create or replace function cornerops_internal.reject_commercial_transition_mutation()
 returns trigger language plpgsql set search_path='' as $$
 begin
+  if TG_OP = 'TRUNCATE' then
+    raise exception 'immutable commercial evidence cannot be truncated' using errcode='42501';
+  end if;
   raise exception 'commercial transition evidence is append-only' using errcode='42501';
 end $$;
 
@@ -101,9 +104,19 @@ create trigger commercial_transition_events_append_only before update or delete
 on cornerops_internal.commercial_transition_events for each row
 execute function cornerops_internal.reject_commercial_transition_mutation();
 
+drop trigger if exists commercial_transition_events_reject_truncate on cornerops_internal.commercial_transition_events;
+create trigger commercial_transition_events_reject_truncate before truncate
+on cornerops_internal.commercial_transition_events for each statement
+execute function cornerops_internal.reject_commercial_transition_mutation();
+
 drop trigger if exists commercial_evidence_registry_append_only on cornerops_internal.commercial_evidence_registry;
 create trigger commercial_evidence_registry_append_only before update or delete
 on cornerops_internal.commercial_evidence_registry for each row
+execute function cornerops_internal.reject_commercial_transition_mutation();
+
+drop trigger if exists commercial_evidence_registry_reject_truncate on cornerops_internal.commercial_evidence_registry;
+create trigger commercial_evidence_registry_reject_truncate before truncate
+on cornerops_internal.commercial_evidence_registry for each statement
 execute function cornerops_internal.reject_commercial_transition_mutation();
 
 revoke all on all tables in schema cornerops_internal from public, anon, authenticated, service_role;
