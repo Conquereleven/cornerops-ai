@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import type { ReactElement } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { AppShell } from './components/layout/AppShell';
 import { moduleRegistry, type ModuleKey } from './config/moduleRegistry';
 import { AuthorizedSellers } from './routes/AuthorizedSellers';
@@ -22,4 +22,8 @@ const dedicated:Partial<Record<ModuleKey,ReactElement>>={
   'authorized-sellers':<AuthorizedSellers/>,'seller-catalog':<SellerCatalog/>,'seller-inventory':<SellerInventory/>,'seller-comparison':<SellerComparison/>,
   'worker-settings':<WorkerSettings/>,integrations:<Integrations/>,settings:<Settings/>,
 };
-export default function App(){return <BrowserRouter><Routes><Route element={<AppShell/>}>{moduleRegistry.map(item=><Route key={item.key} path={item.route} element={dedicated[item.key]||<OperationalModulePage moduleKey={item.key}/>}/>)}<Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail/>}/>{moduleRegistry.flatMap(item=>(item.aliases||[]).map(alias=><Route key={alias} path={alias} element={<Navigate to={item.route} replace/>}/>))}<Route path="*" element={<Navigate to="/overview" replace/>}/></Route></Routes></BrowserRouter>}
+// CO-UX-1.1 CornerGlass: isolated design preview, lazy-loaded so it adds no weight to
+// production routes. Rendered OUTSIDE AppShell and absent from moduleRegistry, so it never
+// appears in normal operational navigation.
+const CornerGlassPreview=lazy(()=>import('./routes/CornerGlassPreview'));
+export default function App(){return <BrowserRouter><Routes><Route path="/design/cornerglass-preview" element={<Suspense fallback={<div style={{padding:24,color:'#8190a0'}}>Loading CornerGlass preview…</div>}><CornerGlassPreview/></Suspense>}/><Route element={<AppShell/>}>{moduleRegistry.map(item=><Route key={item.key} path={item.route} element={dedicated[item.key]||<OperationalModulePage moduleKey={item.key}/>}/>)}<Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail/>}/>{moduleRegistry.flatMap(item=>(item.aliases||[]).map(alias=><Route key={alias} path={alias} element={<Navigate to={item.route} replace/>}/>))}<Route path="*" element={<Navigate to="/overview" replace/>}/></Route></Routes></BrowserRouter>}
