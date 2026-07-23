@@ -156,4 +156,136 @@ describe('CornerGlass preview', () => {
     await user.keyboard('{Escape}');
     await waitFor(() => expect(shell.hasAttribute('inert')).toBe(false));
   });
+
+  // CO-UX-1.1-R2 — exclusive modal state
+  const allModalDialogs = () => screen.queryAllByRole('dialog')
+    .filter((el) => el.getAttribute('aria-modal') === 'true');
+
+  test('1. detail open + Cmd/Ctrl+K closes detail and opens the palette, never both', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    await user.click(screen.getByRole('button', { name: /detail panel/i }));
+    await screen.findByRole('dialog', { name: /work item/i });
+
+    await user.keyboard('{Meta>}k{/Meta}');
+
+    expect(await screen.findByRole('dialog', { name: /command palette/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /work item/i })).not.toBeInTheDocument();
+    expect(allModalDialogs()).toHaveLength(1);
+  });
+
+  test('2. drawer open + Cmd/Ctrl+K closes the drawer and opens the palette, never both', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    const drawerOpeners = screen.getAllByRole('button', { name: /open navigation|drawer/i });
+    await user.click(drawerOpeners[0]);
+    await screen.findByRole('dialog', { name: 'Navigation' });
+
+    await user.keyboard('{Meta>}k{/Meta}');
+
+    expect(await screen.findByRole('dialog', { name: /command palette/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Navigation' })).not.toBeInTheDocument();
+    expect(allModalDialogs()).toHaveLength(1);
+  });
+
+  test('3. opening the detail panel from inside the palette closes the palette atomically', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    await user.click(screen.getByRole('button', { name: /command palette/i }));
+    const palette = await screen.findByRole('dialog', { name: /command palette/i });
+    await user.click(within(palette).getByRole('button', { name: /open detail panel/i }));
+
+    expect(await screen.findByRole('dialog', { name: /work item/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /command palette/i })).not.toBeInTheDocument();
+    expect(allModalDialogs()).toHaveLength(1);
+  });
+
+  test('4. at most one aria-modal dialog exists across a full drawer -> palette -> detail -> palette chain', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    const drawerOpeners = screen.getAllByRole('button', { name: /open navigation|drawer/i });
+    await user.click(drawerOpeners[0]);
+    await screen.findByRole('dialog', { name: 'Navigation' });
+    expect(allModalDialogs()).toHaveLength(1);
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    await screen.findByRole('dialog', { name: /command palette/i });
+    expect(allModalDialogs()).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: /open detail panel/i }));
+    await screen.findByRole('dialog', { name: /work item/i });
+    expect(allModalDialogs()).toHaveLength(1);
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    await screen.findByRole('dialog', { name: /command palette/i });
+    expect(allModalDialogs()).toHaveLength(1);
+  });
+
+  test('5. shell remains continuously inert while switching from one modal to another', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<CornerGlassPreview />);
+    const shell = container.querySelector('.cg-shell') as HTMLElement;
+
+    await user.click(screen.getByRole('button', { name: /detail panel/i }));
+    await screen.findByRole('dialog', { name: /work item/i });
+    expect(shell.hasAttribute('inert')).toBe(true);
+
+    // Switch detail -> palette via the shortcut; inert must never drop to false in between.
+    await user.keyboard('{Meta>}k{/Meta}');
+    await screen.findByRole('dialog', { name: /command palette/i });
+    expect(shell.hasAttribute('inert')).toBe(true);
+    expect(shell.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  test('6. body scroll stays locked throughout a modal-to-modal transition', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    await user.click(screen.getByRole('button', { name: /detail panel/i }));
+    await screen.findByRole('dialog', { name: /work item/i });
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    await screen.findByRole('dialog', { name: /command palette/i });
+    expect(document.body.style.overflow).toBe('hidden');
+  });
+
+  test('7. closing the final active modal restores shell and body state', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<CornerGlassPreview />);
+    const shell = container.querySelector('.cg-shell') as HTMLElement;
+    const originalOverflow = document.body.style.overflow;
+
+    await user.click(screen.getByRole('button', { name: /detail panel/i }));
+    await screen.findByRole('dialog', { name: /work item/i });
+    await user.keyboard('{Meta>}k{/Meta}');
+    await screen.findByRole('dialog', { name: /command palette/i });
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /command palette/i })).not.toBeInTheDocument());
+    expect(shell.hasAttribute('inert')).toBe(false);
+    expect(shell.getAttribute('aria-hidden')).toBeNull();
+    expect(document.body.style.overflow).toBe(originalOverflow);
+  });
+
+  test('8. focus lands inside the active modal after a switch and returns to a valid element on final close', async () => {
+    const user = userEvent.setup();
+    render(<CornerGlassPreview />);
+    const detailOpener = screen.getByRole('button', { name: /detail panel/i });
+    await user.click(detailOpener);
+    const detail = await screen.findByRole('dialog', { name: /work item/i });
+    expect(detail.contains(document.activeElement)).toBe(true);
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    const palette = await screen.findByRole('dialog', { name: /command palette/i });
+    // Focus must have landed inside the newly active palette, not left on the (now removed)
+    // detail panel and not lost to <body>.
+    await waitFor(() => expect(palette.contains(document.activeElement)).toBe(true));
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /command palette/i })).not.toBeInTheDocument());
+    // Focus returns to a real, valid, focusable element in the document (never lost to <body>).
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBeInstanceOf(HTMLElement);
+    expect(document.body.contains(document.activeElement)).toBe(true);
+  });
 });

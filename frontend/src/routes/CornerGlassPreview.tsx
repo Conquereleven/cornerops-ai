@@ -46,20 +46,31 @@ export default function CornerGlassPreview() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [forceFallback, setForceFallback] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [operatorOpen, setOperatorOpen] = useState(false);
   const [connectionOpen, setConnectionOpen] = useState(false);
+
+  // CO-UX-1.1-R2: exclusive modal state. Only one of drawer/palette/detail can ever be the
+  // active modal — there is no way to represent "two modals open" in this model, so a stray
+  // ⌘/Ctrl+K (or any other opener) firing while another modal is open cannot leave two
+  // aria-modal dialogs rendered at once. Switching modals is a single atomic state update
+  // (no intermediate "both open" or "both closed" render).
+  type ModalKind = 'drawer' | 'palette' | 'detail' | null;
+  const [activeModal, setActiveModal] = useState<ModalKind>(null);
+  const drawerOpen = activeModal === 'drawer';
+  const paletteOpen = activeModal === 'palette';
+  const detailOpen = activeModal === 'detail';
 
   const connectionAnchorRef = useRef<HTMLDivElement | null>(null);
   const operatorAnchorRef = useRef<HTMLDivElement | null>(null);
 
-  const closePalette = useCallback(() => setPaletteOpen(false), []);
+  const closeModal = useCallback(() => setActiveModal(null), []);
+  const closePalette = closeModal;
 
   // Truthful modal isolation: while any modal overlay is open the background shell is inert,
   // hidden from the accessibility tree, and body scroll is locked (restored exactly on close).
-  const modalOpen = drawerOpen || paletteOpen || detailOpen;
+  // Because activeModal is a single value, this stays continuously true across a modal-to-modal
+  // switch (never flickers false in between) and only becomes false once no modal is active.
+  const modalOpen = activeModal !== null;
   useEffect(() => {
     if (!modalOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -71,7 +82,9 @@ export default function CornerGlassPreview() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setPaletteOpen((v) => !v);
+        // Deterministic: if the palette is already active, close it. Otherwise make the
+        // palette the (sole) active modal — closing whatever else was open first, atomically.
+        setActiveModal((current) => (current === 'palette' ? null : 'palette'));
       }
     };
     window.addEventListener('keydown', onKey);
@@ -80,7 +93,7 @@ export default function CornerGlassPreview() {
 
   const paletteActions: GlassCommandAction[] = useMemo(() => [
     { id: 'nav-overview', label: 'Go to Overview (preview)', hint: 'preview', icon: <Layers size={15} />, onRun: closePalette },
-    { id: 'open-detail', label: 'Open detail panel', hint: 'preview', icon: <PanelRightOpen size={15} />, onRun: () => { setDetailOpen(true); closePalette(); } },
+    { id: 'open-detail', label: 'Open detail panel', hint: 'preview', icon: <PanelRightOpen size={15} />, onRun: () => setActiveModal('detail') },
     { id: 'toggle-rt', label: 'Toggle reduced transparency', hint: 'preview', icon: <Eye size={15} />, onRun: () => { setReducedTransparency((v) => !v); closePalette(); } },
     { id: 'approve', label: 'Approve payment', icon: <ShieldCheck size={15} />, disabled: true },
     { id: 'send', label: 'Send quote', icon: <FileText size={15} />, disabled: true },
@@ -116,7 +129,7 @@ export default function CornerGlassPreview() {
           <div className="cg-main">
             {/* Topbar (glass) with state toggles */}
             <GlassSurface as="header" className="cg-topbar">
-              <button type="button" className="cg-icon-btn cg-mobile-only" onClick={() => setDrawerOpen(true)} aria-label="Open navigation">
+              <button type="button" className="cg-icon-btn cg-mobile-only" onClick={() => setActiveModal('drawer')} aria-label="Open navigation">
                 <Menu size={18} />
               </button>
               <div>
@@ -154,13 +167,13 @@ export default function CornerGlassPreview() {
             <main className="cg-content">
               {/* Toolbar (glass) + overlay openers */}
               <GlassToolbar label="Preview controls">
-                <button type="button" className="cg-btn" onClick={() => setPaletteOpen(true)}>
+                <button type="button" className="cg-btn" onClick={() => setActiveModal('palette')}>
                   <Command size={14} /> Command palette <span className="cg-kbd-hint">⌘K</span>
                 </button>
-                <button type="button" className="cg-btn" onClick={() => setDetailOpen(true)}>
+                <button type="button" className="cg-btn" onClick={() => setActiveModal('detail')}>
                   <PanelRightOpen size={14} /> Detail panel
                 </button>
-                <button type="button" className="cg-btn cg-mobile-only" onClick={() => setDrawerOpen(true)}>
+                <button type="button" className="cg-btn cg-mobile-only" onClick={() => setActiveModal('drawer')}>
                   <Menu size={14} /> Drawer
                 </button>
                 <span className="cg-spacer" />
@@ -258,10 +271,10 @@ export default function CornerGlassPreview() {
         </div>
 
         {/* Overlays */}
-        <GlassDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} label="Navigation">
+        <GlassDrawer open={drawerOpen} onClose={closeModal} label="Navigation">
           <nav className="cg-nav" aria-label="Preview modules (mobile)">
             {NAV.map(({ key, label, icon: Icon, active }) => (
-              <a key={key} href={`#${key}`} className={active ? 'cg-nav-active' : ''} onClick={() => setDrawerOpen(false)}>
+              <a key={key} href={`#${key}`} className={active ? 'cg-nav-active' : ''} onClick={closeModal}>
                 <Icon size={17} strokeWidth={1.8} /><span>{label}</span>
               </a>
             ))}
@@ -270,7 +283,7 @@ export default function CornerGlassPreview() {
 
         <GlassCommandPalette open={paletteOpen} onClose={closePalette} actions={paletteActions} />
 
-        <GlassDetailPanel open={detailOpen} onClose={() => setDetailOpen(false)} title="Work item — DEMO-2">
+        <GlassDetailPanel open={detailOpen} onClose={closeModal} title="Work item — DEMO-2">
           <div className="cg-evidence cg-solid">
             <h3>Evidence (solid inner region)</h3>
             <dl>

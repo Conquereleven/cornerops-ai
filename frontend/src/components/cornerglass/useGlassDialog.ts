@@ -59,8 +59,19 @@ export function useGlassDialog<T extends HTMLElement>(open: boolean, onClose: ()
     node?.addEventListener('keydown', onKeyDown);
     return () => {
       node?.removeEventListener('keydown', onKeyDown);
-      // Restore focus to the element that opened the dialog.
-      openerRef.current?.focus?.();
+      // Restore focus to the element that opened the dialog — but only if focus is still
+      // "ours" to give back (inside this dialog, or lost to body). When CO-UX-1.1-R2 modal
+      // exclusivity swaps directly from one modal to another, the next modal's own effect may
+      // already have moved focus into itself before or after this cleanup runs (React does not
+      // guarantee cross-component effect ordering here). Restoring unconditionally would then
+      // steal focus back out of the modal that is actually open. Only reclaim focus when this
+      // dialog still owns it.
+      const activeElement = document.activeElement;
+      const stillOwnsFocus = activeElement === document.body || activeElement == null
+        || (node?.contains(activeElement) ?? false);
+      if (stillOwnsFocus) {
+        openerRef.current?.focus?.();
+      }
     };
   }, [open, onClose]);
 
