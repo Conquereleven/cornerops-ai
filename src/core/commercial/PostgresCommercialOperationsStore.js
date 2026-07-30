@@ -12,24 +12,55 @@ class PostgresCommercialOperationsStore {
     this.internalStore = internalStore;
   }
   table(name) { return this.internalStore.table(name); }
+  async persistenceOperation(operation) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error?.code === '42P01') {
+        throw commercialError('Commercial persistence is not ready.', 'COMMERCIAL_PERSISTENCE_REQUIRED', 503);
+      }
+      throw error;
+    }
+  }
   async health() {
-    const result = await this.internalStore.pool.query('select to_regclass($1) is not null as ready', [`${this.internalStore.boundary.schema}.commercial_entities`]);
-    return { healthy: Boolean(result.rows[0]?.ready), provider: 'postgres', durable: true };
+    const requiredObjects = ['commercial_entities', 'commercial_transition_events', 'commercial_evidence_registry'];
+    try {
+      const result = await this.internalStore.pool.query(
+        `select ${requiredObjects.map((_name, index) => `to_regclass($${index + 1}) is not null as object_${index + 1}`).join(', ')}`,
+        requiredObjects.map((name) => `${this.internalStore.boundary.schema}.${name}`),
+      );
+      const missing = requiredObjects.filter((_name, index) => !result.rows[0]?.[`object_${index + 1}`]);
+      return {
+        healthy: missing.length === 0,
+        state: missing.length === 0 ? 'ready' : 'missing',
+        provider: 'postgres',
+        durable: true,
+        missingRequiredObjects: missing,
+      };
+    } catch (_error) {
+      return {
+        healthy: false,
+        state: 'probe_error',
+        provider: 'postgres',
+        durable: true,
+        reason: 'COMMERCIAL_PERSISTENCE_PROBE_ERROR',
+      };
+    }
   }
   async get(kind, stableKey) {
-    const result = await this.internalStore.pool.query(
+    const result = await this.persistenceOperation(() => this.internalStore.pool.query(
       `select payload from ${this.table('commercial_entities')} where entity_type=$1 and stable_key=$2`, [kind, stableKey],
-    );
+    ));
     return result.rows[0]?.payload || null;
   }
   async list(kind) {
-    const result = await this.internalStore.pool.query(
+    const result = await this.persistenceOperation(() => this.internalStore.pool.query(
       `select payload from ${this.table('commercial_entities')} where entity_type=$1 order by created_at desc limit 500`, [kind],
-    );
+    ));
     return result.rows.map((row) => row.payload);
   }
   async create(kind, stableKey, payload, context = {}) {
-    return this.internalStore.withTransaction(async (client) => {
+    return this.persistenceOperation(() => this.internalStore.withTransaction(async (client) => {
       const timestamp = new Date().toISOString();
       const record = { ...payload, createdAt: payload.createdAt || timestamp, updatedAt: payload.updatedAt || timestamp, version: 1 };
       const inserted = await client.query(
@@ -51,10 +82,10 @@ class PostgresCommercialOperationsStore {
         metadata: { stableKey, sanitized: true },
       });
       return { record: row.payload, created: true };
-    });
+    }));
   }
   async update(kind, stableKey, updater, context = {}) {
-    return this.internalStore.withTransaction(async (client) => {
+    return this.persistenceOperation(() => this.internalStore.withTransaction(async (client) => {
       const selected = await client.query(
         `select * from ${this.table('commercial_entities')} where entity_type=$1 and stable_key=$2 for update`, [kind, stableKey],
       );
@@ -72,7 +103,7 @@ class PostgresCommercialOperationsStore {
         metadata: { previousState: previous.payload.status || null, newState: next.status || null, reason: context.reason, sanitized: true },
       });
       return { ...updated.rows[0].payload, version: updated.rows[0].version, updatedAt: updated.rows[0].updated_at };
-    });
+    }));
   }
   async appendTransition(client, kind, stableKey, previousState, newState, context = {}) {
     await client.query(
@@ -87,13 +118,13 @@ class PostgresCommercialOperationsStore {
     const clauses = [];
     if (filters.entityType) { values.push(filters.entityType); clauses.push(`entity_type=$${values.length}`); }
     if (filters.entityId) { values.push(filters.entityId); clauses.push(`entity_stable_key=$${values.length}`); }
-    const result = await this.internalStore.pool.query(
+    const result = await this.persistenceOperation(() => this.internalStore.pool.query(
       `select * from ${this.table('commercial_transition_events')} ${clauses.length ? `where ${clauses.join(' and ')}` : ''} order by created_at desc limit 500`, values,
-    );
+    ));
     return result.rows.map(camel);
   }
   async claimEvidence(record) {
-    return this.internalStore.withTransaction(async (client) => {
+    return this.persistenceOperation(() => this.internalStore.withTransaction(async (client) => {
       const inserted = await client.query(
         `insert into ${this.table('commercial_evidence_registry')}
          (evidence_fingerprint,evidence_id,source_type,source_reference,evidence_unit_reference,
@@ -113,12 +144,12 @@ class PostgresCommercialOperationsStore {
         [record.evidenceFingerprint],
       );
       return { record: camel(existing.rows[0]), created: false };
-    });
+    }));
   }
   async listEvidence() {
-    const result = await this.internalStore.pool.query(
+    const result = await this.persistenceOperation(() => this.internalStore.pool.query(
       `select * from ${this.table('commercial_evidence_registry')} order by recorded_at desc limit 500`,
-    );
+    ));
     return result.rows.map(camel);
   }
 }

@@ -32,10 +32,94 @@ class CommercialOperationsService {
     this.evidenceIntegrityService = evidenceIntegrityService;
     this.config = config;
   }
+  isEnabled() { return this.config.corneropsCommercialOperationsEnabled === true; }
+  disabledAvailability() {
+    return {
+      status: 'disabled',
+      code: 'COMMERCIAL_OPERATIONS_DISABLED',
+      featureEnabled: false,
+      available: false,
+      querySkipped: true,
+      readOnly: true,
+      writesBlocked: true,
+      cornerMexWritesBlocked: true,
+      externalSendsBlocked: true,
+      paymentCaptureBlocked: true,
+      reason: 'FEATURE_DISABLED',
+    };
+  }
   assertEnabled() {
-    if (this.config.corneropsCommercialOperationsEnabled === false) {
-      throw commercialError('Commercial operations are disabled.', 'COMMERCIAL_OPERATIONS_DISABLED', 503);
+    if (!this.isEnabled()) {
+      throw commercialError(
+        'Commercial operations are disabled.',
+        'COMMERCIAL_OPERATIONS_DISABLED',
+        503,
+        this.disabledAvailability(),
+      );
     }
+  }
+  async availability() {
+    if (!this.isEnabled()) return this.disabledAvailability();
+    let persistence;
+    try {
+      persistence = await this.store.health();
+    } catch (_error) {
+      persistence = {
+        healthy: false,
+        state: 'probe_error',
+        provider: 'unavailable',
+        durable: false,
+        reason: 'COMMERCIAL_PERSISTENCE_PROBE_ERROR',
+      };
+    }
+    const publicPersistence = {
+      healthy: persistence?.healthy === true,
+      state: persistence?.state || (persistence?.healthy ? 'ready' : 'missing'),
+      provider: persistence?.provider || 'unavailable',
+      durable: persistence?.durable === true,
+      ...(persistence?.reason && { reason: persistence.reason }),
+    };
+    if (!publicPersistence.healthy) {
+      return {
+        status: 'configuration_required',
+        code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+        featureEnabled: true,
+        available: false,
+        querySkipped: true,
+        readOnly: true,
+        writesBlocked: true,
+        cornerMexWritesBlocked: true,
+        externalSendsBlocked: true,
+        paymentCaptureBlocked: true,
+        reason: 'PERSISTENCE_NOT_READY',
+        persistence: publicPersistence,
+      };
+    }
+    return {
+      status: 'ready',
+      featureEnabled: true,
+      available: true,
+      querySkipped: false,
+      readOnly: false,
+      writesBlocked: false,
+      cornerMexWritesBlocked: true,
+      externalSendsBlocked: true,
+      paymentCaptureBlocked: true,
+      persistence: publicPersistence,
+    };
+  }
+  async assertPersistenceReady() {
+    this.assertEnabled();
+    const availability = await this.availability();
+    if (!availability.available) {
+      throw commercialError(
+        'Commercial persistence is not ready.',
+        'COMMERCIAL_PERSISTENCE_REQUIRED',
+        503,
+        availability,
+      );
+    }
+    return availability;
   }
   async queue(recommendation, context) {
     if (!this.workQueueService?.syncCommercial) return null;
@@ -123,13 +207,14 @@ class CommercialOperationsService {
     }
   }
   async status() {
-    const persistence = await this.store.health();
-    const summary = await this.summary();
-    return { status: persistence.healthy ? 'ready' : 'configuration_required', persistence, ...summary, externalSendsBlocked: true, paymentCaptureBlocked: true, cornerMexWritesBlocked: true };
+    const availability = await this.availability();
+    if (!availability.available) return availability;
+    const summary = await this.summary({ persistenceReady: true });
+    return { ...availability, ...summary };
   }
   previewInputPack(input, options) { return this.inputPackService.preview(input, options); }
   async confirmInputPack(input, options = {}, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!options.confirmed) throw commercialError('Explicit confirmation is required.', 'COMMERCIAL_INPUT_CONFIRMATION_REQUIRED', 409);
     const preview = this.previewInputPack(input, options);
     if (!preview.valid) throw commercialError('Input pack validation failed.', 'COMMERCIAL_INPUT_INVALID', 422, preview.errors);
@@ -141,7 +226,7 @@ class CommercialOperationsService {
     return { checksum: preview.checksum, reused: false, coverage: preview.coverage, accountCount: preview.records.accounts.length, skuCount: preview.records.skus.length };
   }
   async createOpportunity(input, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!OPPORTUNITY_STATES.includes(input.status || 'NEW')) throw commercialError('Opportunity status is invalid.', 'OPPORTUNITY_STATUS_INVALID');
     if (!await this.store.get('account', input.accountId)) throw commercialError('Account does not exist.', 'ACCOUNT_NOT_FOUND', 404);
     const id = input.opportunityId || stableId('opp', input.idempotencyKey || randomUUID());
@@ -171,7 +256,7 @@ class CommercialOperationsService {
     return { subtotal, shipping, tax, discount, total: knownNumber(totalBeforeDiscount) ? totalBeforeDiscount - discount : 'unknown' };
   }
   async createQuote(input, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     const opportunity = await this.store.get('opportunity', input.opportunityId);
     if (!opportunity || opportunity.accountId !== input.accountId) throw commercialError('Opportunity/account link is invalid.', 'QUOTE_OPPORTUNITY_INVALID', 422);
     const quoteId = input.quoteId || stableId('quote', input.idempotencyKey || randomUUID());
@@ -189,7 +274,7 @@ class CommercialOperationsService {
     return this.store.create('quote', quoteId, { quoteId, accountId: input.accountId, opportunityId: input.opportunityId, lineItems: lines, currency: input.currency || 'unknown', ...totals, shippingSource, shippingRate, destinationEmirate: input.destinationEmirate || 'unknown', validUntil: input.validUntil || null, paymentTerms: input.paymentTerms || 'not_provided', deliveryTerms: input.deliveryTerms || 'not_provided', evidenceStatus: input.evidenceStatus || 'pending_verification', approvalStatus: 'pending', sendStatus: 'DRAFT_NOT_SENT', status: 'DRAFT_NOT_SENT' }, context);
   }
   async transitionQuote(quoteId, command, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!QUOTE_STATES.includes(command.status)) throw commercialError('Quote status is invalid.', 'QUOTE_STATUS_INVALID');
     const transitionContext = this.transitionContext(command, context);
     if (command.status === 'APPROVED_INTERNAL') await this.assertQuoteApproval(quoteId, command);
@@ -207,7 +292,7 @@ class CommercialOperationsService {
     return result;
   }
   async exportQuote(quoteId, format, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!['json', 'csv', 'pdf'].includes(format)) throw commercialError('Export format is invalid.', 'QUOTE_EXPORT_FORMAT_INVALID');
     const quote = await this.store.get('quote', quoteId);
     if (!quote || quote.status !== 'APPROVED_INTERNAL') throw commercialError('Only internally approved quotes can be exported.', 'QUOTE_EXPORT_NOT_ALLOWED', 409);
@@ -215,7 +300,7 @@ class CommercialOperationsService {
     return { quoteId, format, sendStatus: 'DRAFT_NOT_SENT', externallySent: false, payload: format === 'json' ? quote : { generated: true, sanitized: true } };
   }
   async acceptQuote(quoteId, input = {}, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     const quote = await this.store.get('quote', quoteId);
     if (!quote) throw commercialError('Quote not found.', 'QUOTE_NOT_FOUND', 404);
     if (quote.status !== 'SENT_MANUALLY_CONFIRMED' && quote.status !== 'ACCEPTED') throw commercialError('Quote must be manually sent before acceptance.', 'QUOTE_ACCEPTANCE_INVALID', 409);
@@ -226,7 +311,7 @@ class CommercialOperationsService {
     return this.store.create('order', orderId, order, context);
   }
   async transitionOrder(orderId, command, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!ORDER_STATES.includes(command.status)) throw commercialError('Order status is invalid.', 'ORDER_STATUS_INVALID');
     if (command.status === 'PAID') {
       const order = await this.store.get('order', orderId);
@@ -256,7 +341,7 @@ class CommercialOperationsService {
     return result;
   }
   async recordPayment(orderId, input, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     const order = await this.store.get('order', orderId);
     if (!order) throw commercialError('Order not found.', 'ORDER_NOT_FOUND', 404);
     if (!PAYMENT_METHODS.includes(input.method)) throw commercialError('Payment method is invalid.', 'PAYMENT_METHOD_INVALID');
@@ -339,7 +424,7 @@ class CommercialOperationsService {
     return result;
   }
   async createFulfillment(orderId, input = {}, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     const order = await this.store.get('order', orderId);
     if (!order) throw commercialError('Order not found.', 'ORDER_NOT_FOUND', 404);
     if (!['PAID', 'READY_FOR_FULFILLMENT'].includes(order.status) && order.paymentMethod !== 'CASH_ON_DELIVERY') throw commercialError('Order is not eligible for fulfillment.', 'FULFILLMENT_ORDER_NOT_READY', 409);
@@ -354,7 +439,7 @@ class CommercialOperationsService {
     return this.store.create('fulfillment', fulfillmentId, { fulfillmentId, orderId, cornerMexOrderReference: input.cornerMexOrderReference || orderId, intermexFulfillmentReference: input.intermexFulfillmentReference || 'unknown', intermexHandoffReference: input.intermexHandoffReference || 'unknown', carrierReference: input.carrierReference || 'unknown', warehouseEvidenceReference: input.warehouseEvidenceReference || 'unknown', carrierEvidenceReference: input.carrierEvidenceReference || 'unknown', commercialOwner: { party: 'CornerMex', truthStatus: 'configured' }, warehouseCustodian: { party: 'Intermex UAE', truthStatus: 'configured', integrationMode: 'manual_evidence_only' }, carrierProvider: { party: input.carrierProvider || 'unknown', truthStatus: input.carrierProvider ? 'manually_reported' : 'unknown' }, assignedTo: input.assignedTo || context.actorId, status: order.paymentMethod === 'CASH_ON_DELIVERY' || order.status === 'PAID' ? 'READY_FOR_INTERMEX_HANDOFF' : 'WAITING_PAYMENT', expectedDispatchAt: input.expectedDispatchAt || null, dispatchedAt: null, deliveredAt: null, blockers: [], notes: input.notes || null, intermexHandoffConfirmedBy: null, intermexHandoffConfirmedAt: null }, context);
   }
   async transitionFulfillment(fulfillmentId, command, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!FULFILLMENT_STATES.includes(command.status)) throw commercialError('Fulfillment status is invalid.', 'FULFILLMENT_STATUS_INVALID');
     const current = await this.store.get('fulfillment', fulfillmentId);
     if (!current) throw commercialError('Fulfillment not found.', 'FULFILLMENT_NOT_FOUND', 404);
@@ -379,7 +464,7 @@ class CommercialOperationsService {
     return result;
   }
   async createException(input, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!EXCEPTION_TYPES.includes(input.type)) throw commercialError('Exception type is invalid.', 'EXCEPTION_TYPE_INVALID');
     const key = stableId('exception', `${input.type}:${input.entityType}:${input.entityId}`);
     const severity = input.severity || EXCEPTION_SEVERITY_DEFAULTS[input.type] || 'medium';
@@ -394,7 +479,7 @@ class CommercialOperationsService {
     return result;
   }
   async transitionException(exceptionId, command, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     if (!EXCEPTION_STATES.includes(command.status)) throw commercialError('Exception status is invalid.', 'EXCEPTION_STATUS_INVALID');
     if (['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) && (!command.reason || !command.evidence)) throw commercialError('Exception closure requires reason and evidence.', 'EXCEPTION_RESOLUTION_EVIDENCE_REQUIRED');
     const result = await this.store.update('exception', exceptionId, (item) => ({ ...item, status: command.status, resolvedAt: ['RESOLVED', 'DISMISSED_WITH_REASON'].includes(command.status) ? now() : null, resolution: command.reason || null }), { ...context, reason: command.reason, evidence: command.evidence });
@@ -404,7 +489,7 @@ class CommercialOperationsService {
     return result;
   }
   async dailyClose(input, context = {}) {
-    this.assertEnabled(); requiredActor(context);
+    await this.assertPersistenceReady(); requiredActor(context);
     const exceptions = await this.store.list('exception');
     const critical = exceptions.filter((item) => item.severity === 'critical' && item.status === 'OPEN');
     const integrityBlockers = exceptions.filter((item) => ['EVIDENCE_REPLAY_CONFLICT', 'PAYMENT_DUPLICATE_REMITTANCE', 'PAYMENT_OVERPAYMENT', 'PAYMENT_CURRENCY_MISMATCH', 'EVIDENCE_TIMESTAMP_INVALID', 'EVIDENCE_CHECKSUM_INVALID'].includes(item.type) && !['RESOLVED', 'DISMISSED_WITH_REASON'].includes(item.status));
@@ -432,7 +517,8 @@ class CommercialOperationsService {
     };
     return this.store.create('daily_close', date, { date, closeStatus: input.closeStatus || 'OPEN', closedBy: input.closeStatus === 'CLOSED' ? context.actorId : null, closedAt: input.closeStatus === 'CLOSED' ? now() : null, notes: input.notes || null, unresolvedItems: input.unresolvedItems || [], metrics: summary }, context);
   }
-  async summary() {
+  async summary({ persistenceReady = false } = {}) {
+    if (!persistenceReady) await this.assertPersistenceReady();
     const [accounts, skus, opportunities, quotes, orders, payments, fulfillments, exceptions] = await Promise.all(['account', 'sku', 'opportunity', 'quote', 'order', 'payment', 'fulfillment', 'exception'].map((kind) => this.store.list(kind)));
     const confirmedPayments = payments.filter((payment) => ['CONFIRMED', 'BANK_TRANSFER_SETTLEMENT_CONFIRMED', 'COD_REMITTED_CONFIRMED'].includes(payment.status));
     const inventoryEvidence = quotes.flatMap((quote) => quote.lineItems || []).map((line) => line.inventoryEvidence || { status: 'UNKNOWN' });
@@ -453,8 +539,9 @@ class CommercialOperationsService {
     };
   }
   async founderDaily() {
+    await this.assertPersistenceReady();
     const [opportunities, quotes, orders, fulfillments, exceptions] = await Promise.all(['opportunity', 'quote', 'order', 'fulfillment', 'exception'].map((kind) => this.store.list(kind)));
-    const summary = await this.summary();
+    const summary = await this.summary({ persistenceReady: true });
     return {
       ...summary,
       newOpportunities: opportunities.filter((item) => item.status === 'NEW').length,
@@ -477,7 +564,10 @@ class CommercialOperationsService {
       metricSemantics: { quotes: 'not_revenue', unpaidOrders: 'not_cash', inventoryUnknown: 'not_available' },
     };
   }
-  async list(kind) { return this.store.list(kind); }
+  async list(kind) {
+    await this.assertPersistenceReady();
+    return this.store.list(kind);
+  }
 }
 
 module.exports = { CommercialOperationsService, stableId };

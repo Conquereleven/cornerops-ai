@@ -281,10 +281,15 @@ const actorContext = (req) => ({
 
 const commercialEnvelope = (data, status = 'success') => ({
   status,
-  sourceMode: data?.persistence?.healthy ? 'internal_postgres' : 'configuration_required',
-  readOnly: false,
+  ...(data?.code && { code: data.code }),
+  ...(typeof data?.featureEnabled === 'boolean' && { featureEnabled: data.featureEnabled }),
+  ...(typeof data?.available === 'boolean' && { available: data.available }),
+  ...(typeof data?.querySkipped === 'boolean' && { querySkipped: data.querySkipped }),
+  ...(data?.reason && { reason: data.reason }),
+  sourceMode: data?.persistence?.healthy ? 'internal_postgres' : (data?.status || 'configuration_required'),
+  readOnly: data?.readOnly ?? false,
   dryRun: false,
-  writesBlocked: false,
+  writesBlocked: data?.writesBlocked ?? false,
   internalWritesOnly: true,
   cornerMexWritesBlocked: true,
   externalSendsBlocked: true,
@@ -295,14 +300,43 @@ const commercialEnvelope = (data, status = 'success') => ({
   data,
 });
 
+const commercialAvailabilityError = (error) => {
+  if (!['COMMERCIAL_OPERATIONS_DISABLED', 'COMMERCIAL_PERSISTENCE_REQUIRED'].includes(error?.code)) return null;
+  const fallback = error.code === 'COMMERCIAL_OPERATIONS_DISABLED'
+    ? commercialOperationsService.disabledAvailability()
+    : {
+      status: 'unavailable',
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+      featureEnabled: true,
+      available: false,
+      querySkipped: true,
+      readOnly: true,
+      writesBlocked: true,
+      cornerMexWritesBlocked: true,
+      externalSendsBlocked: true,
+      paymentCaptureBlocked: true,
+      reason: 'PERSISTENCE_NOT_READY',
+    };
+  return { ...fallback, ...(error.details || {}), status: 'unavailable' };
+};
+
+const handleCommercialReadError = (error, res, next) => {
+  const availability = commercialAvailabilityError(error);
+  if (!availability) return next(error);
+  return res.status(503).json(commercialEnvelope(availability, 'unavailable'));
+};
+
 const commercialStatus = async (_req, res, next) => {
-  try { return res.json(commercialEnvelope(await commercialOperationsService.status())); } catch (error) { return next(error); }
+  try {
+    const status = await commercialOperationsService.status();
+    return res.json(commercialEnvelope(status, status.status));
+  } catch (error) { return next(error); }
 };
 const commercialFounderDaily = async (_req, res, next) => {
-  try { return res.json(commercialEnvelope(await commercialOperationsService.founderDaily())); } catch (error) { return next(error); }
+  try { return res.json(commercialEnvelope(await commercialOperationsService.founderDaily())); } catch (error) { return handleCommercialReadError(error, res, next); }
 };
 const listCommercialEntities = (kind) => async (_req, res, next) => {
-  try { return res.json(commercialEnvelope({ items: await commercialOperationsService.list(kind), entityType: kind })); } catch (error) { return next(error); }
+  try { return res.json(commercialEnvelope({ items: await commercialOperationsService.list(kind), entityType: kind })); } catch (error) { return handleCommercialReadError(error, res, next); }
 };
 const previewCommercialInput = async (req, res, next) => {
   try { return res.json(commercialEnvelope(commercialOperationsService.previewInputPack(req.body?.input, req.body || {}))); } catch (error) { return next(error); }

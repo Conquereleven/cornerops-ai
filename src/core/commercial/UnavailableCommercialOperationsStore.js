@@ -1,7 +1,7 @@
 const { commercialError } = require('./commercialTypes');
 
 class UnavailableCommercialOperationsStore {
-  async health() { return { healthy: false, provider: 'unavailable', durable: false, reason: 'COMMERCIAL_MIGRATION_NOT_APPLIED' }; }
+  async health() { return { healthy: false, state: 'missing', provider: 'unavailable', durable: false, reason: 'COMMERCIAL_MIGRATION_NOT_APPLIED' }; }
   async get() { return null; }
   async list() { return []; }
   async listTransitions() { return []; }
