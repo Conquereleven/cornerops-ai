@@ -279,6 +279,58 @@ const actorContext = (req) => ({
   correlationId: req.get('x-correlation-id') || requestId(req, `work-queue-${Date.now()}`),
 });
 
+const COMMERCIAL_DISABLED_WARNING = 'Commercial Operations is disabled. Persistence readiness was not queried.';
+const COMMERCIAL_PERSISTENCE_WARNING = 'Commercial persistence readiness requirements are not satisfied.';
+const COMMERCIAL_PERSISTENCE_STATES = new Set(['ready', 'missing', 'probe_error']);
+const COMMERCIAL_PERSISTENCE_PROVIDERS = new Set(['postgres', 'unavailable']);
+const COMMERCIAL_PERSISTENCE_REASONS = new Set(['COMMERCIAL_PERSISTENCE_PROBE_ERROR', 'PERSISTENCE_NOT_READY']);
+
+const sanitizeCommercialPersistence = (persistence) => {
+  if (!persistence || typeof persistence !== 'object' || Array.isArray(persistence)) return undefined;
+  const sanitized = {};
+  if (typeof persistence.healthy === 'boolean') sanitized.healthy = persistence.healthy;
+  if (COMMERCIAL_PERSISTENCE_STATES.has(persistence.state)) sanitized.state = persistence.state;
+  if (COMMERCIAL_PERSISTENCE_PROVIDERS.has(persistence.provider)) sanitized.provider = persistence.provider;
+  if (typeof persistence.durable === 'boolean') sanitized.durable = persistence.durable;
+  if (COMMERCIAL_PERSISTENCE_REASONS.has(persistence.reason)) sanitized.reason = persistence.reason;
+  return Object.keys(sanitized).length ? sanitized : undefined;
+};
+
+const canonicalCommercialAvailability = (code, status = 'unavailable', persistence) => {
+  const disabled = code === 'COMMERCIAL_OPERATIONS_DISABLED';
+  const canonical = {
+    status,
+    code: disabled ? 'COMMERCIAL_OPERATIONS_DISABLED' : 'COMMERCIAL_PERSISTENCE_REQUIRED',
+    featureEnabled: !disabled,
+    available: false,
+    querySkipped: true,
+    readOnly: true,
+    writesBlocked: true,
+    cornerMexWritesBlocked: true,
+    externalSendsBlocked: true,
+    paymentCaptureBlocked: true,
+    reason: disabled ? 'FEATURE_DISABLED' : 'PERSISTENCE_NOT_READY',
+  };
+  const safePersistence = disabled ? undefined : sanitizeCommercialPersistence(persistence);
+  return safePersistence ? { ...canonical, persistence: safePersistence } : canonical;
+};
+
+const canonicalCommercialStatus = (data) => {
+  if (data?.code === 'COMMERCIAL_OPERATIONS_DISABLED') {
+    return canonicalCommercialAvailability(data.code, 'disabled');
+  }
+  if (data?.code === 'COMMERCIAL_PERSISTENCE_REQUIRED') {
+    return canonicalCommercialAvailability(data.code, 'configuration_required', data.persistence);
+  }
+  return data;
+};
+
+const commercialAvailabilityWarnings = (data) => {
+  if (data?.featureEnabled === false && data?.querySkipped === true) return [COMMERCIAL_DISABLED_WARNING];
+  if (data?.featureEnabled === true && data?.available === false) return [COMMERCIAL_PERSISTENCE_WARNING];
+  return [];
+};
+
 const commercialEnvelope = (data, status = 'success') => ({
   status,
   ...(data?.code && { code: data.code }),
@@ -296,28 +348,13 @@ const commercialEnvelope = (data, status = 'success') => ({
   paymentCaptureBlocked: true,
   approvalRequired: true,
   auditId: `audit-commercial-${Date.now()}`,
-  warnings: data?.persistence?.healthy ? [] : ['Commercial migration is proposed but not applied.'],
+  warnings: commercialAvailabilityWarnings(data),
   data,
 });
 
 const commercialAvailabilityError = (error) => {
   if (!['COMMERCIAL_OPERATIONS_DISABLED', 'COMMERCIAL_PERSISTENCE_REQUIRED'].includes(error?.code)) return null;
-  const fallback = error.code === 'COMMERCIAL_OPERATIONS_DISABLED'
-    ? commercialOperationsService.disabledAvailability()
-    : {
-      status: 'unavailable',
-      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
-      featureEnabled: true,
-      available: false,
-      querySkipped: true,
-      readOnly: true,
-      writesBlocked: true,
-      cornerMexWritesBlocked: true,
-      externalSendsBlocked: true,
-      paymentCaptureBlocked: true,
-      reason: 'PERSISTENCE_NOT_READY',
-    };
-  return { ...fallback, ...(error.details || {}), status: 'unavailable' };
+  return canonicalCommercialAvailability(error.code, 'unavailable', error.details?.persistence);
 };
 
 const handleCommercialReadError = (error, res, next) => {
@@ -329,7 +366,8 @@ const handleCommercialReadError = (error, res, next) => {
 const commercialStatus = async (_req, res, next) => {
   try {
     const status = await commercialOperationsService.status();
-    return res.json(commercialEnvelope(status, status.status));
+    const canonicalStatus = canonicalCommercialStatus(status);
+    return res.json(commercialEnvelope(canonicalStatus, canonicalStatus.status));
   } catch (error) { return next(error); }
 };
 const commercialFounderDaily = async (_req, res, next) => {
@@ -750,6 +788,13 @@ module.exports = {
   workQueueService,
   workQueueStatus,
   commercialOperationsService,
+  __commercialAvailabilityTestHelpers: {
+    canonicalCommercialAvailability,
+    canonicalCommercialStatus,
+    commercialAvailabilityError,
+    commercialAvailabilityWarnings,
+    sanitizeCommercialPersistence,
+  },
   commercialStatus,
   commercialFounderDaily,
   commercialAccounts: listCommercialEntities('account'),

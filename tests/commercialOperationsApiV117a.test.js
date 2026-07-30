@@ -10,6 +10,9 @@ const dataRoutes = [
   'payments', 'fulfillments', 'exceptions', 'daily-closes',
 ];
 const allReadRoutes = ['status', ...dataRoutes];
+const disabledWarning = 'Commercial Operations is disabled. Persistence readiness was not queried.';
+const persistenceWarning = 'Commercial persistence readiness requirements are not satisfied.';
+const migrationAssertion = /migration is proposed|migration is not applied|migration missing|schema missing|commercial_entities|SQLSTATE/i;
 
 const configureApi = (enabled) => {
   process.env.CONTROL_TOWER_FRONTEND_TOKEN_HASH = hash(operatorToken);
@@ -63,7 +66,9 @@ describe('CO-1.17A-R1 disabled commercial API boundary', () => {
       externalSendsBlocked: true,
       paymentCaptureBlocked: true,
       reason: 'FEATURE_DISABLED',
+      warnings: [disabledWarning],
     });
+    expect(JSON.stringify(response.body)).not.toMatch(migrationAssertion);
   });
 
   test.each(dataRoutes)('authenticated disabled GET %s returns unavailable, never empty data', async (route) => {
@@ -77,6 +82,8 @@ describe('CO-1.17A-R1 disabled commercial API boundary', () => {
     });
     const serialized = JSON.stringify(response.body);
     expect(serialized).not.toMatch(/42P01|commercial_entities|cornerops_internal|select\s|insert\s/i);
+    expect(serialized).not.toMatch(migrationAssertion);
+    expect(response.body.warnings).toEqual([disabledWarning]);
     expect(response.body.data?.items).toBeUndefined();
   });
 
@@ -104,7 +111,9 @@ describe('CO-1.17A-R1 enabled with unavailable persistence', () => {
       available: false,
       querySkipped: true,
       writesBlocked: true,
+      warnings: [persistenceWarning],
     });
+    expect(JSON.stringify(response.body)).not.toMatch(migrationAssertion);
   });
 
   test.each(dataRoutes)('GET %s requires persistence and exposes no database detail', async (route) => {
@@ -116,7 +125,10 @@ describe('CO-1.17A-R1 enabled with unavailable persistence', () => {
       querySkipped: true,
       writesBlocked: true,
     });
-    expect(JSON.stringify(response.body)).not.toMatch(/42P01|commercial_entities|cornerops_internal|select\s|insert\s/i);
+    const serialized = JSON.stringify(response.body);
+    expect(serialized).not.toMatch(/42P01|commercial_entities|cornerops_internal|select\s|insert\s/i);
+    expect(serialized).not.toMatch(migrationAssertion);
+    expect(response.body.warnings).toEqual([persistenceWarning]);
   });
 
   test('preview validates without writes and founder-action auth protects confirmation', async () => {
@@ -140,5 +152,129 @@ describe('CO-1.17A-R1 enabled with unavailable persistence', () => {
       .send({ accountId: 'x' })
       .expect(403);
     expect(response.body).toMatchObject({ code: 'CONTROL_TOWER_FRONTEND_ORIGIN_DENIED', writesBlocked: true });
+  });
+});
+
+describe('CO-1.17A-R2 commercial availability envelope hardening', () => {
+  let helpers;
+
+  beforeAll(() => {
+    jest.resetModules();
+    helpers = require('../src/controllers/intelligenceController').__commercialAvailabilityTestHelpers;
+  });
+
+  afterAll(clearApiConfig);
+
+  test('ready status has no availability warning', () => {
+    expect(helpers.commercialAvailabilityWarnings({
+      status: 'ready',
+      featureEnabled: true,
+      available: true,
+      persistence: { healthy: true },
+    })).toEqual([]);
+  });
+
+  test('malicious details cannot override canonical persistence-required controls or leak fields', () => {
+    const result = helpers.commercialAvailabilityError({
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+      details: {
+        status: 'ready',
+        code: 'ATTACKER_CODE',
+        featureEnabled: false,
+        available: true,
+        querySkipped: false,
+        writesBlocked: false,
+        reason: 'ATTACKER_REASON',
+        message: 'raw database error',
+        stack: 'private stack',
+        sql: 'select secret from private_table',
+        schema: 'cornerops_internal',
+        relation: 'commercial_entities',
+        connectionString: 'postgres://private',
+        secret: 'private-secret',
+        missingRequiredObjects: ['commercial_entities'],
+        persistence: {
+          healthy: false,
+          state: 'probe_error',
+          provider: 'postgres',
+          durable: true,
+          reason: 'COMMERCIAL_PERSISTENCE_PROBE_ERROR',
+          schema: 'cornerops_internal',
+          missingRequiredObjects: ['commercial_entities'],
+          secret: 'nested-secret',
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      status: 'unavailable',
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+      featureEnabled: true,
+      available: false,
+      querySkipped: true,
+      readOnly: true,
+      writesBlocked: true,
+      cornerMexWritesBlocked: true,
+      externalSendsBlocked: true,
+      paymentCaptureBlocked: true,
+      reason: 'PERSISTENCE_NOT_READY',
+      persistence: {
+        healthy: false,
+        state: 'probe_error',
+        provider: 'postgres',
+        durable: true,
+        reason: 'COMMERCIAL_PERSISTENCE_PROBE_ERROR',
+      },
+    });
+
+    const serialized = JSON.stringify(result);
+    ['message', 'stack', 'sql', 'schema', 'relation', 'connectionString', 'secret', 'missingRequiredObjects']
+      .forEach((field) => expect(serialized).not.toContain(field));
+  });
+
+  test('disabled errors ignore all persistence and attacker-controlled details', () => {
+    const result = helpers.commercialAvailabilityError({
+      code: 'COMMERCIAL_OPERATIONS_DISABLED',
+      details: {
+        status: 'ready',
+        available: true,
+        writesBlocked: false,
+        persistence: { healthy: true, state: 'ready', provider: 'postgres', durable: true },
+      },
+    });
+    expect(result).toEqual({
+      status: 'unavailable',
+      code: 'COMMERCIAL_OPERATIONS_DISABLED',
+      featureEnabled: false,
+      available: false,
+      querySkipped: true,
+      readOnly: true,
+      writesBlocked: true,
+      cornerMexWritesBlocked: true,
+      externalSendsBlocked: true,
+      paymentCaptureBlocked: true,
+      reason: 'FEATURE_DISABLED',
+    });
+  });
+
+  test('configuration-required status removes unverified migration assertions', () => {
+    const result = helpers.canonicalCommercialStatus({
+      status: 'configuration_required',
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+      persistence: {
+        healthy: false,
+        state: 'missing',
+        provider: 'unavailable',
+        durable: false,
+        reason: 'COMMERCIAL_MIGRATION_NOT_APPLIED',
+      },
+    });
+    expect(result.persistence).toEqual({
+      healthy: false,
+      state: 'missing',
+      provider: 'unavailable',
+      durable: false,
+    });
+    expect(JSON.stringify(result)).not.toMatch(migrationAssertion);
   });
 });
