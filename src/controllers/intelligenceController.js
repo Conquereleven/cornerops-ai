@@ -279,30 +279,102 @@ const actorContext = (req) => ({
   correlationId: req.get('x-correlation-id') || requestId(req, `work-queue-${Date.now()}`),
 });
 
+const COMMERCIAL_DISABLED_WARNING = 'Commercial Operations is disabled. Persistence readiness was not queried.';
+const COMMERCIAL_PERSISTENCE_WARNING = 'Commercial persistence readiness requirements are not satisfied.';
+const COMMERCIAL_PERSISTENCE_STATES = new Set(['ready', 'missing', 'probe_error']);
+const COMMERCIAL_PERSISTENCE_PROVIDERS = new Set(['postgres', 'unavailable']);
+const COMMERCIAL_PERSISTENCE_REASONS = new Set(['COMMERCIAL_PERSISTENCE_PROBE_ERROR', 'PERSISTENCE_NOT_READY']);
+
+const sanitizeCommercialPersistence = (persistence) => {
+  if (!persistence || typeof persistence !== 'object' || Array.isArray(persistence)) return undefined;
+  const sanitized = {};
+  if (typeof persistence.healthy === 'boolean') sanitized.healthy = persistence.healthy;
+  if (COMMERCIAL_PERSISTENCE_STATES.has(persistence.state)) sanitized.state = persistence.state;
+  if (COMMERCIAL_PERSISTENCE_PROVIDERS.has(persistence.provider)) sanitized.provider = persistence.provider;
+  if (typeof persistence.durable === 'boolean') sanitized.durable = persistence.durable;
+  if (COMMERCIAL_PERSISTENCE_REASONS.has(persistence.reason)) sanitized.reason = persistence.reason;
+  return Object.keys(sanitized).length ? sanitized : undefined;
+};
+
+const canonicalCommercialAvailability = (code, status = 'unavailable', persistence) => {
+  const disabled = code === 'COMMERCIAL_OPERATIONS_DISABLED';
+  const canonical = {
+    status,
+    code: disabled ? 'COMMERCIAL_OPERATIONS_DISABLED' : 'COMMERCIAL_PERSISTENCE_REQUIRED',
+    featureEnabled: !disabled,
+    available: false,
+    querySkipped: true,
+    readOnly: true,
+    writesBlocked: true,
+    cornerMexWritesBlocked: true,
+    externalSendsBlocked: true,
+    paymentCaptureBlocked: true,
+    reason: disabled ? 'FEATURE_DISABLED' : 'PERSISTENCE_NOT_READY',
+  };
+  const safePersistence = disabled ? undefined : sanitizeCommercialPersistence(persistence);
+  return safePersistence ? { ...canonical, persistence: safePersistence } : canonical;
+};
+
+const canonicalCommercialStatus = (data) => {
+  if (data?.code === 'COMMERCIAL_OPERATIONS_DISABLED') {
+    return canonicalCommercialAvailability(data.code, 'disabled');
+  }
+  if (data?.code === 'COMMERCIAL_PERSISTENCE_REQUIRED') {
+    return canonicalCommercialAvailability(data.code, 'configuration_required', data.persistence);
+  }
+  return data;
+};
+
+const commercialAvailabilityWarnings = (data) => {
+  if (data?.featureEnabled === false && data?.querySkipped === true) return [COMMERCIAL_DISABLED_WARNING];
+  if (data?.featureEnabled === true && data?.available === false) return [COMMERCIAL_PERSISTENCE_WARNING];
+  return [];
+};
+
 const commercialEnvelope = (data, status = 'success') => ({
   status,
-  sourceMode: data?.persistence?.healthy ? 'internal_postgres' : 'configuration_required',
-  readOnly: false,
+  ...(data?.code && { code: data.code }),
+  ...(typeof data?.featureEnabled === 'boolean' && { featureEnabled: data.featureEnabled }),
+  ...(typeof data?.available === 'boolean' && { available: data.available }),
+  ...(typeof data?.querySkipped === 'boolean' && { querySkipped: data.querySkipped }),
+  ...(data?.reason && { reason: data.reason }),
+  sourceMode: data?.persistence?.healthy ? 'internal_postgres' : (data?.status || 'configuration_required'),
+  readOnly: data?.readOnly ?? false,
   dryRun: false,
-  writesBlocked: false,
+  writesBlocked: data?.writesBlocked ?? false,
   internalWritesOnly: true,
   cornerMexWritesBlocked: true,
   externalSendsBlocked: true,
   paymentCaptureBlocked: true,
   approvalRequired: true,
   auditId: `audit-commercial-${Date.now()}`,
-  warnings: data?.persistence?.healthy ? [] : ['Commercial migration is proposed but not applied.'],
+  warnings: commercialAvailabilityWarnings(data),
   data,
 });
 
+const commercialAvailabilityError = (error) => {
+  if (!['COMMERCIAL_OPERATIONS_DISABLED', 'COMMERCIAL_PERSISTENCE_REQUIRED'].includes(error?.code)) return null;
+  return canonicalCommercialAvailability(error.code, 'unavailable', error.details?.persistence);
+};
+
+const handleCommercialReadError = (error, res, next) => {
+  const availability = commercialAvailabilityError(error);
+  if (!availability) return next(error);
+  return res.status(503).json(commercialEnvelope(availability, 'unavailable'));
+};
+
 const commercialStatus = async (_req, res, next) => {
-  try { return res.json(commercialEnvelope(await commercialOperationsService.status())); } catch (error) { return next(error); }
+  try {
+    const status = await commercialOperationsService.status();
+    const canonicalStatus = canonicalCommercialStatus(status);
+    return res.json(commercialEnvelope(canonicalStatus, canonicalStatus.status));
+  } catch (error) { return next(error); }
 };
 const commercialFounderDaily = async (_req, res, next) => {
-  try { return res.json(commercialEnvelope(await commercialOperationsService.founderDaily())); } catch (error) { return next(error); }
+  try { return res.json(commercialEnvelope(await commercialOperationsService.founderDaily())); } catch (error) { return handleCommercialReadError(error, res, next); }
 };
 const listCommercialEntities = (kind) => async (_req, res, next) => {
-  try { return res.json(commercialEnvelope({ items: await commercialOperationsService.list(kind), entityType: kind })); } catch (error) { return next(error); }
+  try { return res.json(commercialEnvelope({ items: await commercialOperationsService.list(kind), entityType: kind })); } catch (error) { return handleCommercialReadError(error, res, next); }
 };
 const previewCommercialInput = async (req, res, next) => {
   try { return res.json(commercialEnvelope(commercialOperationsService.previewInputPack(req.body?.input, req.body || {}))); } catch (error) { return next(error); }
@@ -716,6 +788,13 @@ module.exports = {
   workQueueService,
   workQueueStatus,
   commercialOperationsService,
+  __commercialAvailabilityTestHelpers: {
+    canonicalCommercialAvailability,
+    canonicalCommercialStatus,
+    commercialAvailabilityError,
+    commercialAvailabilityWarnings,
+    sanitizeCommercialPersistence,
+  },
   commercialStatus,
   commercialFounderDaily,
   commercialAccounts: listCommercialEntities('account'),

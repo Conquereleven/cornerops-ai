@@ -4,6 +4,7 @@ const { createHash } = require('crypto');
 const fixture = require('./fixtures/commercial/commercial-input-v117a.json');
 const {
   CommercialInputPackService, CommercialOperationsService, MemoryCommercialOperationsStore,
+  PostgresCommercialOperationsStore,
 } = require('../src/core/commercial');
 const { ApprovalEngineService, MemoryInternalOperationsStore, WorkQueueService } = require('../src/core/work-queue');
 
@@ -32,6 +33,102 @@ const approvedQuote = async (service, opportunity, quoteId = 'quote-approved') =
   await service.transitionQuote(quoteId, { status: 'APPROVED_INTERNAL', reason: 'approved', approvalId: 'approval-test', evidence: { approvalStatus: 'approved' } }, context);
   return service.list('quote').then((items) => items.find((item) => item.quoteId === quoteId));
 };
+
+describe('CO-1.17A-R1 commercial availability gate', () => {
+  test('disabled service status, reads and confirmation perform zero store operations', async () => {
+    const forbidden = jest.fn(() => { throw new Error('store must not be queried'); });
+    const store = {
+      health: forbidden, get: forbidden, list: forbidden, create: forbidden,
+      update: forbidden, claimEvidence: forbidden, listEvidence: forbidden,
+    };
+    const service = new CommercialOperationsService({
+      store,
+      config: { corneropsCommercialOperationsEnabled: false },
+    });
+
+    await expect(service.status()).resolves.toMatchObject({
+      status: 'disabled', code: 'COMMERCIAL_OPERATIONS_DISABLED', querySkipped: true,
+    });
+    await expect(service.list('account')).rejects.toMatchObject({ code: 'COMMERCIAL_OPERATIONS_DISABLED' });
+    await expect(service.founderDaily()).rejects.toMatchObject({ code: 'COMMERCIAL_OPERATIONS_DISABLED' });
+    await expect(service.confirmInputPack(fixture, { confirmed: true }, context))
+      .rejects.toMatchObject({ code: 'COMMERCIAL_OPERATIONS_DISABLED' });
+    expect(forbidden).not.toHaveBeenCalled();
+  });
+
+  test('enabled service checks readiness but never summarizes or lists when persistence is missing', async () => {
+    const health = jest.fn().mockResolvedValue({
+      healthy: false, state: 'missing', provider: 'postgres', durable: true,
+    });
+    const list = jest.fn(() => { throw new Error('commercial relation must not be queried'); });
+    const service = new CommercialOperationsService({
+      store: { health, list },
+      config: { corneropsCommercialOperationsEnabled: true },
+    });
+
+    await expect(service.status()).resolves.toMatchObject({
+      status: 'configuration_required', code: 'COMMERCIAL_PERSISTENCE_REQUIRED', querySkipped: true,
+    });
+    await expect(service.list('account')).rejects.toMatchObject({ code: 'COMMERCIAL_PERSISTENCE_REQUIRED' });
+    await expect(service.founderDaily()).rejects.toMatchObject({ code: 'COMMERCIAL_PERSISTENCE_REQUIRED' });
+    expect(health).toHaveBeenCalledTimes(3);
+    expect(list).not.toHaveBeenCalled();
+  });
+
+  test('readiness probe errors become sanitized configuration_required state', async () => {
+    const service = new CommercialOperationsService({
+      store: {
+        health: jest.fn().mockRejectedValue(Object.assign(new Error('private connection detail'), { code: '08006' })),
+        list: jest.fn(() => { throw new Error('list must not run'); }),
+      },
+      config: { corneropsCommercialOperationsEnabled: true },
+    });
+    const status = await service.status();
+    expect(status).toMatchObject({
+      status: 'configuration_required',
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED',
+      persistence: { state: 'probe_error', reason: 'COMMERCIAL_PERSISTENCE_PROBE_ERROR' },
+    });
+    expect(JSON.stringify(status)).not.toContain('private connection detail');
+  });
+
+  test('PostgreSQL readiness probes all required relations without selecting from them', async () => {
+    const query = jest.fn().mockResolvedValue({
+      rows: [{ object_1: true, object_2: false, object_3: false }],
+    });
+    const store = new PostgresCommercialOperationsStore({
+      internalStore: {
+        boundary: { schema: 'cornerops_internal' },
+        pool: { query },
+        table: (name) => `cornerops_internal.${name}`,
+        withTransaction: jest.fn(),
+      },
+    });
+
+    await expect(store.health()).resolves.toMatchObject({ healthy: false, state: 'missing' });
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0][0]).toMatch(/^select to_regclass/);
+    expect(query.mock.calls[0][1]).toHaveLength(3);
+  });
+
+  test('PostgreSQL boundary translates only undefined-table errors', async () => {
+    const pool = { query: jest.fn().mockRejectedValue(Object.assign(new Error('unsafe relation detail'), { code: '42P01' })) };
+    const store = new PostgresCommercialOperationsStore({
+      internalStore: {
+        boundary: { schema: 'cornerops_internal' }, pool,
+        table: (name) => `cornerops_internal.${name}`,
+        withTransaction: jest.fn(),
+      },
+    });
+    await expect(store.list('account')).rejects.toMatchObject({
+      code: 'COMMERCIAL_PERSISTENCE_REQUIRED', statusCode: 503,
+      message: 'Commercial persistence is not ready.',
+    });
+
+    pool.query.mockRejectedValueOnce(Object.assign(new Error('connection failed'), { code: '08006' }));
+    await expect(store.list('account')).rejects.toMatchObject({ code: '08006' });
+  });
+});
 
 describe('CO-1.17A Commercial Input Pack', () => {
   test('accepts real-shaped partial coverage without inventing target records', async () => {

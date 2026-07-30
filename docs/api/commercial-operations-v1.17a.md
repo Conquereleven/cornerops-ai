@@ -9,6 +9,19 @@ Founder Action authentication, exact-origin checks, JSON content type and rate l
 - `GET /api/intelligence/commercial/founder-daily`
 - `GET /api/intelligence/commercial/{accounts|skus|opportunities|quotes|orders|payments|fulfillments|exceptions|daily-closes}`
 
+Authentication is evaluated before feature availability. With Commercial Operations disabled,
+the authenticated status route returns HTTP 200 with `status=disabled`,
+`code=COMMERCIAL_OPERATIONS_DISABLED`, `featureEnabled=false` and `querySkipped=true`. The ten
+data routes return HTTP 503 with the same code and `status=unavailable`; they never return an empty
+collection that could be mistaken for a successful persistence read.
+
+When the feature is enabled but one or more required private persistence relations are unavailable,
+the status route performs only a read-only readiness probe and returns
+`status=configuration_required`. Data routes return HTTP 503 with
+`code=COMMERCIAL_PERSISTENCE_REQUIRED`. Public responses omit relation names, schema names, SQL,
+SQLSTATE and connection details. PostgreSQL undefined-table errors are translated at the commercial
+persistence boundary as defense in depth.
+
 ## Internal mutations
 
 - `POST /api/intelligence/commercial/input-packs/{preview|confirm}`
@@ -24,7 +37,10 @@ These routes write only to the private CornerOps internal database after a separ
 migration and feature-flag activation. They cannot send messages, capture/refund payments, create
 shipments, contact customers/suppliers or write to CornerMex.
 
-The input preview performs no write. Confirmation requires a valid versioned JSON/CSV pack,
+The input preview performs no write and remains available to an authenticated Founder Action caller
+while the commercial feature is disabled so an input pack can be validated safely. Confirmation is
+blocked while disabled or while persistence is unavailable. Once separately activated and ready,
+confirmation requires a valid versioned JSON/CSV pack,
 explicit confirmation and a stable SHA-256 checksum. Coverage starts at one account and one SKU;
 10 priority accounts and 18 launch SKUs remain targets, never fabricated minimums.
 
