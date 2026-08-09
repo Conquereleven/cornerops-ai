@@ -2,308 +2,198 @@
 
 ## Executive verdict
 
-Verdict: `ACCEPT_WITH_LOW_FINDINGS`.
+Final verdict: `ACCEPT_POST_MERGE_INACTIVE`.
 
-PR #78 is merged, the reviewed implementation is contained in current `main`, GitHub CI passed,
-and Railway is running the exact accepted merge SHA. Production health is good. Commercial
-Operations is inactive: the activation and demo flags are false, the commercial migration is not
-recorded or present even partially, and no commercial record can exist because its three tables do
-not exist. No Critical or High finding or stop condition was observed.
+CornerOps Commercial Operations v1.17A is deployed but intentionally inactive. PR #78 introduced
+the commercial core. The initial production acceptance then found that disabled authenticated reads
+could reach absent persistence and return HTTP 500 / `42P01`. PR #82 corrected that boundary and was
+merged from the independently approved exact head. Final read-only production acceptance verified
+the remediation on the exact deployed merge commit.
 
-Three non-activating findings remain: there is no dedicated readiness route; the authenticated
-commercial response envelope statically advertises `readOnly=false`, `dryRun=false`, and
-`writesBlocked=false` even while the feature flag blocks every mutation; and the existing rollback
-runbook says to drop “the two commercial tables” although the proposed migration creates three.
-These findings must be corrected and reviewed before a future activation but do not make a
-commercial mutation reachable in the accepted production state.
+Commercial Operations remains disabled. The proposed migration is not recorded in Supabase
+migration history, its required objects are absent, and no partial application or automatic migration
+runner exists. No production mutation, migration, flag change, restart, deployment, payment,
+fulfillment event, external send, or Intermex action was performed by acceptance.
 
-Evidence captured on `2026-07-23` in `America/Mexico_City`. This sprint performed inspection and
-documentation only; it did not authorize or perform activation.
+Evidence was captured on `2026-07-30` in `America/Mexico_City`.
 
-## Git and merge identity
+## Acceptance chronology
 
-| Field | Result | Evidence |
-| --- | --- | --- |
-| Repository | `Conquereleven/cornerops-ai` | `VERIFIED_LOCAL`, `VERIFIED_GITHUB` |
-| Agent/model | Codex / GPT-5 | `AGENT_REPORTED` |
-| GitHub identity | `Conquereleven` | `VERIFIED_GITHUB` |
-| PR | `#78`, `MERGED` at `2026-07-23T14:32:28Z` | `VERIFIED_GITHUB` |
-| PR title | `feat: add commercial operations core v1.17` | `VERIFIED_GITHUB` |
-| Reviewed head | `5f1cbc65693483bb80f44e1e32d51b98b2a16aee` | `VERIFIED_GITHUB` |
-| Merge commit | `7bb5bde197a966a0e864a500a055b13f1fdf7843` | `VERIFIED_GITHUB`, `VERIFIED_LOCAL` |
-| Current `origin/main` | `7bb5bde197a966a0e864a500a055b13f1fdf7843` | `VERIFIED_LOCAL` |
-| Commits after merge | None | `VERIFIED_LOCAL` |
-| Reviewed head ancestry | Ancestor of merge commit | `VERIFIED_LOCAL` |
-| Review threads | Zero total; therefore zero unresolved Critical/High threads | `VERIFIED_GITHUB` |
+### 1. Original implementation
 
-There is no post-merge commercial, deployment, database, flag, or runtime drift to classify.
+- PR #78: `feat: add commercial operations core v1.17`.
+- Reviewed head: `5f1cbc65693483bb80f44e1e32d51b98b2a16aee`.
+- Merge commit: `7bb5bde197a966a0e864a500a055b13f1fdf7843`.
+- Initial Railway deployment: `88c49401-f0fc-4f04-ba90-1fb03524c70d`.
 
-## Package-manager gate
+### 2. Initial acceptance failure
 
-- `pnpm --version`: `11.15.1`; disposition: `VERIFIED_AVAILABLE_NOT_ADOPTED`.
-- Repository npm version used for local commands: `11.17.0`.
-- Root and frontend `package-lock.json` remain present. Their SHA-256 values are respectively
-  `ff88a28bc2ac53e3c55aedf25f1706720a3e150ec426f3779e7dc633366e8ae1` and
-  `ef7f542b4b55a779b7af5112d0fe65c36ef8cf9637ae1443a6cde8f542e6ac1` before and after local checks.
-- No `pnpm-lock.yaml` exists and root `package.json` has no `packageManager` field.
-- CI and Railway continue to use npm. No install, package script, lockfile, CI, Railway, or build
-  command was changed in this sprint.
+The first production acceptance found that all eleven authenticated commercial GET routes could
+reach PostgreSQL while Commercial Operations was disabled. The absent private relations produced
+HTTP 500 / `42P01`. This was a fail-closed contract defect, not an authorized activation or data
+mutation. PR #81 was kept draft pending remediation.
 
-## CI integrity
+### 3. PR #82 remediation
 
-CI is accepted for both the reviewed head and current `main` (`VERIFIED_GITHUB`).
+- PR #82: `fix: fail closed before commercial persistence`.
+- First remediation head: `aded2c6305cfdddfdbc593410e61e0f573ee3de8`.
+- Final reviewed head: `7c81484baeeb778c037021ef020b75a03522948d`.
+- Formal review: `APPROVED` by `cornermexuae-netizen` on the final exact head.
+- Merge commit: `325294244ea191db3260561fa33cb7f1fd1945d4`.
 
-| SHA / event | Run | Conclusion | Covered gates |
+PR #82 enforces feature availability before persistence access, returns truthful disabled and
+configuration-required states, sanitizes availability details through an explicit whitelist, and
+does not claim unverified migration state.
+
+### 4. Final production acceptance
+
+`origin/main` and the active Railway deployment both resolve to
+`325294244ea191db3260561fa33cb7f1fd1945d4`. There were no later commits at acceptance time.
+
+## CI evidence
+
+| Surface | Run | SHA | Result |
 | --- | --- | --- | --- |
-| `5f1cbc6` / push | `30014807285` | `SUCCESS` | npm install, lint, typecheck, backend tests, frontend tests, build, safe demos |
-| `5f1cbc6` / pull request | `30014811439` | `SUCCESS` | Same complete CI job |
-| `7bb5bde` / push to `main` | `30016303319` | `SUCCESS` | Same complete CI job |
+| PR #82 exact head | `30506454180` | `7c81484baeeb778c037021ef020b75a03522948d` | `SUCCESS` |
+| Merge commit / main | `30567901099` | `325294244ea191db3260561fa33cb7f1fd1945d4` | `SUCCESS` |
+| Production watch | `30574586876` | `325294244ea191db3260561fa33cb7f1fd1945d4` | `SUCCESS` |
+| Supabase Preview on PR #82 | n/a | exact PR head | `SKIPPED` |
 
-The current-main job completed at `2026-07-23T14:33:50Z`. Scheduled production-watch runs
-`30022676788`, `30028996688`, and `30037113237` also completed successfully against the same SHA.
-
-Focused local verification used existing installed dependencies without an install:
-
-- `npm run lint`: 615 JavaScript files passed.
-- Four focused commercial suites: 4/4 suites and 84/84 tests passed.
-- The focused API suite verified unauthenticated read denial, read-only preview behavior, founder
-  authentication, missing-migration fail-closed behavior, and exact-origin denial.
-- CI remains the source of truth for the full typecheck, frontend test, backend test, and build gates.
+The main CI job passed install, lint, typecheck, backend tests, frontend tests, build, and safe beta
+demos. No workflow was rerun during final acceptance.
 
 ## Railway deployment identity
 
-| Field | Result | Evidence |
-| --- | --- | --- |
-| Project | `CornerOps AI` | `VERIFIED_RAILWAY` |
-| Environment | `production` | `VERIFIED_RAILWAY` |
-| Service | `cornerops-ai` | `VERIFIED_RAILWAY` |
-| Deployment ID | `88c49401-f0fc-4f04-ba90-1fb03524c70d` | `VERIFIED_RAILWAY` |
-| Status / instance | `SUCCESS` / `RUNNING` | `VERIFIED_RAILWAY` |
-| Created | `2026-07-23T14:32:31.209Z` | `VERIFIED_RAILWAY` |
-| Source SHA | `7bb5bde197a966a0e864a500a055b13f1fdf7843` | `VERIFIED_RAILWAY` |
-| Expected SHA | `7bb5bde197a966a0e864a500a055b13f1fdf7843` | `VERIFIED_LOCAL` |
-| Previous deployment | `b434f2f5-8ba8-4ac9-b259-ba54fdb51fc7`, `REMOVED`, SHA `8ae0d4966edfbc70c9da1b561b87eb7114e23a2c` | `VERIFIED_RAILWAY` |
-| Deployments caused by merge | One | `VERIFIED_RAILWAY` |
-| Current running deployment | `88c49401-f0fc-4f04-ba90-1fb03524c70d` | `VERIFIED_RAILWAY` |
-
-Railway built with `npm --prefix frontend ci && npm --prefix frontend run build`, starts with
-`npm start`, and uses `/api/health` as its healthcheck. There is no pre-deploy migration command.
-
-## Runtime health and readiness
-
-All probes were GET-only (`VERIFIED_RUNTIME`).
-
-| Route | HTTP | Result |
-| --- | ---: | --- |
-| `/api/health` | 200 | JSON `status=ok`; no stack or secret-like match |
-| `/health` | 200 | JSON `status=ok`; no stack or secret-like match |
-| `/api/ready` | 404 | JSON route-not-found; dedicated readiness is absent |
-| `/api/readiness` | 404 | JSON route-not-found; dedicated readiness is absent |
-| `/` | 200 | Production frontend HTML loaded |
-| `/api/intelligence/commercial/status` without credentials | 401 | Fails closed with `CONTROL_TOWER_FRONTEND_TOKEN_MISSING`, `writesBlocked=true`, and `externalSendsBlocked=true` |
-
-Railway readiness is currently represented only by the `/api/health` deployment healthcheck. The
-missing application readiness route is recorded as a Low residual and was not repaired.
-
-## Effective commercial and execution flags
-
-Only non-secret effective booleans were inspected (`VERIFIED_RAILWAY`, `VERIFIED_LOCAL`).
-
-| Control | Effective state |
+| Field | Result |
 | --- | --- |
-| `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED` | `false` (variable absent; fail-closed default) |
-| `CORNEROPS_COMMERCIAL_DEMO_ENABLED` | `false` |
-| Commercial shipping fallback / COD compatibility | `false` / `false`; version `unconfigured` |
-| Controlled actions | `false`; dry-run `true`; local internal writes `false` |
-| Agent framework / execution | Framework `true`, global dry-run `true`; execution remains simulated |
-| Real operator channel | `false` |
-| Telegram activation / operator | `false` / `false` |
-| Slack operator | `false` |
-| OpenClaw | `false` |
-| Business DB writes | `false` |
-| CornerMex Supabase writes | `false` |
-| Frontend bridge | read-only `true`, fail-closed `true` |
+| Project | `CornerOps AI` |
+| Service | `cornerops-ai` |
+| Environment | `production` |
+| Previous deployment | `88c49401-f0fc-4f04-ba90-1fb03524c70d`, source `7bb5bde197a966a0e864a500a055b13f1fdf7843`, removed |
+| Active deployment | `e2e42e1d-1da7-4ce2-883c-8635b631053d` |
+| Trigger | Automatic GitHub deployment after PR #82 merge |
+| Created | `2026-07-30T17:52:27.591Z` |
+| Status | `SUCCESS`, online |
+| Source SHA | `325294244ea191db3260561fa33cb7f1fd1945d4` |
+| Deployments caused by merge | One |
 
-Commercial writes are `OFF`. External sends are `OFF`. Payment capture/refund is absent and
-blocked by design. Fulfillment is a manual evidence ledger with no shipment adapter. The code has
-no automated Intermex adapter. Production logs contain no external-action attempt.
+No manual deployment, restart, rollback, Railway variable change, or healthcheck change occurred.
 
-## Migration and PostgreSQL state
+## Runtime acceptance
 
-Migration under inspection:
+All probes were GET-only.
+
+| Probe | Result |
+| --- | --- |
+| `GET /api/health` | HTTP 200, `status=ok` |
+| `GET /health` | HTTP 200, `status=ok` |
+| `GET /` | HTTP 200 |
+| `GET /readiness` | HTTP 200 frontend HTML fallback; not a dedicated readiness endpoint |
+| Eleven unauthenticated commercial GETs | 11/11 HTTP 401; no availability, SQL, schema, relation, or migration disclosure |
+| Authenticated commercial status | HTTP 200, `status=disabled`, `featureEnabled=false`, `available=false`, `querySkipped=true`, `readOnly=true`, `writesBlocked=true`, `reason=FEATURE_DISABLED` |
+| Disabled status warning | `Commercial Operations is disabled. Persistence readiness was not queried.` |
+| Ten authenticated commercial data GETs | 10/10 HTTP 503, `status=unavailable`, `code=COMMERCIAL_OPERATIONS_DISABLED`, no fabricated empty collections |
+| HTTP 500 | Zero |
+| `42P01` | Zero |
+
+The final commercial envelope truthfully reports disabled/read-only/write-blocked state. Responses
+contain no unverified migration assertion, SQL, SQLSTATE, schema or relation names, stack traces,
+connection details, or secrets.
+
+## Effective safety state
+
+- `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED`: absent, therefore fail-closed `false`.
+- `CORNEROPS_COMMERCIAL_DEMO_ENABLED`: absent, therefore `false`.
+- General internal persistence: enabled for existing private internal systems; the commercial gate
+  prevents commercial persistence access while the feature is disabled.
+- Controlled actions and real internal action flags: absent, therefore disabled; default dry-run and
+  approval requirements remain active.
+- CornerMex/Supabase writes: disabled.
+- External sends and payment capture: blocked.
+- Commercial fulfillment execution and Intermex actions: blocked.
+- Agents: framework default enabled, global dry-run and approval defaults active.
+- OpenClaw: disabled.
+
+## Migration and database state
+
+Migration:
 `supabase/migrations/20260722010000_cornerops_commercial_operations_v117a.sql`.
 
-| Check | Result | Evidence |
+| Check | Result | Classification |
 | --- | --- | --- |
-| Repository SHA-256 | `44cee38fe62e540b7bb12fea27ece4e424e448678ce47c497c268faeacd36705` | `VERIFIED_LOCAL` |
-| Supabase migration history | Version `20260722010000` absent | `VERIFIED_DATABASE` |
-| Commercial tables | 0 of 3 present | `VERIFIED_DATABASE` |
-| Commercial mutation-protection function | Absent | `VERIFIED_DATABASE` |
-| Commercial triggers | 0 present | `VERIFIED_DATABASE` |
-| Commercial grants | 0 present | `VERIFIED_DATABASE` |
-| Partial application | None | `VERIFIED_DATABASE` |
-| Automatic migration runner | Not configured in CI, Railway manifest, start command, or package scripts | `VERIFIED_LOCAL`, `VERIFIED_RAILWAY` |
+| Repository SHA-256 | `44cee38fe62e540b7bb12fea27ece4e424e448678ce47c497c268faeacd36705` | `VERIFIED` |
+| Supabase migration version `20260722010000` | Not recorded | `VERIFIED` |
+| `commercial_entities` | Absent | `VERIFIED` |
+| `commercial_transition_events` | Absent | `VERIFIED` |
+| `commercial_evidence_registry` | Absent | `VERIFIED` |
+| Mutation-protection function | Absent | `VERIFIED` |
+| Partial application | None | `VERIFIED` |
+| Automatic migration runner | Not configured in CI, Railway manifest, start command, or package scripts | `VERIFIED` |
 
-The direct runtime-role audit ran as `cornerops_internal_app` inside a PostgreSQL transaction with
-`transaction_read_only=on`. The intended `cornerops_internal_runtime` role exists and is non-login,
-non-superuser, cannot create roles/databases, cannot replicate, and cannot bypass RLS. The proposed
-SQL revokes public API roles and grants only the private runtime role. The private
-`cornerops_internal` schema has no `USAGE` or table grants for `public`, `anon`, `authenticated`, or
-`service_role`; the generic “RLS disabled” table advisory therefore does not represent Data API
-exposure in this configuration.
+The private-schema RLS advisory is generic. Read-only privilege introspection confirmed that
+`anon`, `authenticated`, and `service_role` have no schema usage, table SELECT, or table write
+privileges in `cornerops_internal`. No remediation was applied during acceptance.
 
-Migration state: `NOT APPLIED`. Partial application: `NONE`. Automatic runner:
-`NOT CONFIGURED FOR THIS FILE`.
+## Runtime logs
 
-## Fail-closed commercial runtime
+Logs from deployment `e2e42e1d-1da7-4ce2-883c-8635b631053d` through final acceptance contained:
 
-Static and local behavioral evidence shows:
-
-- every commercial route first passes operator-token auth;
-- every state-changing service method calls `assertEnabled()` and receives effective flag `false`;
-- founder-action auth, JSON content type, exact-origin checks, and rate limiting protect mutation routes;
-- even with valid founder auth in the focused test, unavailable persistence returns HTTP 503;
-- the production schema has no commercial tables, so no commercial record or demo record exists;
-- demo data is an in-memory fixture labeled `COMMERCIAL_DEMO_DATA_NOT_PRODUCTION`, requires an
-  explicit script, and is disabled in production;
-- quote output remains `DRAFT_NOT_SENT`; no messaging, payment-capture, shipment, purchasing, or
-  CornerMex mutation adapter exists;
-- fulfillment and payment state changes require attributable evidence, and immutable evidence has
-  append-only/replay protections in the proposed migration and focused tests.
-
-No production mutation probe was made. The safe GET probe failed closed at authentication.
-
-Low finding: `commercialEnvelope()` statically reports `readOnly=false`, `dryRun=false`, and
-`writesBlocked=false` instead of reflecting the disabled activation flag. This is misleading status
-metadata for an authenticated operator, although the feature flag assertion and absent schema still
-prevent every mutation. Correct the envelope before activation.
-
-## Logs and runtime stability
-
-Sanitized review covered 423 runtime records and 279 build records for deployment
-`88c49401-f0fc-4f04-ba90-1fb03524c70d` (`VERIFIED_RAILWAY`).
-
-- No crash loop, unhandled exception, migration error, permission error, retry storm, payment event,
-  fulfillment event, Intermex event, queue failure, agent execution, or secret pattern was found.
-- The single restart-pattern match was normal container startup; the instance remains `RUNNING`.
-- Startup reached `CornerOps AI Workers listening on http://0.0.0.0:8080`.
-- Two known fail-safe warnings were emitted: missing `INTERNAL_API_KEY` keeps internal endpoints
-  locked; agents enabled with global dry-run keeps agent execution simulated.
-- Build warnings were npm production-config guidance and deprecations for `inflight`, `glob@7`,
-  `node-domexception`, and `whatwg-encoding`. No build failure occurred.
+- zero `42P01` or commercial relation-name matches;
+- zero exact HTTP 500 responses;
+- zero crash loops, unexpected migrations, payments, fulfillment events, Intermex actions,
+  external sends, or secret patterns;
+- the ten expected fail-closed HTTP 503 responses generated by acceptance;
+- one non-blocking npm production-config warning recommending `--omit=dev`.
 
 ## No-write attestation
 
-This acceptance sprint caused:
-
 | Action | Count |
 | --- | ---: |
-| GitHub production-code writes | 0 |
+| GitHub production or code writes | 0 |
 | Railway writes | 0 |
 | Supabase writes | 0 |
 | PostgreSQL writes | 0 |
-| Feature-flag changes | 0 |
-| Restarts | 0 |
-| Redeployments | 0 |
-| External sends | 0 |
+| Variable changes | 0 |
+| Restarts or manual deployments | 0 |
 | Commercial records created | 0 |
-| Payments captured | 0 |
-| Fulfillment events created | 0 |
-| Intermex contacts/actions | 0 |
+| Payments | 0 |
+| Fulfillment events | 0 |
+| External sends | 0 |
+| Intermex actions | 0 |
 
-The database `audit_events` count was 1,013 both before and after runtime probing, and commercial
-object counts remained zero. GitHub/Railway/Supabase inspection was read-only. The only allowed
-write is this documentation artifact on a dedicated branch and its draft documentation PR.
+The single automatic Railway deployment caused by the authorized PR #82 merge is recorded
+separately and is not a platform write performed by acceptance.
 
-## Activation readiness matrix
+## Remaining Low findings
 
-| Gate | State | Basis |
-| --- | --- | --- |
-| Code merged | `VERIFIED` | PR #78 merge identity |
-| CI accepted | `VERIFIED` | Reviewed-head and main CI success |
-| Correct source deployed | `VERIFIED` | Railway SHA equals accepted main |
-| Runtime healthy | `VERIFIED` | Health and frontend HTTP 200; stable logs |
-| Commercial flag off | `VERIFIED` | Effective production config false |
-| Migration unapplied | `VERIFIED` | History absent and objects absent |
-| Migration hash verified | `VERIFIED` | Exact expected SHA-256 |
-| Migration dependency review | `VERIFIED` | Runtime role exists; transaction/grant/function dependencies reviewed |
-| PostgreSQL grants reviewed | `VERIFIED` | Proposed grants inspected; live commercial grants absent; API roles isolated |
-| Rollback plan documented | `VERIFIED` | Existing runbook, with table-count correction required before use |
-| Forbidden operation probes designed | `VERIFIED` | Runbook and focused PostgreSQL test design |
-| Seed/input package available | `NOT_VERIFIED` | Demo fixture exists but is not an authorized production package |
-| Accounts configured | `NOT_VERIFIED` | No commercial tables or production input package |
-| Launch SKUs configured | `NOT_VERIFIED` | No commercial tables or production input package |
-| Intermex data available | `NOT_VERIFIED` | No production fulfillment references or commercial evidence pack |
-| Shipping rules available | `NOT_VERIFIED` | Shipping configuration is unconfigured |
-| Payment terms available | `NOT_VERIFIED` | Demo values are pending verification; no production package |
-| Activation authorized | `NOT_AUTHORIZED` | Founder activation approval is outside this sprint |
+1. No dedicated application readiness endpoint; `/readiness` resolves to the frontend fallback.
+2. Readiness health probes may repeat across commercial calls.
+3. The shared commercial envelope reports `approvalRequired` unconditionally.
+4. The shared commercial envelope audit ID is generated in-process rather than persisted.
+5. The internal test-helper export has no route or state-changing capability but remains visible to
+   CommonJS consumers.
+6. npm emits non-blocking production/deprecation guidance.
 
-## Readiness disposition and blockers
+These findings do not make Commercial Operations reachable while disabled. They require review
+before any future activation.
 
-| Dimension | State | Disposition |
-| --- | --- | --- |
-| Code readiness | `VERIFIED` | Merged, CI accepted, exact source deployed, fail-closed tests passed |
-| Data readiness | `BLOCKED` | Production accounts, SKUs, prices, costs, MOQ, inventory, shipping, payment terms, and Intermex references missing |
-| Operational readiness | `BLOCKED` | Window, backup validation, corrected rollback, forbidden probes, ownership, SLAs, and evidence retention not approved |
-| Production authorization | `NOT_AUTHORIZED` | Migration and feature activation explicitly forbidden in this sprint |
+## Activation disposition
 
-Before any future migration or activation, obtain and verify:
+| Dimension | State |
+| --- | --- |
+| Code remediation | `VERIFIED` |
+| Exact source deployed | `VERIFIED` |
+| Disabled runtime contract | `VERIFIED` |
+| Migration applied | `NOT_AUTHORIZED` |
+| Production input package | `NOT_VERIFIED` |
+| Commercial activation | `NOT_AUTHORIZED` |
+| External commercial use | `BLOCKED` |
 
-1. Founder-approved production migration window and exact accepted SHA.
-2. Validated database backup/restore posture and a corrected rollback runbook covering all three
-   commercial tables, the function, triggers, evidence preservation, and dependency order.
-3. Rolled-back forbidden-operation probes for runtime and owner roles, including update, delete,
-   truncate, public-role access, replay, and duplicate settlement.
-4. Confirmed production runtime database role and post-migration grant introspection.
-5. Authorized accounts and launch-SKU packages with prices, costs, MOQs, inventory evidence, and
-   source/checksum ownership.
-6. Real Intermex fulfillment/handoff references, warehouse and carrier evidence rules, UAE
-   destination/shipping configuration, and COD/bank-transfer policy.
-7. Evidence retention requirements, commercial owner/operator assignments, exception ownership,
-   Daily Close responsibility, and service-level expectations.
-8. Explicit Founder authorization for migration first and activation only after a separate
-   post-migration verification.
-
-## Rollback posture and residual risks
-
-No database rollback is required because the commercial migration was not applied. The commercial
-flag is already false. A code rollback reference would be merge commit
-`7bb5bde197a966a0e864a500a055b13f1fdf7843`; the previous Railway deployment is
-`b434f2f5-8ba8-4ac9-b259-ba54fdb51fc7`. Neither rollback was performed or authorized.
-
-Residuals:
-
-1. Low: no dedicated application readiness endpoint; Railway relies on `/api/health`.
-2. Low: the commercial response envelope does not reflect disabled/write-blocked state accurately.
-3. Low: rollback prose refers to two commercial tables although the migration creates three.
-4. Operational: npm dependency deprecation warnings remain; they did not affect build or runtime.
-5. Activation: all real business inputs, operator controls, window, backup proof, and Founder
-   authorization remain absent or not verified.
-
-## Recommended next authorization
-
-Authorize a separate, non-activating remediation and activation-preparation sprint to correct the
-two documentation/runtime-status findings, add an explicit readiness contract, validate backup and
-rollback, design rolled-back forbidden probes, and assemble founder-reviewed production input
-packages. Only after that evidence is independently accepted should a distinct exact-head migration
-window be considered. Do not enable `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED` in that preparation
-sprint.
-
-## Evidence labels
-
-- `VERIFIED_LOCAL`: observed from the exact accepted repository/worktree.
-- `VERIFIED_GITHUB`: read from GitHub commit, PR, review, or Actions metadata.
-- `VERIFIED_RAILWAY`: read from Railway deployment/configuration/log metadata without mutation.
-- `VERIFIED_RUNTIME`: observed through safe production GET requests.
-- `VERIFIED_DATABASE`: read from Supabase/PostgreSQL metadata or a transaction forced read-only.
-- `STATIC_REVIEW`: concluded from source, migration, test, or runbook inspection.
-- `AGENT_REPORTED`: agent/runtime identity declared by this audit.
-- `AUTHOR_REPORTED`: implementation documentation statement not independently established live.
-- `NOT_VERIFIED`: evidence is missing or insufficient; it is not a pass.
-- `NOT_AUTHORIZED`: outside the Founder authorization boundary.
+The next authorized step is a separate non-activating readiness sprint. Migration application and
+Commercial Operations activation require distinct Founder decisions.
 
 ## Final status
 
-Final verdict: `ACCEPT_WITH_LOW_FINDINGS`.
+Final verdict: `ACCEPT_POST_MERGE_INACTIVE`.
 
 Final status token: `cornerops_v1_17a_post_merge_accepted_inactive`.
