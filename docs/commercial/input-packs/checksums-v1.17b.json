@@ -1,0 +1,12 @@
+{
+  "algorithm": "sha256",
+  "logicalCandidateChecksum": "2dfbad6640d44021877a6e7247f97592f2540f2fa94ab605754072921d2b06ea",
+  "files": {
+    "commercial-input-v1.17b.schema.json": "cba8c171b529f94f2a729040f61a401bd331f545d0ce1568ee24a915fc6eb8f6",
+    "commercial-production-template-v1.17b.json": "dce01cb3c52eee7dea686a7ac5566c3df81c96316a491cc1385efdf7bd28d558",
+    "commercial-production-candidate-v1.17b.json": "ca6714126b48c9afe6e13006447b2a167f8f96ab485e22094403201ac49f8469",
+    "commercial-production-validation-v1.17b.json": "6e021a1348ea4cb185eda10f3230af7a70416cf0459991b0903e6e89676e0960"
+  },
+  "writesPerformed": false,
+  "importAuthorized": false
+}

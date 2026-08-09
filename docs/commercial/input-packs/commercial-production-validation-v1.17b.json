@@ -1,0 +1,19 @@
+{
+  "classification": "COMMERCIAL_PRODUCTION_CANDIDATE_NOT_IMPORTED",
+  "version": "commercial-input-v1.17b",
+  "status": "production_candidate_validated_not_imported",
+  "valid": true,
+  "candidateChecksum": "2dfbad6640d44021877a6e7247f97592f2540f2fa94ab605754072921d2b06ea",
+  "counts": {
+    "accounts": 10,
+    "skus": 12,
+    "unknownFields": 220,
+    "sourceBackedFields": 234
+  },
+  "validationErrors": [],
+  "unknownMarkers": ["unknown", "not_provided", "pending_verification"],
+  "writesPerformed": false,
+  "importAuthorized": false,
+  "validatedAt": "2026-08-09T00:00:00.000Z",
+  "validator": "CommercialProductionCandidateService"
+}
