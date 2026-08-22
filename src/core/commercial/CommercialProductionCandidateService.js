@@ -65,6 +65,7 @@ class CommercialProductionCandidateService {
     }
 
     const inspect = (record, recordType, index, requiredFields) => {
+      const allowedFields = new Set([...requiredFields, ...EVIDENCE_FIELDS]);
       EVIDENCE_FIELDS.forEach((field) => {
         if (!(field in record) || record[field] === '' || record[field] === null) {
           errors.push({ type: recordType, index, field, code: 'EVIDENCE_FIELD_REQUIRED' });
@@ -82,14 +83,18 @@ class CommercialProductionCandidateService {
       if (UNKNOWN_SET.has(record.evidenceSource)) {
         errors.push({ type: recordType, index, field: 'evidenceSource', code: 'EVIDENCE_SOURCE_REQUIRED' });
       }
-      [...new Set([...requiredFields, ...EVIDENCE_FIELDS])].forEach((field) => {
+      Object.entries(record).forEach(([field, value]) => {
+        if (!allowedFields.has(field)) {
+          errors.push({ type: recordType, index, field, code: 'UNEXPECTED_FIELD' });
+        }
+        if (hasPrivateContactData(value)) {
+          errors.push({ type: recordType, index, field, code: 'PRIVATE_CONTACT_DATA_NOT_ALLOWED' });
+        }
+      });
+      allowedFields.forEach((field) => {
         const value = record[field];
         if (DISALLOWED_UNKNOWN_MARKERS.has(String(value ?? '').trim().toLowerCase())) {
           errors.push({ type: recordType, index, field, code: 'UNKNOWN_MARKER_INVALID' });
-        }
-        if (!['accountId', 'skuId', 'source', 'evidenceSource', 'evidenceDate', 'updatedAt'].includes(field)
-          && hasPrivateContactData(value)) {
-          errors.push({ type: recordType, index, field, code: 'PRIVATE_CONTACT_DATA_NOT_ALLOWED' });
         }
       });
     };
