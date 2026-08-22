@@ -103,6 +103,19 @@ describe('CommercialProductionCandidateService v1.17B', () => {
     expect(result.errors).toContainEqual(expect.objectContaining({ code: 'PRIVATE_CONTACT_DATA_NOT_ALLOWED' }));
   });
 
+  test('rejects unexpected fields so private contact data cannot bypass the allowlist', () => {
+    const pack = validPack();
+    pack.accounts[0].contactEmail = 'private.person@example.test';
+    pack.skus[0].internalNote = 'harmless but undeclared';
+    const result = service.validate(pack);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'account', field: 'contactEmail', code: 'UNEXPECTED_FIELD' }),
+      expect.objectContaining({ type: 'account', field: 'contactEmail', code: 'PRIVATE_CONTACT_DATA_NOT_ALLOWED' }),
+      expect.objectContaining({ type: 'sku', field: 'internalNote', code: 'UNEXPECTED_FIELD' }),
+    ]));
+  });
+
   test('validates the repository candidate and pins source-backed counts', () => {
     const candidate = JSON.parse(fs.readFileSync(path.join(
       __dirname,
