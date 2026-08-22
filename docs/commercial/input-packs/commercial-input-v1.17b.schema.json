@@ -66,7 +66,8 @@
             "updatedAt": { "type": "string", "format": "date-time" }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "sku": {
       "allOf": [
@@ -95,7 +96,8 @@
             "updatedAt": { "type": "string", "format": "date-time" }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     }
   },
   "x-cornerops-unknown-markers": ["unknown", "not_provided", "pending_verification"],
