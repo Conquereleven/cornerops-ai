@@ -33,8 +33,20 @@ const checksum = (value) => createHash('sha256')
   .digest('hex');
 const hasPrivateContactData = (value) => {
   const text = String(value ?? '');
-  return /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(text)
-    || /(?:\+?\d[\d\s().-]{8,}\d)/.test(text);
+  const hasEmail = /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(text);
+  if (hasEmail) return true;
+
+  // Avoid treating ISO timestamps and ordinary numeric evidence as phone numbers.
+  // Phone detection intentionally requires either a leading +, a 9–15 digit
+  // uninterrupted number, or a separator-based sequence that begins and ends
+  // with digits and contains at least 9 digits overall.
+  if (/\+\d[\d\s().-]{7,}\d/.test(text) || /\b\d{9,15}\b/.test(text)) return true;
+  const separated = text.match(/\b\d(?:[\s().-]+\d){8,}\b/g) || [];
+  return separated.some((candidate) => {
+    if (/^\d{4}-\d{2}-\d{2}T/.test(candidate)) return false;
+    const digits = candidate.replace(/\D/g, '');
+    return digits.length >= 9 && digits.length <= 15;
+  });
 };
 const validTimestamp = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value));
 
