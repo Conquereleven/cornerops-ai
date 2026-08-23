@@ -5,10 +5,12 @@ import App from './App';
 const envelope={status:'success',sourceMode:'internal_postgresql',readOnly:true,dryRun:true,writesBlocked:true,externalSendsBlocked:true,approvalRequired:false,auditId:'audit-live-overview',warnings:[],data:{headline:'Live founder summary'}};
 const wave1={status:'ready',sellerCount:14,sellers:[{productCount:489}],writesBlocked:true,externalContactBlocked:true,marketComparisonPerformed:false,marketCompletenessClaim:false,bestSupplierClaim:false,basketOptimizerStatus:'deferred'};
 const inventory={productsWithInitializedInventory:489,physicallyVerifiedProducts:0,initialQuantityPerProduct:100,inventorySource:'founder_authorized_initialization',physicalCountVerified:false};
+const originalMatchMedia=window.matchMedia;
 
 describe('App',()=>{
   afterEach(()=>{
     vi.restoreAllMocks();
+    Object.defineProperty(window,'matchMedia',{configurable:true,writable:true,value:originalMatchMedia});
     sessionStorage.clear();
     window.history.pushState({},'', '/');
   });
@@ -18,6 +20,17 @@ describe('App',()=>{
     expect(await screen.findByRole('heading',{name:'Run the company from the signal, not the noise.'})).toBeInTheDocument();
     expect(screen.getByRole('link',{name:'Operator sign in'})).toHaveAttribute('href','/login');
     expect(screen.getByText('PRODUCT PREVIEW')).toBeInTheDocument();
+  });
+
+  test('keeps the landing static when reduced motion is requested',async()=>{
+    Object.defineProperty(window,'matchMedia',{configurable:true,writable:true,value:vi.fn().mockReturnValue({
+      matches:true,
+      media:'(prefers-reduced-motion: reduce)',
+      addEventListener:vi.fn(),
+      removeEventListener:vi.fn(),
+    })});
+    const { container }=render(<App/>);
+    await waitFor(()=>expect(container.querySelector('.co-public')).toHaveAttribute('data-motion','reduced'));
   });
 
   test('renders the truthful non-authenticated login gateway',async()=>{

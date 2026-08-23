@@ -36,6 +36,7 @@
 }
 
 .co-public-nav nav { display: flex; align-items: center; gap: 22px; color: var(--co-public-muted); font-size: 12px; }
+.co-public-nav nav > a { min-height: 44px; display: inline-flex; align-items: center; }
 .co-public-nav nav > a:hover { color: white; }
 .co-public-brand { display: inline-flex; align-items: center; gap: 10px; }
 .co-public-brand-mark, .co-login-brand-mark {
@@ -54,6 +55,12 @@
 .co-public-brand strong { font-size: 14px; letter-spacing: -.3px; }
 .co-public-brand small { margin-top: 2px; color: var(--co-public-muted); font-size: 9px; }
 .co-public-signin { padding: 9px 13px; border: 1px solid var(--co-public-border-strong); border-radius: 8px; color: white !important; background: rgba(255,255,255,.035); }
+
+.co-public a:focus-visible,
+.co-public button:focus-visible {
+  outline: 3px solid rgba(105, 180, 255, .78);
+  outline-offset: 3px;
+}
 
 .co-public-hero {
   width: min(1180px, calc(100% - 32px));

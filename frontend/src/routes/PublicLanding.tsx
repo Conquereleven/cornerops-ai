@@ -1,4 +1,5 @@
 import { ArrowRight, Check, LockKeyhole, Radar, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/public.css';
 
@@ -33,8 +34,99 @@ const safeguards = [
 ];
 
 export function PublicLanding() {
+  const root = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const rootElement = root.current;
+    if (!rootElement) return;
+
+    if (typeof window.matchMedia !== 'function') {
+      rootElement.dataset.motion = 'static';
+      return;
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      rootElement.dataset.motion = 'reduced';
+      return;
+    }
+
+    let disposed = false;
+    let motionScope: { revert: () => void } | undefined;
+
+    void import('animejs').then(({ animate, createScope, createTimeline, onScroll, stagger }) => {
+      if (disposed) return;
+
+      motionScope = createScope({ root: rootElement }).add(() => {
+        createTimeline({ defaults: { ease: 'out(4)' } })
+          .add('.co-public-nav', { opacity: [0, 1], y: [-10, 0], duration: 480 })
+          .add('.co-public-hero-copy > *', {
+            opacity: [0, 1],
+            y: [18, 0],
+            duration: 620,
+            delay: stagger(55),
+          }, '-=260')
+          .add('.co-public-command-preview', {
+            opacity: [0, 1],
+            x: [20, 0],
+            scale: [.985, 1],
+            duration: 760,
+          }, '-=520')
+          .add('.co-public-preview-grid article', {
+            opacity: [0, 1],
+            y: [10, 0],
+            duration: 420,
+            delay: stagger(45),
+          }, '-=520');
+
+        animate('.co-public-section-heading', {
+          opacity: [0, 1],
+          y: [24, 0],
+          duration: 650,
+          ease: 'out(4)',
+          autoplay: onScroll({ target: '.co-public-section-heading', enter: 'bottom-=100 top', repeat: false }),
+        });
+
+        animate('.co-public-module-card', {
+          opacity: [0, 1],
+          y: [22, 0],
+          duration: 620,
+          delay: stagger(70),
+          ease: 'out(4)',
+          autoplay: onScroll({ target: '.co-public-module-grid', enter: 'bottom-=90 top', repeat: false }),
+        });
+
+        animate('.co-public-governance > *', {
+          opacity: [0, 1],
+          y: [20, 0],
+          duration: 650,
+          delay: stagger(90),
+          ease: 'out(4)',
+          autoplay: onScroll({ target: '.co-public-governance', enter: 'bottom-=90 top', repeat: false }),
+        });
+
+        animate('.co-public-cta > *', {
+          opacity: [0, 1],
+          y: [18, 0],
+          duration: 600,
+          delay: stagger(65),
+          ease: 'out(4)',
+          autoplay: onScroll({ target: '.co-public-cta', enter: 'bottom-=90 top', repeat: false }),
+        });
+      });
+
+      rootElement.dataset.motion = 'ready';
+    }).catch(() => {
+      if (!disposed) rootElement.dataset.motion = 'static';
+    });
+
+    return () => {
+      disposed = true;
+      motionScope?.revert();
+    };
+  }, []);
+
   return (
-    <main className="co-public cg-root">
+    <main className="co-public cg-root" ref={root}>
       <header className="co-public-nav" aria-label="CornerOps public navigation">
         <Link className="co-public-brand" to="/" aria-label="CornerOps home">
           <span className="co-public-brand-mark">C</span>
