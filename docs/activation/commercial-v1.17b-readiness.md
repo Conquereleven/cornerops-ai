@@ -28,3 +28,17 @@ migration, `/api/ready` must remain HTTP 200 with mode `commercial_inactive` unt
 authorization changes the feature flag.
 
 `pnpm`: `VERIFIED_AVAILABLE_NOT_ADOPTED`. npm remains the repository package manager.
+
+## Independent migration-only technical gate
+
+State: `VERIFIED_STATIC_NON_APPLYING_REVIEW`
+
+The migration-only gate independently pins and checks the exact migration SHA-256, runtime grants,
+external-role revocations, owner-level immutable triggers and dependency-ordered rollback contract.
+The gate is static by design: it reads repository artifacts and does not execute SQL, connect to a
+database or change any environment. Existing disposable PostgreSQL rehearsal evidence remains the
+runtime evidence for the Founder decision package.
+
+This gate does not authorize a production migration. Any separately authorized migration must still
+verify the target fingerprint, capture a backup, introspect effective privileges, run rolled-back
+forbidden-operation probes and confirm `commercial_inactive` before the change can be accepted.

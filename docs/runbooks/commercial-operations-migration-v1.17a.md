@@ -22,6 +22,20 @@ Review checksum: `44cee38fe62e540b7bb12fea27ece4e424e448678ce47c497c268faeacd367
 
 ## Rollback
 
-Disable `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED` first. Preserve/export audit evidence, then under
-separate approval drop the two commercial tables, trigger and function. Never roll back by deleting
-individual transition records.
+Disable `CORNEROPS_COMMERCIAL_OPERATIONS_ENABLED` first and verify `/api/ready` reports
+`commercial_inactive`. Preserve/export audit evidence, then under separate approval use this exact
+dependency order inside one transaction:
+
+1. Drop `commercial_transition_events_append_only` and
+   `commercial_transition_events_reject_truncate` from `commercial_transition_events`.
+2. Drop `commercial_evidence_registry_append_only` and
+   `commercial_evidence_registry_reject_truncate` from `commercial_evidence_registry`.
+3. Drop `commercial_evidence_registry`.
+4. Drop `commercial_transition_events`.
+5. Drop `commercial_entities`.
+6. Drop `reject_commercial_transition_mutation()`.
+
+After rollback, verify that all three commercial tables, all four triggers and the trigger function
+are absent while the Work Queue tables, the `cornerops_internal` schema and
+`cornerops_internal_runtime` role remain present. Never drop the shared schema/runtime role and never
+roll back by deleting individual transition records.
