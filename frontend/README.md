@@ -18,7 +18,20 @@ La aplicación queda disponible en `http://127.0.0.1:5173`.
 
 ```env
 VITE_API_BASE_URL=
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+VITE_SUPABASE_GOOGLE_AUTH_ENABLED=false
 ```
+
+Auth uses Supabase PKCE with persisted browser sessions. Email magic links are
+limited to existing users (`shouldCreateUser=false`). Google is rendered only
+when the explicit frontend flag is enabled and the provider/redirect allow-list
+have been configured in Supabase. Never place a secret or service-role key in a
+`VITE_` variable.
+
+Required redirect URLs include `/auth/callback` for each trusted local, preview,
+and production origin. A verified identity remains in `access pending`; workspace
+membership and roles are deliberately deferred to CO-WEB-1F.
 
 El backend debe ejecutarse desde la raíz del proyecto:
 
