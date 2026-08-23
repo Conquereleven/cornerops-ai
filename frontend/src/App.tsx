@@ -1,8 +1,13 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ReactElement } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthContext';
+import { RequireAuthentication, RequireWorkspaceAccess } from './auth/AuthBoundaries';
 import { AppShell } from './components/layout/AppShell';
 import { moduleRegistry, type ModuleKey } from './config/moduleRegistry';
+import { AccessPending } from './routes/AccessPending';
 import { AuthorizedSellers } from './routes/AuthorizedSellers';
+import { AuthCallback } from './routes/AuthCallback';
 import { ChatCenter } from './routes/ChatCenter';
 import { Conversations } from './routes/Conversations';
 import { ControlTower } from './routes/ControlTower';
@@ -14,7 +19,7 @@ import { OperationalModulePage } from './routes/OperationalModulePage';
 import { Orders } from './routes/Orders';
 import { Products } from './routes/Products';
 import { PublicLanding } from './routes/PublicLanding';
-import { SellerCatalog, SellerComparison, SellerInventory, AuthorizedSellerDetail } from './routes/SellerOperations';
+import { AuthorizedSellerDetail, SellerCatalog, SellerComparison, SellerInventory } from './routes/SellerOperations';
 import { Settings } from './routes/Settings';
 import { WorkerSettings } from './routes/WorkerSettings';
 
@@ -25,16 +30,22 @@ const dedicated:Partial<Record<ModuleKey,ReactElement>>={
   'worker-settings':<WorkerSettings/>,integrations:<Integrations/>,settings:<Settings/>,
 };
 
-export default function App(){
-  return <BrowserRouter><Routes>
+export default function App({ authClient }: { authClient?: SupabaseClient | null }){
+  return <AuthProvider client={authClient}><BrowserRouter><Routes>
     <Route path="/" element={<PublicLanding/>}/>
     <Route path="/login" element={<LoginGateway/>}/>
-    <Route path="/app" element={<Navigate to="/overview" replace/>}/>
-    <Route element={<AppShell/>}>
-      {moduleRegistry.map(item=><Route key={item.key} path={item.route} element={dedicated[item.key]||<OperationalModulePage moduleKey={item.key}/>}/>)}
-      <Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail/>}/>
-      {moduleRegistry.flatMap(item=>(item.aliases||[]).map(alias=><Route key={alias} path={alias} element={<Navigate to={item.route} replace/>}/>))}
+    <Route path="/auth/callback" element={<AuthCallback/>}/>
+    <Route element={<RequireAuthentication/>}>
+      <Route path="/access-pending" element={<AccessPending/>}/>
+      <Route element={<RequireWorkspaceAccess/>}>
+        <Route path="/app" element={<Navigate to="/overview" replace/>}/>
+        <Route element={<AppShell/>}>
+          {moduleRegistry.map(item=><Route key={item.key} path={item.route} element={dedicated[item.key]||<OperationalModulePage moduleKey={item.key}/>}/>) }
+          <Route path="/authorized-sellers/:sellerId" element={<AuthorizedSellerDetail/>}/>
+          {moduleRegistry.flatMap(item=>(item.aliases||[]).map(alias=><Route key={alias} path={alias} element={<Navigate to={item.route} replace/>}/>))}
+        </Route>
+      </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace/>}/>
-  </Routes></BrowserRouter>;
+  </Routes></BrowserRouter></AuthProvider>;
 }

@@ -180,6 +180,21 @@
 .co-login-status span { margin-top: 4px; color: var(--co-public-muted); font-size: 9px; line-height: 1.5; }
 .co-login-disabled { width: 100%; min-height: 44px; border: 1px solid var(--co-public-border); border-radius: 9px; color: #748392; background: #101720; font-size: 10px; }
 .co-login-note { margin-top: 14px; display: flex; align-items: center; gap: 7px; color: #768594; font-size: 9px; }
+.co-login-form { display: grid; gap: 8px; margin-top: 22px; }
+.co-login-form label { color: #aebbc6; font-size: 10px; }
+.co-login-form input { min-height: 44px; padding: 0 12px; color: #e8eef4; border: 1px solid var(--co-public-border); border-radius: 9px; background: #0a1118; outline: none; }
+.co-login-form input:focus { border-color: rgba(84, 174, 255, .7); box-shadow: 0 0 0 3px rgba(84, 174, 255, .12); }
+.co-login-primary, .co-login-google { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; font-size: 10px; }
+.co-login-primary { color: #06130c; border: 1px solid #65e391; background: var(--co-public-green); font-weight: 800; }
+.co-login-google { margin-top: 9px; color: #dce5ed; border: 1px solid var(--co-public-border); background: #111a23; }
+.co-auth-success, .co-auth-error { margin: 12px 0 0 !important; padding: 10px 11px; border-radius: 8px; font-size: 9px !important; line-height: 1.5 !important; }
+.co-auth-success { color: #91e8ae !important; border: 1px solid rgba(69,220,120,.3); background: rgba(69,220,120,.08); }
+.co-auth-error { color: #ffadb6 !important; border: 1px solid rgba(255,101,119,.35); background: rgba(255,101,119,.09); }
+.co-auth-state { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 14px; padding: 30px; text-align: center; }
+.co-auth-state > svg { color: var(--co-public-blue); }
+.co-auth-state h1 { max-width: 720px; margin: 0; font-size: clamp(30px, 5vw, 48px); }
+.co-auth-state p { max-width: 650px; margin: 0; color: var(--co-public-muted); font-size: 11px; line-height: 1.65; }
+.co-auth-state .co-public-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; margin-top: 8px; }
 
 @media (hover: hover) {
   .co-public-module-card, .co-public-primary, .co-public-secondary, .co-public-signin { transition: transform 180ms ease, border-color 180ms ease, background 180ms ease; }
