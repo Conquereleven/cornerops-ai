@@ -91,6 +91,25 @@ class CanonicalOrderIntakeService {
     this.store.save(sourceKey, record);
     return { assessment, record, idempotentReplay: false, sourceKey, fingerprint };
   }
+
+  async ingestDurable(order = {}, profile = {}, context = {}) {
+    if (!text(context.actorId)) throw commerceOsError('Actor is required.', 'COMMERCE_OS_ACTOR_REQUIRED');
+    if (typeof this.store.ingest !== 'function') throw commerceOsError('Durable order persistence is required.', 'COMMERCE_OS_ORDER_PERSISTENCE_REQUIRED');
+    const assessment = this.assess(order, profile);
+    const fingerprint = checksum(order);
+    const sourceKey = `${text(order.tenantId)}:${text(order.source?.system).toLowerCase()}:${text(order.source?.externalOrderId)}`;
+    if (assessment.status === 'rejected' || !text(order.source?.externalOrderId)) {
+      return { assessment, record: null, idempotentReplay: false, sourceKey, fingerprint };
+    }
+    const persisted = await this.store.ingest({ order, assessment, fingerprint, sourceKey }, context);
+    if (persisted.conflict) {
+      return {
+        assessment: { ...assessment, status: 'rejected', issues: [...assessment.issues, issue('SOURCE_VERSION_CONFLICT', 'source.externalUpdatedAt', 'error')] },
+        record: persisted.record, idempotentReplay: false, sourceKey, fingerprint,
+      };
+    }
+    return { assessment: persisted.record.assessment, record: persisted.record, idempotentReplay: persisted.idempotentReplay, sourceKey, fingerprint };
+  }
 }
 
 module.exports = { CanonicalOrderIntakeService, MemoryCommerceOrderIntakeStore };
