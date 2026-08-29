@@ -1,0 +1,88 @@
+{
+  "classification": "COMMERCIAL_RULES_CANDIDATE_NOT_ACTIVE",
+  "version": "commercial-rules-v1.17b",
+  "active": false,
+  "roles": {
+    "commercialOwner": {
+      "party": "CornerMex",
+      "verificationStatus": "verified_in_v1.17a_source",
+      "source": "docs/architecture/commercial-operations-core-v1.17a.md"
+    },
+    "warehouseCustodian": {
+      "party": "Intermex UAE",
+      "responsibility": "warehouse custodian and fulfillment center",
+      "integrationMode": "manual_evidence_only",
+      "verificationStatus": "verified_in_v1.17a_source",
+      "source": "docs/architecture/commercial-operations-core-v1.17a.md"
+    },
+    "carrierProvider": {
+      "party": "unknown",
+      "responsibility": "carrier delivery only",
+      "verificationStatus": "pending_verification"
+    }
+  },
+  "shipping": {
+    "currency": "AED",
+    "fallbackEnabled": false,
+    "freeShippingThreshold": "pending_verification",
+    "destinations": {
+      "Dubai": { "amount": "pending_verification", "codEligible": "pending_verification" },
+      "Abu Dhabi": { "amount": "pending_verification", "codEligible": "pending_verification" },
+      "Sharjah": { "amount": "pending_verification", "codEligible": "pending_verification" },
+      "Ajman": { "amount": "pending_verification", "codEligible": "pending_verification" }
+    },
+    "verificationStatus": "pending_verification",
+    "activationBlocked": true
+  },
+  "payments": {
+    "bankTransfer": {
+      "settlementEvidenceRequired": true,
+      "humanVerificationRequired": true,
+      "bankDetailsEmbedded": false,
+      "verificationStatus": "verified_in_v1.17a_source"
+    },
+    "cashOnDelivery": {
+      "collectionIsSettlement": false,
+      "fullRemittanceEvidenceRequired": true,
+      "destinationEligibility": "pending_verification",
+      "verificationStatus": "partially_verified"
+    }
+  },
+  "inventory": {
+    "freshnessThresholdHours": 24,
+    "verificationStatus": "implementation_default_requires_founder_confirmation",
+    "unknownIsAvailable": false
+  },
+  "registration": {
+    "unknownHandling": "block_commercial_review",
+    "verificationStatus": "pending_verification"
+  },
+  "minimumOrderQuantity": {
+    "semantics": "per_sku_explicit_value_required",
+    "unknownHandling": "block_quote_review",
+    "verificationStatus": "pending_verification"
+  },
+  "ownership": {
+    "evidenceOwner": "pending_verification",
+    "exceptionOwner": "pending_verification",
+    "dailyCloseOwner": "pending_verification",
+    "verificationStatus": "pending_verification"
+  },
+  "serviceLevels": {
+    "intermexHandoff": "pending_verification",
+    "picking": "pending_verification",
+    "packing": "pending_verification",
+    "carrierDispatch": "pending_verification",
+    "delivery": "pending_verification",
+    "exceptionResponse": "pending_verification",
+    "verificationStatus": "pending_verification"
+  },
+  "safety": {
+    "externalMessagesAllowed": false,
+    "customerContactAllowed": false,
+    "supplierContactAllowed": false,
+    "paymentCaptureAllowed": false,
+    "fulfillmentExecutionAllowed": false,
+    "cornerMexWritesAllowed": false
+  }
+}
