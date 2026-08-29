@@ -27,6 +27,14 @@ It does not send messages, capture payments, create shipments or write to Corner
 - v1.25 Fulfillment and Payments
 - v2.0 Controlled AI Workers
 
+### UX Track
+
+A parallel visual-experience track that does not change the numbered product versions above.
+
+- UX-1.1 CornerGlass Command Center Prototype (prototype only; see [`docs/design/cornerglass-design-system-v1.md`](docs/design/cornerglass-design-system-v1.md). The preview route `/design/cornerglass-preview` is development-only and absent from production builds.)
+- UX-1.2 CornerGlass Operational Shell Pilot (future)
+- UX-1.3 CornerGlass Controlled Rollout (future)
+
 CornerOps AI is the internal AI operating system for CornerMex. It coordinates
 business operations, agents, workflows, memory, tools, integrations and
 human-approved automation. OpenClaw is integrated only as a self-hosted
