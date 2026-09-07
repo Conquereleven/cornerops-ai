@@ -28,3 +28,5 @@ Contact destination is pending owner input. Talk to CornerOps currently navigate
 Validation commands passed: root lint (615 JavaScript files), frontend typecheck, 20 frontend tests / 8 files, Vite build and diff whitespace check. Changed-file secret-pattern scan found no matches for private keys, AWS access keys, GitHub/OpenAI tokens or quoted secret assignments; this is a scoped pattern scan, not a full-history credential audit.
 
 Build output: CSS 9.55 kB gzip; primary JS 101.10 kB gzip; separate dynamically imported Anime.js chunk 15.28 kB gzip. Existing root dependency install reports 7 audit advisories; dependency manifests and lockfiles are unchanged.
+
+Full repository validation also passed: 129 backend suites / 766 tests (2 suites and 12 tests skipped), control:tower and demo:beta. Backend tests were rerun with local socket permission after the sandbox initially blocked Supertest's temporary listener.
