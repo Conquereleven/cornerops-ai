@@ -287,3 +287,7 @@
 .studio-skip:focus { top: 12px; }
 @media(max-width: 1000px) { .studio .co-public-hero { grid-template-columns: 1fr; } .studio-hero-art { max-width: 550px; width: 100%; justify-self: center; } .studio-cases { grid-template-columns: 1fr; } .studio-case-art { height: 110px; } .studio-process { grid-template-columns: repeat(3,1fr); } .studio-problems { gap: 30px; } }
 @media(max-width: 620px) { .studio .co-public-nav nav { gap: 10px; } .studio .co-public-nav nav > a[href="#contact"] { display: inline-flex; } .studio .co-public-hero { padding-top: 60px; width: calc(100% - 32px); } .studio .co-public-hero h1 { font-size: 56px; } .studio .co-public-hero-copy > p { font-size: 16px; } .studio-problems,.studio-solutions,.studio-process { grid-template-columns: 1fr; } .studio-industry-strip { align-items: start; flex-direction: column; gap: 12px; } .studio .co-public-section { padding: 64px 0; } .studio .co-public-governance { gap: 30px; } .studio .co-public-brand strong { font-size: 16px; } }
+
+.studio-contact-actions { justify-content: center; }
+.studio .studio-contact-actions a { flex-direction: column; gap: 4px; padding: 14px 20px; max-width: 100%; overflow-wrap: anywhere; }
+.studio-contact-actions a span { font-size: 13px; font-weight: 500; }
