@@ -1,6 +1,7 @@
 import { render,screen,waitFor } from '@testing-library/react';
 import { afterEach,describe,expect,test,vi } from 'vitest';
 import App from './App';
+import userEvent from '@testing-library/user-event';
 
 const envelope={status:'success',sourceMode:'internal_postgresql',readOnly:true,dryRun:true,writesBlocked:true,externalSendsBlocked:true,approvalRequired:false,auditId:'audit-live-overview',warnings:[],data:{headline:'Live founder summary'}};
 const wave1={status:'ready',sellerCount:14,sellers:[{productCount:489}],writesBlocked:true,externalContactBlocked:true,marketComparisonPerformed:false,marketCompletenessClaim:false,bestSupplierClaim:false,basketOptimizerStatus:'deferred'};
@@ -17,9 +18,19 @@ describe('App',()=>{
 
   test('renders the public CornerOps landing at root',async()=>{
     render(<App/>);
-    expect(await screen.findByRole('heading',{name:'Run the company from the signal, not the noise.'})).toBeInTheDocument();
-    expect(screen.getByRole('link',{name:'Operator sign in'})).toHaveAttribute('href','/login');
-    expect(screen.getByText('PRODUCT PREVIEW')).toBeInTheDocument();
+    expect(await screen.findByRole('heading',{name:'AI systems that make businesses run better.'})).toBeInTheDocument();
+    expect(screen.getAllByRole('link',{name:'Sign in'})[0]).toHaveAttribute('href','/login');
+    expect(screen.getByRole('link',{name:/Talk to CornerOps/})).toHaveAttribute('href','#contact');
+    expect(screen.getByRole('link',{name:/See our work/})).toHaveAttribute('href','#work');
+    expect(document.getElementById('contact')).toBeInTheDocument();
+    expect(document.getElementById('work')).toBeInTheDocument();
+  });
+
+  test('navigates from public landing to the existing login gateway',async()=>{
+    render(<App/>);
+    await userEvent.click((await screen.findAllByRole('link',{name:'Sign in'}))[0]);
+    expect(await screen.findByRole('heading',{name:'Sign in to CornerOps'})).toBeInTheDocument();
+    expect(screen.getByRole('button',{name:'Authentication pending gated integration'})).toBeDisabled();
   });
 
   test('keeps the landing static when reduced motion is requested',async()=>{

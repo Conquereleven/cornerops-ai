@@ -1,234 +1,64 @@
-import { ArrowRight, Check, LockKeyhole, Radar, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { CaseCard, type CaseStudy } from '../components/public/CaseCard';
 import '../styles/public.css';
 
-const modules = [
-  {
-    icon: Radar,
-    title: 'Founder Daily',
-    copy: 'A single operating brief for what changed, what is blocked and what deserves attention next.',
-  },
-  {
-    icon: Workflow,
-    title: 'Work Queue',
-    copy: 'Turn operational evidence into prioritized, traceable actions without hiding uncertainty.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Approvals',
-    copy: 'Keep sensitive actions behind explicit human decisions with audit-ready context.',
-  },
-  {
-    icon: Sparkles,
-    title: 'Operational Intelligence',
-    copy: 'Synthesize commerce, supply and workflow signals into recommendations instead of noisy dashboards.',
-  },
+const cases: CaseStudy[] = [
+  { industry: 'Commerce & distribution', title: 'Specialty food distributor', status: 'Internal platform', problem: 'Catalog, stock and commercial decisions live in separate workflows.', solution: 'An operating layer that brings product readiness, inventory signals and priorities into view.', modules: ['Catalog intelligence', 'Inventory watch', 'Work queues'] },
+  { industry: 'B2B operations', title: 'From quote to delivery', status: 'In development', problem: 'Quotes, orders and fulfillment handoffs are difficult to follow as one process.', solution: 'A Commerce OS workstream connecting commercial records, exceptions and approval checkpoints.', modules: ['Quote preparation', 'Order tracking', 'Daily close'] },
+  { industry: 'Founder operations', title: 'CornerOps operating platform', status: 'Internal platform', problem: 'Founders need to know what needs a decision without checking every tool.', solution: 'A daily brief, prioritized work queue and approval center built around operational evidence.', modules: ['Founder Daily', 'Approvals', 'Intelligence'] },
 ];
-
-const safeguards = [
-  'Read-only boundaries remain explicit where writes are not authorized.',
-  'Unknown, unavailable and unverified states are shown truthfully.',
-  'Sensitive execution stays behind approvals and capability gates.',
-  'Audit evidence is treated as product infrastructure, not decoration.',
+const solutions = [
+  ['AI agents', 'Read, prepare and recommend. Give your team useful assistance with clear approval boundaries.'],
+  ['Workflow automation', 'Move information and tasks between teams without repeated copying, chasing or re-entry.'],
+  ['Internal operating systems', 'Bring the workflows that make your business different into software designed around them.'],
+  ['Commerce systems', 'Connect catalog, orders, stock and quoting so the next step is easier to see.'],
+  ['WhatsApp & CRM automation', 'Turn conversations into structured enquiries, follow-ups and customer context.'],
+  ['Dashboards & intelligence', 'Make scattered business data useful for daily decisions and exception handling.'],
+  ['APIs & integrations', 'Connect your existing tools with reliable data flows and explicit ownership.'],
 ];
+const process = [['Discover', 'Find the bottleneck. Understand the people, tools and decisions around it.'], ['Design', 'Define the workflow, user experience and what success will look like.'], ['Build', 'Ship a focused system your team can test with real work.'], ['Integrate', 'Connect the stack, agree the controls and support the handover.'], ['Improve', 'Review what happens in practice and refine the system.']];
 
 export function PublicLanding() {
   const root = useRef<HTMLElement>(null);
-
   useEffect(() => {
-    const rootElement = root.current;
-    if (!rootElement) return;
-
-    if (typeof window.matchMedia !== 'function') {
-      rootElement.dataset.motion = 'static';
-      return;
-    }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      rootElement.dataset.motion = 'reduced';
-      return;
-    }
-
+    const element = root.current;
+    if (!element) return;
+    const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     let disposed = false;
-    let motionScope: { revert: () => void } | undefined;
-
-    void import('animejs').then(({ animate, createScope, createTimeline, onScroll, stagger }) => {
-      if (disposed) return;
-
-      motionScope = createScope({ root: rootElement }).add(() => {
-        createTimeline({ defaults: { ease: 'out(4)' } })
-          .add('.co-public-nav', { opacity: [0, 1], y: [-10, 0], duration: 480 })
-          .add('.co-public-hero-copy > *', {
-            opacity: [0, 1],
-            y: [18, 0],
-            duration: 620,
-            delay: stagger(55),
-          }, '-=260')
-          .add('.co-public-command-preview', {
-            opacity: [0, 1],
-            x: [20, 0],
-            scale: [.985, 1],
-            duration: 760,
-          }, '-=520')
-          .add('.co-public-preview-grid article', {
-            opacity: [0, 1],
-            y: [10, 0],
-            duration: 420,
-            delay: stagger(45),
-          }, '-=520');
-
-        animate('.co-public-section-heading', {
-          opacity: [0, 1],
-          y: [24, 0],
-          duration: 650,
-          ease: 'out(4)',
-          autoplay: onScroll({ target: '.co-public-section-heading', enter: 'bottom-=100 top', repeat: false }),
-        });
-
-        animate('.co-public-module-card', {
-          opacity: [0, 1],
-          y: [22, 0],
-          duration: 620,
-          delay: stagger(70),
-          ease: 'out(4)',
-          autoplay: onScroll({ target: '.co-public-module-grid', enter: 'bottom-=90 top', repeat: false }),
-        });
-
-        animate('.co-public-governance > *', {
-          opacity: [0, 1],
-          y: [20, 0],
-          duration: 650,
-          delay: stagger(90),
-          ease: 'out(4)',
-          autoplay: onScroll({ target: '.co-public-governance', enter: 'bottom-=90 top', repeat: false }),
-        });
-
-        animate('.co-public-cta > *', {
-          opacity: [0, 1],
-          y: [18, 0],
-          duration: 600,
-          delay: stagger(65),
-          ease: 'out(4)',
-          autoplay: onScroll({ target: '.co-public-cta', enter: 'bottom-=90 top', repeat: false }),
-        });
+    let scope: { revert: () => void } | undefined;
+    const reduce = () => { if (preference?.matches) { scope?.revert(); element.dataset.motion = 'reduced'; } };
+    preference?.addEventListener('change', reduce);
+    if (!preference || preference.matches) element.dataset.motion = preference ? 'reduced' : 'static';
+    else void import('animejs').then(({ animate, createScope, stagger }) => {
+      if (disposed || preference.matches) return;
+      scope = createScope({ root: element }).add(() => {
+        animate('.co-public-hero-copy > *, .studio-hero-art', { opacity: [0, 1], y: [18, 0], duration: 700, delay: stagger(75), ease: 'out(4)' });
       });
-
-      rootElement.dataset.motion = 'ready';
-    }).catch(() => {
-      if (!disposed) rootElement.dataset.motion = 'static';
-    });
-
-    return () => {
-      disposed = true;
-      motionScope?.revert();
-    };
+      element.dataset.motion = 'ready';
+    }).catch(() => { if (!disposed) element.dataset.motion = 'static'; });
+    return () => { disposed = true; scope?.revert(); preference?.removeEventListener('change', reduce); };
   }, []);
 
-  return (
-    <main className="co-public cg-root" ref={root}>
-      <header className="co-public-nav" aria-label="CornerOps public navigation">
-        <Link className="co-public-brand" to="/" aria-label="CornerOps home">
-          <span className="co-public-brand-mark">C</span>
-          <span><strong>CornerOps</strong><small>Operational intelligence</small></span>
-        </Link>
-        <nav>
-          <a href="#product">Product</a>
-          <a href="#governance">Governance</a>
-          <Link className="co-public-signin" to="/login">Sign in</Link>
-        </nav>
-      </header>
-
-      <section className="co-public-hero" aria-labelledby="co-public-title">
-        <div className="co-public-hero-copy">
-          <span className="co-public-eyebrow">Founder-led commerce, one operating layer</span>
-          <h1 id="co-public-title">Run the company from the signal, not the noise.</h1>
-          <p>
-            CornerOps brings operational evidence, work queues, approvals and commercial intelligence into one command center built for deliberate execution.
-          </p>
-          <div className="co-public-actions">
-            <a className="co-public-primary" href="#product">Explore the product <ArrowRight size={16} /></a>
-            <Link className="co-public-secondary" to="/login">Operator sign in</Link>
-          </div>
-          <div className="co-public-trustline">
-            <ShieldCheck size={15} /> Human approval stays in the loop for controlled actions.
-          </div>
-        </div>
-
-        <div className="co-public-command-preview" aria-label="Illustrative CornerOps command center preview">
-          <div className="co-public-preview-topbar">
-            <span>COMMAND CENTER</span>
-            <span className="co-public-preview-badge">PRODUCT PREVIEW</span>
-          </div>
-          <div className="co-public-preview-grid">
-            <article>
-              <small>Founder Daily</small>
-              <strong>3 decisions</strong>
-              <span>2 blockers · 1 review</span>
-            </article>
-            <article>
-              <small>Work Queue</small>
-              <strong>Prioritized</strong>
-              <span>Evidence-backed actions</span>
-            </article>
-            <article className="co-public-preview-wide">
-              <small>Approval flow</small>
-              <div className="co-public-flow">
-                <span>Observe</span><i />
-                <span>Recommend</span><i />
-                <span>Prepare</span><i />
-                <span>Approve</span>
-              </div>
-            </article>
-            <article className="co-public-preview-wide co-public-preview-alert">
-              <LockKeyhole size={17} />
-              <div><small>Execution boundary</small><strong>Controlled by authorization</strong></div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section className="co-public-section" id="product" aria-labelledby="co-public-product-title">
-        <div className="co-public-section-heading">
-          <span className="co-public-eyebrow">One command center</span>
-          <h2 id="co-public-product-title">A calmer way to operate complexity.</h2>
-          <p>CornerOps is designed to reduce operational ambiguity, not add another layer of dashboards.</p>
-        </div>
-        <div className="co-public-module-grid">
-          {modules.map(({ icon: Icon, title, copy }) => (
-            <article key={title} className="co-public-module-card">
-              <span className="co-public-icon"><Icon size={18} /></span>
-              <h3>{title}</h3>
-              <p>{copy}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="co-public-governance" id="governance" aria-labelledby="co-public-governance-title">
-        <div>
-          <span className="co-public-eyebrow">Operational governance</span>
-          <h2 id="co-public-governance-title">AI that prepares the move before it makes the move.</h2>
-          <p>
-            CornerOps separates observation, recommendation, preparation, approval and execution so capability does not quietly become authority.
-          </p>
-        </div>
-        <ul>
-          {safeguards.map(item => <li key={item}><Check size={15} /> {item}</li>)}
-        </ul>
-      </section>
-
-      <section className="co-public-cta">
-        <span className="co-public-eyebrow">CornerOps</span>
-        <h2>Operational clarity deserves its own operating system.</h2>
-        <p>Public presentation is live on this branch. Authenticated workspace access is the next gated step.</p>
-        <Link className="co-public-primary" to="/login">Go to sign in <ArrowRight size={16} /></Link>
-      </section>
-
-      <footer className="co-public-footer">
-        <span>© CornerOps</span>
-        <span>Operational intelligence for controlled execution.</span>
-      </footer>
-    </main>
-  );
+  return <main className="co-public cg-root studio" ref={root}>
+    <a className="studio-skip" href="#main-content">Skip to content</a>
+    <header className="co-public-nav" aria-label="CornerOps public navigation">
+      <Link className="co-public-brand" to="/" aria-label="CornerOps home"><span className="co-public-brand-mark">C</span><span><strong>CornerOps</strong><small>AI systems studio</small></span></Link>
+      <nav aria-label="Main"><a href="#solutions">Solutions</a><a href="#work">Our work</a><a href="#contact">Let’s talk <ArrowUpRight size={14}/></a><Link className="co-public-signin" to="/login">Sign in</Link></nav>
+    </header>
+    <section className="co-public-hero" id="main-content" aria-labelledby="co-public-title">
+      <div className="co-public-hero-copy"><span className="co-public-eyebrow">AI agency / systems studio</span><h1 id="co-public-title">AI systems that make businesses <em>run better.</em></h1><p>We design and build AI systems, automation and custom software for sales, commerce, customer operations and back office.</p><div className="co-public-actions"><a className="co-public-primary" href="#contact">Talk to CornerOps <ArrowUpRight size={17}/></a><a className="co-public-secondary" href="#work">See our work <ArrowRight size={17}/></a></div><div className="co-public-trustline">Built around your business. Connected to your stack.</div></div>
+      <div className="studio-hero-art" aria-label="From fragmented work to a connected operating system"><div className="studio-art-label">FROM FRICTION TO FLOW</div><div className="studio-inputs"><span>Conversations</span><span>Orders</span><span>Data</span></div><div className="studio-orbit"><div className="studio-core">C<span>CornerOps</span></div></div><div className="studio-output">Connected systems <ArrowRight size={16}/> Clear next steps</div><small>AI + software + operational thinking</small></div>
+    </section>
+    <div className="studio-industry-strip"><span>BUILT FOR</span><p>Retail · Distributors · Hospitality · Real estate · Professional services · Founder-led businesses</p></div>
+    <section className="co-public-section studio-problems" id="problems"><div className="co-public-section-heading"><span className="co-public-eyebrow">01 / What we fix</span><h2>Good teams.<br/>Unnecessary friction.</h2><p>When the business grows, manual work grows with it. We build systems around the places where time, context and opportunities get lost.</p></div><ul>{['WhatsApp chaos', 'Manual order entry', 'Fragmented tools', 'Missed leads', 'Repetitive admin', 'Slow quoting & invoicing', 'Inventory blind spots', 'Disconnected customer data'].map((item, i) => <li key={item}><span>0{i + 1}</span>{item}<ArrowUpRight size={17}/></li>)}</ul></section>
+    <section className="co-public-section" id="solutions"><div className="co-public-section-heading"><span className="co-public-eyebrow">02 / Solutions</span><h2>From one bottleneck<br/>to a better way of working.</h2><p>A focused automation or an entire operating system. The right scope starts with the problem.</p></div><div className="studio-solutions">{solutions.map(([title, copy], i) => <article key={title}><span className="studio-number">0{i + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
+    <section className="co-public-section" id="work"><div className="co-public-section-heading"><span className="co-public-eyebrow">03 / Selected work</span><h2>Systems taking shape.<br/>Real operational problems.</h2><p>A selection of internal platforms and work in development. Each project is labelled by its current stage.</p></div><div className="studio-cases">{cases.map((study, index) => <CaseCard key={study.title} study={study} index={index}/>)}</div></section>
+    <section className="co-public-section" id="process"><div className="co-public-section-heading"><span className="co-public-eyebrow">04 / How we work</span><h2>Close to the operation.<br/>Through to the build.</h2></div><ol className="studio-process">{process.map(([title, copy], i) => <li key={title}><span>0{i + 1}</span><h3>{title}</h3><p>{copy}</p></li>)}</ol></section>
+    <section className="co-public-governance" id="why"><div><span className="co-public-eyebrow">05 / Why CornerOps</span><h2>Engineering meets<br/>operational thinking.</h2><p>We connect AI, product design and software engineering to the details of how your business actually works.</p></div><div className="studio-principles"><article><h3>Systems that ship.</h3><p>Working software, usable workflows and a clear handover are the deliverables.</p></article><article><h3>AI with a clear role.</h3><p>Automate routine work. Keep consequential actions behind human approval.</p></article><article><h3>Your stack, connected.</h3><p>Build on the tools your team already uses, with integrations that keep context moving.</p></article></div></section>
+    <section className="co-public-section studio-capabilities"><span className="co-public-eyebrow">The capabilities behind the work</span><p>Strategy. UX & product. AI agents. APIs & integrations. Automation. Dashboards. Custom software.</p><small>Our internal platform and Commerce OS provide reusable foundations for the systems we build.</small></section>
+    <section className="co-public-cta" id="contact"><span className="co-public-eyebrow">Let’s build something useful</span><h2>Where does your<br/>business get stuck?</h2><p>Bring us one workflow that takes too much time. We’ll help you identify what to build first.</p><p className="studio-contact-pending">For a project conversation or a demo, speak with the CornerOps team at the meeting.</p></section>
+    <footer className="co-public-footer"><Link to="/" aria-label="CornerOps home">© CornerOps — AI systems studio</Link><div><a href="#contact">Contact</a><a href="#work">Selected work</a><Link to="/login">Sign in</Link></div></footer>
+  </main>;
 }

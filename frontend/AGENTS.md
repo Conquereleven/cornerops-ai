@@ -9,3 +9,5 @@ When implementing from a selected generated mock, treat that image as the source
 ## Durable Founder Decisions
 
 - 2026-08-22 — CO-WEB-1C Founder visual acceptance was approved for the public landing and truthful login gateway at PR #84 head `9cfccabf8338f1a8c6a052d8eea1d7e1a4dfd0d0`. Preserve the accepted CornerGlass hierarchy, responsive behavior, reduced-motion support, accessible focus treatment, and staged non-functional authentication until a separately approved follow-up changes them.
+
+- 2026-09-08 — Public landing leads with CornerOps as an AI agency / AI systems studio. Preserve CornerGlass restraint and finite Anime.js motion; Commerce OS is a supporting capability. Portfolio claims require evidence and honest stage labels. This sprint stays in a new draft PR without merge or deployment.
