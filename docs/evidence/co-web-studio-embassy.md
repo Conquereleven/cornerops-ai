@@ -45,3 +45,9 @@ Full repository validation also passed: 129 backend suites / 766 tests (2 suites
 - Browser: document scrollWidth equals viewport width at 390/768/1280/1440; hero contact and portfolio anchors navigate correctly; email and WhatsApp exact hrefs inspected without sending messages; keyboard Tab reaches WhatsApp with visible solid focus outline; login retains the truthful disabled authentication gateway.
 - Review: semantic heading hierarchy, existing SEO/OG basics, finite reduced-motion-aware animation and honest Internal platform / In development portfolio labels preserved.
 - Calendar smoke and production checks deferred by the required booking blocker.
+
+## Booking confirmed — 2026-09-08
+
+Founder supplied https://calendar.app.google/1KYnZsKuFbbGj2Ha8. It resolves to a Google Calendar appointment schedule titled Talk to CornerOps, with 30-minute discovery calls and available slots. The booking blocker above is resolved. Book a call is the primary contact CTA; email and WhatsApp remain visible. Founder authorizes controlled web-only #84/#90 merges and production deployment after all gates pass, superseding the initial draft-only boundary.
+
+Booking RC validation: lint, typecheck, 20 frontend tests, 766 backend tests (12 skipped), build, control:tower, demo:beta and diff check passed again. Browser scroll widths equal 390/768/1280/1440 viewports. All three exact contact hrefs and external rel/labels verified; keyboard focus remains visible.
