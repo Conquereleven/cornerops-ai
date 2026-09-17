@@ -12,7 +12,10 @@ const emirateFromProvince = (value) => {
 };
 
 class ShopifyOrderSimulatorAdapter {
-  constructor({ shopDomain = 'simulation.invalid' } = {}) { this.shopDomain = shopDomain; }
+  constructor({ shopDomain = 'simulation.invalid', provenance } = {}) {
+    this.shopDomain = shopDomain;
+    this.provenance = provenance || { adapter: 'shopify_simulator', simulated: true, rawPayloadStored: false };
+  }
   status() { return { adapter: 'shopify', mode: 'simulation', networkAccess: false, externalWritesAllowed: false }; }
 
   normalize(payload = {}, { tenantId } = {}) {
@@ -38,7 +41,7 @@ class ShopifyOrderSimulatorAdapter {
       delivery: { countryCode: String(payload.shipping_address?.country_code || '').toUpperCase() || null, emirate: emirateFromProvince(payload.shipping_address?.province) },
       lineItems,
       totals: { subtotalMinor, discountMinor, taxMinor, shippingMinor, totalMinor },
-      provenance: { adapter: 'shopify_simulator', simulated: true, rawPayloadStored: false },
+      provenance: { ...this.provenance },
     };
   }
 }
