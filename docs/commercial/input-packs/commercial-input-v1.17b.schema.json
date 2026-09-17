@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cornerops.internal/schemas/commercial-input-v1.17b.json",
+  "title": "CornerOps commercial production candidate v1.17B",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["classification", "version", "accounts", "skus"],
+  "properties": {
+    "classification": { "const": "COMMERCIAL_PRODUCTION_CANDIDATE_NOT_IMPORTED" },
+    "version": { "const": "commercial-input-v1.17b" },
+    "accounts": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/account" }
+    },
+    "skus": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": { "$ref": "#/$defs/sku" }
+    }
+  },
+  "$defs": {
+    "knownOrUnknown": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "number", "minimum": 0 }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["evidenceSource", "evidenceDate", "verificationStatus", "owner", "updatedAt"],
+      "properties": {
+        "evidenceSource": { "type": "string", "minLength": 1 },
+        "evidenceDate": { "type": "string", "format": "date-time" },
+        "verificationStatus": {
+          "enum": ["source_verified", "partial_source_verified", "founder_attested", "pending_verification", "not_verified", "blocked"]
+        },
+        "owner": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "account": {
+      "allOf": [
+        { "$ref": "#/$defs/evidence" },
+        {
+          "type": "object",
+          "required": ["accountId", "legalName", "displayName", "accountType", "emirate", "city", "channel", "contactStatus", "commercialStatus", "owner", "priority", "paymentTerms", "deliveryTerms", "notes", "source", "updatedAt"],
+          "properties": {
+            "accountId": { "type": "string", "minLength": 1 },
+            "legalName": { "$ref": "#/$defs/knownOrUnknown" },
+            "displayName": { "type": "string", "minLength": 1 },
+            "accountType": { "$ref": "#/$defs/knownOrUnknown" },
+            "emirate": { "$ref": "#/$defs/knownOrUnknown" },
+            "city": { "$ref": "#/$defs/knownOrUnknown" },
+            "channel": { "$ref": "#/$defs/knownOrUnknown" },
+            "contactStatus": { "$ref": "#/$defs/knownOrUnknown" },
+            "commercialStatus": { "$ref": "#/$defs/knownOrUnknown" },
+            "owner": { "$ref": "#/$defs/knownOrUnknown" },
+            "priority": { "$ref": "#/$defs/knownOrUnknown" },
+            "paymentTerms": { "$ref": "#/$defs/knownOrUnknown" },
+            "deliveryTerms": { "$ref": "#/$defs/knownOrUnknown" },
+            "notes": { "$ref": "#/$defs/knownOrUnknown" },
+            "source": { "type": "string", "minLength": 1 },
+            "updatedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "sku": {
+      "allOf": [
+        { "$ref": "#/$defs/evidence" },
+        {
+          "type": "object",
+          "required": ["skuId", "name", "brand", "category", "supplier", "supplierSku", "unit", "casePack", "costCurrency", "unitCost", "sellingCurrency", "suggestedB2BPrice", "minimumOrderQuantity", "inventoryStatus", "registrationStatus", "commercialStatus", "source", "updatedAt"],
+          "properties": {
+            "skuId": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "brand": { "$ref": "#/$defs/knownOrUnknown" },
+            "category": { "$ref": "#/$defs/knownOrUnknown" },
+            "supplier": { "$ref": "#/$defs/knownOrUnknown" },
+            "supplierSku": { "$ref": "#/$defs/knownOrUnknown" },
+            "unit": { "$ref": "#/$defs/knownOrUnknown" },
+            "casePack": { "$ref": "#/$defs/knownOrUnknown" },
+            "costCurrency": { "$ref": "#/$defs/knownOrUnknown" },
+            "unitCost": { "$ref": "#/$defs/knownOrUnknown" },
+            "sellingCurrency": { "$ref": "#/$defs/knownOrUnknown" },
+            "suggestedB2BPrice": { "$ref": "#/$defs/knownOrUnknown" },
+            "minimumOrderQuantity": { "$ref": "#/$defs/knownOrUnknown" },
+            "inventoryStatus": { "$ref": "#/$defs/knownOrUnknown" },
+            "registrationStatus": { "$ref": "#/$defs/knownOrUnknown" },
+            "commercialStatus": { "$ref": "#/$defs/knownOrUnknown" },
+            "source": { "type": "string", "minLength": 1 },
+            "updatedAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  },
+  "x-cornerops-unknown-markers": ["unknown", "not_provided", "pending_verification"],
+  "x-cornerops-import-authorized": false
+}

@@ -18,8 +18,18 @@ const { usesControlTowerFrontendCors } = require('./api/middleware/controlTowerF
 const fs = require('fs');
 const path = require('path');
 const { getDataSourceStatus } = require('./data/supabase/supabaseClient');
+const { ApplicationReadinessService } = require('./core/readiness/ApplicationReadinessService');
+const {
+  commercialOperationsService,
+  workQueueService,
+} = require('./controllers/intelligenceController');
 
 const app = express();
+const applicationReadinessService = new ApplicationReadinessService({
+  commercialOperationsService,
+  config: env,
+  corePersistence: workQueueService.store,
+});
 
 app.disable('x-powered-by');
 app.use((req, res, next) => {
@@ -49,6 +59,10 @@ app.get('/api/health', (req, res) => {
     service: 'cornerops-ai',
     dataSource: getDataSourceStatus(),
   });
+});
+app.get('/api/ready', async (_req, res) => {
+  const result = await applicationReadinessService.check();
+  return res.status(result.httpStatus).json(result.body);
 });
 
 app.use('/api/chat', chatRoutes);

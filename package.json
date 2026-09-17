@@ -90,6 +90,7 @@
     "founder:setup-check": "node scripts/founder-setup-check.js",
     "founder:daily": "node scripts/founder-daily.js",
     "demo:commercial-operations": "node scripts/demo-commercial-operations-v1.17a.js",
+    "commercial:preview-candidate": "node scripts/preview-commercial-production-candidate-v1.17b.js",
     "founder:review": "node scripts/founder-review.js",
     "state:backup": "node scripts/backup-local-state.js",
     "state:export-summary": "node scripts/export-local-state-summary.js",

@@ -1,0 +1,37 @@
+{
+  "classification": "COMMERCIAL_CANARY_MANIFEST_NOT_AUTHORIZED",
+  "version": "commercial-canary-v1.17b",
+  "candidateVersion": "commercial-input-v1.17b",
+  "candidateChecksum": "2dfbad6640d44021877a6e7247f97592f2540f2fa94ab605754072921d2b06ea",
+  "accounts": [
+    "lila-molino-cafe-lila-taqueria",
+    "la-tiendita-abu-dhabi"
+  ],
+  "skus": [
+    "CMX-JAPANESE-STYLE-PEANUTS-WITH-VALENTINA-SAUCE-30G",
+    "CMX-BANDERILLA-TAMAROCA-TAMARIND-STICK-1PCS",
+    "CMX-PEPE-CRUNCH-PEANUTS-HABANERO-FLAVOUR-500G"
+  ],
+  "constraints": {
+    "externalMessages": false,
+    "realPayment": false,
+    "orderFulfillment": false,
+    "intermexAction": false,
+    "cornerMexMutation": false,
+    "customerContact": false,
+    "inventoryReservation": false,
+    "automaticWorkflowExecution": false
+  },
+  "futureSequence": [
+    "migrate_with_feature_disabled",
+    "verify_schema_grants_and_readiness",
+    "obtain_new_founder_authorization",
+    "enable_only_required_internal_commercial_feature",
+    "import_canary_records",
+    "verify_reads_and_daily_close",
+    "create_at_most_one_synthetic_internal_opportunity_and_quote_under_separate_authorization",
+    "stop_and_review_before_expansion"
+  ],
+  "importAuthorized": false,
+  "activationAuthorized": false
+}
