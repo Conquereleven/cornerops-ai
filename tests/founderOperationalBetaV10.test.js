@@ -3,6 +3,9 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const request = require('supertest');
+const { authed, installTestAppAuth } = require('./helpers/appAuth');
+
+installTestAppAuth();
 const { FounderSetupValidator } = require('../src/core/setup/FounderSetupValidator');
 const { FounderFirstRunService } = require('../src/core/setup/FounderFirstRunService');
 const { LocalStateBackupService } = require('../src/core/persistence/LocalStateBackupService');
@@ -162,8 +165,8 @@ describe('Founder Operational Beta v1.0', () => {
       GITHUB_DRY_RUN: 'true',
     };
     const app = require('../src/app');
-    await request(app).get('/api/control-tower/v1.0/status').expect(401);
-    const response = await request(app).get('/api/control-tower/v1.0/status')
+    await authed(app).get('/api/control-tower/v1.0/status').expect(401);
+    const response = await authed(app).get('/api/control-tower/v1.0/status')
       .set('x-cornerops-console-token', 'v10-local-token').expect(200);
     expect(response.body).toMatchObject({
       version: 'v1.0',

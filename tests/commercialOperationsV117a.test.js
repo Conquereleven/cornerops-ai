@@ -338,6 +338,8 @@ describe('CO-1.17A migration and safety boundary', () => {
   });
   test('frontend modules exist inside the current Command Center', () => {
     const registry = fs.readFileSync(path.join(__dirname, '../frontend/src/config/moduleRegistry.ts'), 'utf8');
-    ['Commercial Overview', 'Accounts', 'Opportunities', 'Quotes', 'Commercial Orders', 'Payments', 'Fulfillment', 'Deliveries', 'Exceptions', 'Daily Close'].forEach((label) => expect(registry).toContain(`'${label}'`));
+    // Since Product & Web Consolidation v1 these live in the Commerce OS incubator;
+    // the two generic labels are prefixed so they are not confused with CornerOps Sales.
+    ['Commercial Overview', 'Commercial Accounts', 'Commercial Opportunities', 'Quotes', 'Commercial Orders', 'Payments', 'Fulfillment', 'Deliveries', 'Exceptions', 'Daily Close'].forEach((label) => expect(registry).toContain(`'${label}'`));
   });
 });

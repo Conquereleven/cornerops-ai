@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const { timingSafeEqual } = require('crypto');
 const env = require('../../config/env');
+const appAuth = require('../../middleware/appAuth');
+const { looksLikeSessionToken } = require('../../core/identity/SupabaseIdentityVerifier');
 
 const normalizeHash = (hash) => String(hash || '').replace(/^sha256:/i, '').trim().toLowerCase();
 
@@ -42,7 +44,16 @@ const validateBridgeSafety = (config) => (
   && config.controlTowerFrontendAuditRequests
 );
 
-const createControlTowerFrontendAuth = (config = env) => (req, res, next) => {
+const runChain = (handlers, req, res, done) => {
+  const step = (index) => (index >= handlers.length
+    ? done()
+    : handlers[index](req, res, (error) => (error ? done(error) : step(index + 1))));
+  return step(0);
+};
+
+// Accepts either a workspace session (browser) or the legacy operator token
+// hash (CLI/service). Both paths honour the bridge kill switch and safety flags.
+const createControlTowerFrontendAuth = (config = env, sessionAuth = appAuth) => (req, res, next) => {
   if (!config.controlTowerFrontendApiEnabled) {
     return safeError(
       res,
@@ -61,7 +72,29 @@ const createControlTowerFrontendAuth = (config = env) => (req, res, next) => {
       'unsafe-config',
     );
   }
+  const bearer = req.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1] || '';
+  if (looksLikeSessionToken(bearer)) {
+    return runChain(sessionAuth.guard('read'), req, res, (error) => {
+      if (error) return next(error);
+      req.controlTowerFrontendAuth = {
+        auditId: bridgeAuditId('auth-ok'),
+        authMode: 'workspace_session',
+        authenticated: true,
+        tokenFingerprint: sha256(req.appIdentity.userId).slice(0, 12),
+      };
+      return next();
+    });
+  }
   if (!config.controlTowerFrontendAuthRequired) {
+    if (config.nodeEnv === 'production') {
+      return safeError(
+        res,
+        503,
+        'CONTROL_TOWER_FRONTEND_UNSAFE_CONFIG',
+        'Control Tower frontend API authentication cannot be disabled in production.',
+        'unsafe-config',
+      );
+    }
     req.controlTowerFrontendAuth = {
       auditId: bridgeAuditId('auth-not-required'),
       authMode: config.controlTowerFrontendAuthMode,

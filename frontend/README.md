@@ -73,3 +73,14 @@ npm run build
 4. Detalle de conversación con replay.
 5. Handoff humano y cola operativa.
 6. Configuración real de Supabase, WhatsApp y voz.
+
+## Authentication and workspace access
+
+- Sign-in uses Supabase Auth with PKCE. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` at build time (see `.env.example`). Without them `/login` states that sign-in is unavailable and `/app` stays closed.
+- Never put a secret or service-role key in a `VITE_` variable.
+- Identity does not grant access. After sign-in the app asks `GET /api/app/session`; only a server-side workspace membership opens `/app/*`.
+- Private routes live under `/app`. Pre-consolidation paths such as `/overview` redirect there from inside the same guard.
+- Navigation is driven by `src/config/moduleRegistry.ts` (`surface`: core, admin, incubator, hidden).
+- Public contact values and the canonical site URL come from `VITE_PUBLIC_*` (see `src/config/siteConfig.ts`).
+
+Runbooks: `docs/runbooks/cornerops-auth-callbacks-v1.md`, `docs/runbooks/cornerops-staging-rollout-v1.md`.

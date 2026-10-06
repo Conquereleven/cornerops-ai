@@ -1,27 +1,58 @@
 import { describe, expect, test } from 'vitest';
-import { moduleGroups, moduleRegistry } from './moduleRegistry';
+import { moduleRegistry, navigationFor, navigationSurfaces } from './moduleRegistry';
 
-describe('v1.17A canonical module registry',()=>{
-  test('contains every required module exactly once',()=>{
-    expect(moduleRegistry).toHaveLength(45);
-    expect(new Set(moduleRegistry.map(item=>item.key)).size).toBe(45);
-    expect(new Set(moduleRegistry.map(item=>item.route)).size).toBe(45);
-    expect(moduleGroups).toHaveLength(7);
+const labels = (role: 'viewer' | 'operator' | 'founder', surface: string) => navigationFor(role).find((section) => section.surface === surface)?.modules.map((item) => item.label) ?? [];
+
+describe('consolidated module registry', () => {
+  test('every module has one canonical route under /app and a declared surface', () => {
+    expect(new Set(moduleRegistry.map((item) => item.key)).size).toBe(moduleRegistry.length);
+    expect(new Set(moduleRegistry.map((item) => item.route)).size).toBe(moduleRegistry.length);
+    moduleRegistry.forEach((item) => {
+      expect(item.route === '/app' || item.route.startsWith('/app/')).toBe(true);
+      expect(['core', 'admin', 'incubator', 'hidden']).toContain(item.surface);
+    });
   });
-  test('preserves governance and all marketing modules',()=>{
-    const routes=new Set(moduleRegistry.map(item=>item.route));
-    ['/work-queue','/approvals','/audit-log','/security','/environment-doctor','/flow-engine','/intelligence','/drafts','/telegram','/marketing','/marketing/campaigns','/marketing/content','/marketing/brand','/marketing/assets','/marketing/promotions','/marketing/audiences','/marketing/calendar','/marketing/analytics'].forEach(route=>expect(routes.has(route)).toBe(true));
+
+  test('core navigation is the small company operating set', () => {
+    expect(labels('founder', 'core')).toEqual(['Overview', 'Sales', 'Work Queue', 'Intelligence', 'Approvals', 'Audit', 'AI Chat', 'Control Tower']);
+    expect(navigationSurfaces).toEqual(['core', 'admin', 'incubator']);
   });
-  test('contains the complete commercial operating loop inside the existing Command Center',()=>{
-    const routes=new Set(moduleRegistry.map(item=>item.route));
-    ['/commercial','/commercial/accounts','/commercial/opportunities','/commercial/quotes','/commercial/orders','/commercial/payments','/commercial/fulfillment','/commercial/deliveries','/commercial/exceptions','/commercial/daily-close'].forEach(route=>expect(routes.has(route)).toBe(true));
+
+  test('admin is founder-only; viewers do not see operator-only modules', () => {
+    expect(labels('founder', 'admin')).toEqual(['Security', 'Integrations', 'Settings', 'Capability Status', 'Environment']);
+    expect(labels('operator', 'admin')).toEqual([]);
+    expect(labels('viewer', 'admin')).toEqual([]);
+    expect(labels('viewer', 'core')).not.toContain('AI Chat');
+    expect(navigationFor(undefined)).toEqual([]);
   });
-  test('defines legacy aliases without duplicate canonical routes',()=>{
-    expect(moduleRegistry.find(item=>item.key==='overview')?.aliases).toContain('/');
-    expect(moduleRegistry.find(item=>item.key==='ai-chat')?.aliases).toContain('/chat');
-    expect(moduleRegistry.find(item=>item.key==='b2b-leads')?.aliases).toContain('/leads');
+
+  test('Commerce OS and CornerMex live in the incubator, not in core', () => {
+    const incubator = moduleRegistry.filter((item) => item.surface === 'incubator');
+    expect(incubator.every((item) => item.route.startsWith('/app/labs/commerce-os'))).toBe(true);
+    ['products', 'orders', 'authorized-sellers', 'seller-catalog', 'seller-inventory', 'seller-comparison', 'cornermex-ops', 'commercial-overview']
+      .forEach((key) => expect(incubator.map((item) => item.key)).toContain(key));
+    expect(moduleRegistry.filter((item) => item.surface === 'core').some((item) => /cornermex|commerce/i.test(`${item.key} ${item.label}`))).toBe(false);
   });
-  test('blocks writes and external actions for every module',()=>{
-    moduleRegistry.forEach(item=>{expect(item.readOnly).toBe(true);expect(item.blockedActions).toContain('production_writes');expect(item.blockedActions).toContain('external_actions')});
+
+  test('marketing, promotions and experimental modules are hidden from navigation but kept', () => {
+    const hidden = moduleRegistry.filter((item) => item.surface === 'hidden').map((item) => item.key);
+    ['marketing', 'campaigns', 'content', 'brand', 'assets', 'promotions', 'audiences', 'calendar', 'analytics', 'flow-engine', 'drafts', 'product-activation', 'telegram', 'worker-settings']
+      .forEach((key) => expect(hidden).toContain(key));
+    const visible = navigationFor('founder').flatMap((section) => section.modules.map((item) => item.key));
+    hidden.forEach((key) => expect(visible).not.toContain(key));
+  });
+
+  test('legacy paths are unique, never the public root, and never under /app', () => {
+    const legacy = moduleRegistry.flatMap((item) => item.legacyRoutes);
+    expect(new Set(legacy).size).toBe(legacy.length);
+    expect(legacy).not.toContain('/');
+    expect(legacy).not.toContain('/login');
+    expect(legacy.some((path) => path === '/app' || path.startsWith('/app/') || path.startsWith('/auth/') || path === '/access-pending')).toBe(false);
+    expect(moduleRegistry.find((item) => item.key === 'overview')?.legacyRoutes).toEqual(['/overview']);
+  });
+
+  test('external actions are blocked everywhere; only Sales allows internal writes', () => {
+    moduleRegistry.forEach((item) => expect(item.blockedActions).toContain('external_actions'));
+    expect(moduleRegistry.filter((item) => !item.readOnly).map((item) => item.key)).toEqual(['sales']);
   });
 });

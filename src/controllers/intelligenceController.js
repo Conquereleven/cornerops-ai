@@ -1,5 +1,6 @@
 const data = require('../core/data');
 const env = require('../config/env');
+const { getSharedInternalStore } = require('../core/work-queue/sharedInternalStore');
 const { CornerMexProgramStateService } = require('../integrations/cornermex');
 const { CornerMexFlowEngine } = require('../core/flows/cornermex');
 const {
@@ -62,7 +63,7 @@ const actionEngineService = new ActionEngineService({
   flowEngine,
   founderReviewService,
 });
-const internalOperationsStore = createInternalOperationsStore(env);
+const internalOperationsStore = getSharedInternalStore();
 const workQueueService = new WorkQueueService({
   actionEngineService,
   config: env,

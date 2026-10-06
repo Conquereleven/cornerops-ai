@@ -258,7 +258,7 @@ describe('CornerMex Supabase read-only v1.4', () => {
   test('Supabase key compatibility allows publishable and legacy anon keys only for read-only clients', () => {
     expect(classifySupabaseClientKey('sb_publishable_fake_key_for_test')).toBe('publishable');
     expect(classifySupabaseClientKey('eyJhbGciOiJIUzI1NiJ9.test.signature')).toBe('legacy_anon_jwt');
-    expect(classifySupabaseClientKey('sb_secret_fake_key_for_test')).toBe('forbidden_secret');
+    expect(classifySupabaseClientKey('sb_secret_fake_key_for_test')).toBe('forbidden_secret'); // secret-scan:allow synthetic fixture
     expect(classifySupabaseClientKey('service_role_fake_key_for_test')).toBe('forbidden_secret');
 
     const report = buildSupabaseKeyCompatibilityReport({

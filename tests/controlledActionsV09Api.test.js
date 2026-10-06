@@ -1,4 +1,5 @@
 const request = require('supertest');
+const { authed } = require('./helpers/appAuth');
 
 process.env.CORNEROPS_WEB_CONSOLE_ENABLED = 'true';
 process.env.CORNEROPS_WEB_CONSOLE_REQUIRE_AUTH = 'true';
@@ -21,13 +22,13 @@ const token = { 'x-cornerops-console-token': 'v09-test-console-token', 'x-operat
 
 describe('Controlled Actions v0.9 API', () => {
   test('requires local console authentication and lists only allowlisted actions', async () => {
-    await request(app).get('/api/actions').expect(401);
-    const response = await request(app).get('/api/actions').set(token).expect(200);
+    await authed(app).get('/api/actions').expect(401);
+    const response = await authed(app).get('/api/actions').set(token).expect(200);
     expect(response.body).toMatchObject({ enabled: true, dryRun: true, requireApproval: true });
     expect(response.body.actions.map((action) => action.id)).toEqual([
       'github.issue.create', 'cornerops.note.create', 'cornerops.task.create',
     ]);
-    await request(app).get('/api/actions/orders.mark_paid').set(token).expect(404);
+    await authed(app).get('/api/actions/orders.mark_paid').set(token).expect(404);
   });
 
   test('creates a GitHub draft, requests approval and executes only dry-run', async () => {
@@ -36,37 +37,37 @@ describe('Controlled Actions v0.9 API', () => {
       body: 'Show audit IDs for manual payment orders.',
       sourceRequestId: 'api-request-1',
     };
-    await request(app).post('/api/actions/github/issues/draft').set(token).send(payload).expect(200)
+    await authed(app).post('/api/actions/github/issues/draft').set(token).send(payload).expect(200)
       .then((response) => expect(response.body).toMatchObject({ status: 'draft', dryRun: true }));
-    const requested = await request(app).post('/api/actions/github/issues/request-approval')
+    const requested = await authed(app).post('/api/actions/github/issues/request-approval')
       .set(token).send(payload).expect(202);
-    await request(app).post(`/api/control-tower/v0.8/approvals/${requested.body.approvalId}/approve-dry-run`)
+    await authed(app).post(`/api/control-tower/v0.8/approvals/${requested.body.approvalId}/approve-dry-run`)
       .set(token).send({}).expect(200);
-    const executed = await request(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute-dry-run`)
+    const executed = await authed(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute-dry-run`)
       .set(token).send({}).expect(200);
     expect(executed.body).toMatchObject({ status: 'dry_run_executed', dryRun: true });
-    const duplicate = await request(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute-dry-run`)
+    const duplicate = await authed(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute-dry-run`)
       .set(token).send({}).expect(200);
     expect(duplicate.body).toMatchObject({ duplicate: true });
   });
 
   test('blocks real execution, secrets and payment/order action ids', async () => {
-    await request(app).post('/api/actions/github/issues/draft').set(token).send({
+    await authed(app).post('/api/actions/github/issues/draft').set(token).send({
       title: 'Unsafe', body: `Bearer ${['gh', 'p_'].join('')}abcdefghijklmnopqrstuvwxyz123456`,
     }).expect(400);
-    const requested = await request(app).post('/api/actions/internal-tasks/request-approval').set(token).send({
+    const requested = await authed(app).post('/api/actions/internal-tasks/request-approval').set(token).send({
       title: 'Review stale B2B leads', description: 'Read-only review.', sourceRequestId: 'api-request-2',
     }).expect(202);
-    await request(app).post(`/api/control-tower/v0.8/approvals/${requested.body.approvalId}/approve-dry-run`)
+    await authed(app).post(`/api/control-tower/v0.8/approvals/${requested.body.approvalId}/approve-dry-run`)
       .set(token).send({}).expect(200);
-    await request(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute`)
+    await authed(app).post(`/api/actions/approvals/${requested.body.approvalId}/execute`)
       .set(token).send({}).expect(403);
-    await request(app).post('/api/actions/approvals/approval-does-not-exist/execute')
+    await authed(app).post('/api/actions/approvals/approval-does-not-exist/execute')
       .set(token).send({ actionId: 'orders.mark_paid' }).expect(404);
   });
 
   test('Control Tower v0.9 reports action and idempotency state', async () => {
-    const response = await request(app).get('/api/control-tower/v0.9/status').set(token).expect(200);
+    const response = await authed(app).get('/api/control-tower/v0.9/status').set(token).expect(200);
     expect(response.body).toMatchObject({
       version: 'v0.9',
       controlledActions: {

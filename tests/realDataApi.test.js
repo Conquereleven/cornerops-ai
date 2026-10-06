@@ -1,37 +1,40 @@
 const request = require('supertest');
+const { authed, installTestAppAuth } = require('./helpers/appAuth');
+
+installTestAppAuth();
 const app = require('../src/app');
 
 describe('real data control tower API', () => {
   test('exposes read-only/mock data endpoints', async () => {
-    await request(app)
+    await authed(app)
       .get('/api/quotes/follow-up')
       .expect(200)
       .expect((res) => {
         expect(res.body.length).toBeGreaterThan(0);
       });
 
-    await request(app)
+    await authed(app)
       .get('/api/orders/manual-payments')
       .expect(200)
       .expect((res) => {
         expect(res.body.some((order) => order.paymentMethod === 'bank_transfer')).toBe(true);
       });
 
-    await request(app)
+    await authed(app)
       .get('/api/github/issues')
       .expect(200)
       .expect((res) => {
         expect(res.body.length).toBeGreaterThan(0);
       });
 
-    await request(app)
+    await authed(app)
       .get('/api/data-health')
       .expect(200)
       .expect((res) => {
         expect(res.body.mode).toBe('mock');
       });
 
-    await request(app)
+    await authed(app)
       .get('/api/openclaw-ecosystem/services')
       .expect(200)
       .expect((res) => {
@@ -40,7 +43,7 @@ describe('real data control tower API', () => {
   });
 
   test('write-style endpoints remain dry-run/proposal only', async () => {
-    await request(app)
+    await authed(app)
       .post('/api/github/issues')
       .send({ title: 'Bug dry-run', body: 'No real issue' })
       .expect(403)
@@ -49,7 +52,7 @@ describe('real data control tower API', () => {
         expect(res.body.message).toMatch(/GITHUB_READ_ONLY=true/);
       });
 
-    await request(app)
+    await authed(app)
       .post('/api/orders/order-bank-transfer-001/manual-payment-mark-paid-request')
       .send({})
       .expect(202)

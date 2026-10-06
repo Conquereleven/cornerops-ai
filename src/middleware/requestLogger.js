@@ -5,7 +5,8 @@ const requestLogger = (req, res, next) => {
   res.on('finish', () => {
     logger.info('http_request', {
       method: req.method,
-      path: req.originalUrl,
+      // Query strings can carry search terms or identifiers; never log them.
+      path: String(req.originalUrl || '').split('?')[0],
       statusCode: res.statusCode,
       durationMs: Date.now() - startedAt,
     });
