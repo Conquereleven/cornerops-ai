@@ -46,7 +46,7 @@ GET /health, /api/health                      public
 
 <!-- inventory:start -->
 
-Total routes: 265
+Total routes: 276
 
 ### PUBLIC (2)
 
@@ -55,7 +55,7 @@ Total routes: 265
 | GET | `/api/health` | none |
 | GET | `/health` | none |
 
-### AUTHENTICATED WORKSPACE (169)
+### AUTHENTICATED WORKSPACE (180)
 
 | Method | Path | Authentication |
 |---|---|---|
@@ -65,6 +65,17 @@ Total routes: 265
 | POST | `/api/actions/github/issues/request-approval` | workspace session, policy internal_write + local console guard |
 | POST | `/api/actions/internal-notes/request-approval` | workspace session, policy internal_write + local console guard |
 | POST | `/api/actions/internal-tasks/request-approval` | workspace session, policy internal_write + local console guard |
+| GET | `/api/app/sales/accounts` | workspace session, policy read |
+| POST | `/api/app/sales/accounts` | workspace session, policy internal_write |
+| GET | `/api/app/sales/accounts/:accountId` | workspace session, policy read |
+| PATCH | `/api/app/sales/accounts/:accountId` | workspace session, policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/activities` | workspace session, policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/contacts` | workspace session, policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/opportunities` | workspace session, policy internal_write |
+| PATCH | `/api/app/sales/contacts/:contactId` | workspace session, policy internal_write |
+| POST | `/api/app/sales/import/preview` | workspace session, policy internal_write |
+| PATCH | `/api/app/sales/opportunities/:opportunityId` | workspace session, policy internal_write |
+| GET | `/api/app/sales/summary` | workspace session, policy read |
 | GET | `/api/app/session` | session identity; memberships are reported, not required |
 | GET | `/api/approvals` | workspace session, policy read |
 | GET | `/api/audit-logs` | workspace session, policy read |

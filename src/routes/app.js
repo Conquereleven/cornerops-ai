@@ -24,4 +24,6 @@ router.get('/session', authenticate, async (req, res) => {
   }
 });
 
+router.use('/sales', require('./sales'));
+
 module.exports = router;
