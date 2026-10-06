@@ -26,23 +26,53 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+// The auth layer supplies the current session token and active workspace.
+// Nothing is read from storage here and no shared token is required.
+type ApiAuth = { accessToken: () => string | null; workspaceSlug: () => string | null };
+let apiAuth: ApiAuth = { accessToken: () => null, workspaceSlug: () => null };
+export const configureApiAuth = (next: ApiAuth) => { apiAuth = next; };
+
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   let response: Response;
+  const token = apiAuth.accessToken();
+  const workspace = apiAuth.workspaceSlug();
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(workspace ? { 'x-cornerops-workspace': workspace } : {}),
+        ...options?.headers,
+      },
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`No pude conectar con el backend de CórnerOps AI. Verifica que el servidor Express esté corriendo. ${detail}`);
+    throw new ApiError(`No pude conectar con el backend de CórnerOps AI. Verifica que el servidor Express esté corriendo. ${detail}`, 0);
   }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.message || `La API respondió con HTTP ${response.status}.`);
+    throw new ApiError(body.message || `La API respondió con HTTP ${response.status}.`, response.status, body.code);
   }
   return response.json();
 };
+
+export type WorkspaceMembership = { id: string; slug: string; name: string; role: 'viewer' | 'operator' | 'founder' };
+export type AppSession = { authenticated: boolean; user: { id: string }; workspaces: WorkspaceMembership[] };
+// The token is passed explicitly so the very first call cannot race the provider.
+export const getAppSession = (accessToken: string) =>
+  request<AppSession>('/api/app/session', { headers: { Authorization: `Bearer ${accessToken}` } });
 
 export const sendChatMessage = (payload: { userId: string; message: string; conversationId?: string; requestId?: string; channel?: string }) =>
   request<ChatResponse>('/api/chat', { method: 'POST', body: JSON.stringify(payload) });
@@ -220,4 +250,35 @@ export const getIntelligencePlaybooks = (token = '') =>
   intelligenceRequest<PlaybookSummary[]>('/api/intelligence/playbooks', token);
 export const getIntelligenceConnectors = (token = '') =>
   intelligenceRequest<ConnectorSummary[]>('/api/intelligence/connectors', token);
+
+// --- CornerOps company workspace ---
+export type WorkQueueStatus = { status: string; metrics: { openWorkItems: number; highPriorityWorkItems: number; pendingApprovals: number; draftsAwaitingReview: number; completedThisWeek: number } };
+export const getWorkQueueStatus = () => request<WorkQueueStatus>('/api/intelligence/work-queue/status');
+
+// --- Sales (internal records only; nothing here sends a message) ---
+export const SALES_STAGES = ['new', 'contacted', 'engaged', 'discovery', 'qualified', 'proposal', 'won', 'lost', 'nurture'] as const;
+export const SALES_ACTIVITY_TYPES = ['email', 'call', 'whatsapp', 'linkedin', 'meeting', 'note'] as const;
+export type SalesStage = typeof SALES_STAGES[number];
+export type SalesActivityType = typeof SALES_ACTIVITY_TYPES[number];
+export type SalesAccount = { id: string; name: string; website: string | null; segment: string | null; source: string | null; priority: 'high' | 'medium' | 'low' | null; fitScore: number | null; status: string; problemHypothesis: string | null; updatedAt: string };
+export type SalesAccountRow = SalesAccount & { primaryContact: { id: string; name: string; title: string | null } | null; latestActivity: { type: SalesActivityType; occurredAt: string; outcome: string | null } | null; nextStep: { text: string; at: string | null; stage: SalesStage } | null; openOpportunities: number };
+export type SalesContact = { id: string; name: string; title: string | null; email: string | null; phone: string | null; linkedinUrl: string | null; contactConfidence: string | null; isPrimary: boolean };
+export type SalesOpportunity = { id: string; stage: SalesStage; problemSummary: string | null; solutionHypothesis: string | null; currency: string | null; estimatedValue: number | null; qualificationScore: number | null; nextStep: string | null; nextStepAt: string | null };
+export type SalesActivity = { id: string; type: SalesActivityType; direction: string; occurredAt: string; outcome: string | null; notes: string | null; externalRef: string | null; contactId: string | null; opportunityId: string | null };
+export type SalesOpportunityBrief = { opportunityId: string; accountId: string; accountName: string | null; stage: SalesStage; nextStep: string | null; nextStepAt: string | null };
+export type SalesSummary = { accounts: { total: number }; opportunities: { total: number; open: number; byStage: Record<SalesStage, number> }; nextActionsDue: SalesOpportunityBrief[]; needingFollowUp: SalesOpportunityBrief[]; pipelineValue: Array<{ currency: string; total: number; opportunities: number }>; valueCoverage: { withValue: number; withoutValue: number } };
+export type SalesAccountDetail = { account: SalesAccount; contacts: SalesContact[]; opportunities: SalesOpportunity[]; activities: SalesActivity[] };
+
+const salesWrite = <T>(method: 'POST' | 'PATCH', path: string, body: unknown) =>
+  request<T>(`/api/app/sales${path}`, { method, body: JSON.stringify(body) });
+export const getSalesSummary = () => request<SalesSummary>('/api/app/sales/summary');
+export const getSalesAccounts = () => request<{ accounts: SalesAccountRow[] }>('/api/app/sales/accounts');
+export const getSalesAccount = (id: string) => request<SalesAccountDetail>(`/api/app/sales/accounts/${encodeURIComponent(id)}`);
+export const createSalesAccount = (body: Record<string, unknown>) => salesWrite<SalesAccount>('POST', '/accounts', body);
+export const updateSalesAccount = (id: string, body: Record<string, unknown>) => salesWrite<SalesAccount>('PATCH', `/accounts/${encodeURIComponent(id)}`, body);
+export const createSalesContact = (accountId: string, body: Record<string, unknown>) => salesWrite<SalesContact>('POST', `/accounts/${encodeURIComponent(accountId)}/contacts`, body);
+export const createSalesOpportunity = (accountId: string, body: Record<string, unknown>) => salesWrite<SalesOpportunity>('POST', `/accounts/${encodeURIComponent(accountId)}/opportunities`, body);
+export const updateSalesOpportunity = (id: string, body: Record<string, unknown>) => salesWrite<SalesOpportunity>('PATCH', `/opportunities/${encodeURIComponent(id)}`, body);
+export const createSalesActivity = (accountId: string, body: Record<string, unknown>) => salesWrite<SalesActivity>('POST', `/accounts/${encodeURIComponent(accountId)}/activities`, body);
+
 export { API_BASE_URL };

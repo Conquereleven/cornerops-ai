@@ -319,3 +319,45 @@ td code { color: var(--blue); }
   .resource-actions > span { width: 100%; }
   .ct-title { display: block; }.ct-title-status { justify-content: flex-start; margin-top: 10px; }.ct-auth { grid-template-columns: auto 1fr; }.ct-auth input { grid-column: 1/-1; }.ct-card-grid,.ct-two-column { grid-template-columns: 1fr; }.ct-safety-grid { grid-template-columns: repeat(2,1fr); }.ct-safety-item:nth-child(n) { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }.ct-safety-item:nth-child(even) { border-right: 0; }.ct-security-body { grid-template-columns: 1fr; }.ct-ask-form { grid-template-columns: 1fr; }
 }
+
+/* Company overview and Sales */
+.tenant-flag-workspace { background: #1d5fa8; }
+.overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.overview-card { padding: 16px; margin-bottom: 12px; min-width: 0; }
+.overview-grid .overview-card { margin-bottom: 0; }
+.overview-card h3 { margin: 14px 0 4px; color: var(--muted); font-size: 10px; font-weight: 600; }
+.overview-card p { margin: 6px 0; color: #b8c4ce; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+.overview-card a, .overview-list a, .sales-back { color: var(--green); }
+.overview-card .panel-heading > a { font-size: 10px; }
+.overview-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0; }
+.overview-facts dt { color: var(--muted); font-size: 9px; }
+.overview-facts dd { margin: 3px 0 0; color: white; font-size: 17px; overflow-wrap: anywhere; }
+.overview-list { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 11px; color: #b8c4ce; }
+.overview-list small, .sales-record small, .table-wrap small { color: var(--muted); }
+.sales-muted { color: var(--muted); font-size: 10px; }
+.sales-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 10px; }
+.sales-value { color: var(--muted); font-size: 10px; text-align: right; }
+.sales-pipeline { padding: 16px; margin-bottom: 12px; }
+.sales-stages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.sales-stages li { display: grid; gap: 3px; padding: 9px 6px; text-align: center; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 9px; }
+.sales-stages strong { color: var(--muted); font-size: 16px; }
+.sales-stage-active { border-color: #2d6944 !important; }
+.sales-stage-active strong { color: white; }
+.sales-form { padding: 16px; margin-bottom: 12px; }
+.sales-inline-form { padding: 12px 0 0; margin: 10px 0 0; border-top: 1px solid var(--border-soft); }
+.sales-form .form-grid select, .sales-form textarea, .sales-wide input { width: 100%; padding: 0 11px; color: var(--text); background: #0a1016; border: 1px solid var(--border); border-radius: 6px; outline: none; font: inherit; font-size: 11px; }
+.sales-form .form-grid select, .sales-wide input { height: 40px; }
+.sales-form textarea { padding: 9px 11px; resize: vertical; }
+.sales-form :is(input, select, textarea):focus-visible { border-color: #2d6944; box-shadow: 0 0 0 2px rgba(69, 220, 120, .2); }
+.sales-wide { display: grid; gap: 7px; margin-top: 14px; color: var(--muted); font-size: 10px; }
+.sales-form .button-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sales-form-error { color: #ffadb6; }
+.sales-records, .sales-timeline { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.sales-record, .sales-timeline li { padding: 10px 0; border-top: 1px solid var(--border-soft); font-size: 11px; }
+.sales-record:first-child, .sales-timeline li:first-child { border-top: 0; }
+.sales-page table th { text-align: left; }
+@media (max-width: 900px) {
+  .overview-grid { grid-template-columns: minmax(0, 1fr); }
+  .sales-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sales-value { text-align: left; }
+}

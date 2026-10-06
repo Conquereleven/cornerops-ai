@@ -6,7 +6,7 @@ describe('production mock isolation',()=>{
     const serialized=JSON.stringify(moduleRegistry);
     expect(serialized).not.toMatch(/Data layer MOCK|Usuario 1|order #123|conv-demo|mockData/);
   });
-  test('unavailable modules remain navigable and read-only',()=>{
-    expect(moduleRegistry.every(item=>item.route.startsWith('/')&&item.readOnly)).toBe(true);
+  test('every module is navigable and none can perform an external action',()=>{
+    expect(moduleRegistry.every(item=>item.route.startsWith('/app')&&item.blockedActions.includes('external_actions'))).toBe(true);
   });
 });
