@@ -58,6 +58,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// API responses are never indexable.
+app.use('/api', (req, res, next) => { res.setHeader('X-Robots-Tag', 'noindex'); next(); });
+
 // --- Internal service boundary (x-internal-api-key) ---
 app.use('/api/internal', internalRoutes);
 app.use('/api/openclaw', openclawRoutes);
@@ -97,6 +100,8 @@ if (env.corneropsFrontendServeEnabled && fs.existsSync(frontendIndexPath)) {
       return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
     }
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // Only the public landing is indexable; every other SPA route is private or transient.
+    if (req.path !== '/') res.setHeader('X-Robots-Tag', 'noindex');
     return res.sendFile(frontendIndexPath);
   });
 } else {

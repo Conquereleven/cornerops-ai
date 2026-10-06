@@ -1,0 +1,8 @@
+# Public marketing site is indexable. The private workspace and auth flow are not.
+User-agent: *
+Allow: /$
+Disallow: /app
+Disallow: /api
+Disallow: /auth
+Disallow: /login
+Disallow: /access-pending
