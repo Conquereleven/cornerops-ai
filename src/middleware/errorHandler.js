@@ -6,7 +6,7 @@ const errorHandler = (error, req, res, next) => {
   const log = statusCode >= 500 ? logger.error : logger.warn;
   log('request_error', {
     statusCode,
-    path: req.originalUrl,
+    path: String(req.originalUrl || '').split('?')[0],
     message: error.message,
     ...(statusCode >= 500 &&
       env.nodeEnv !== 'production' && { stack: error.stack }),

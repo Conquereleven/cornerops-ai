@@ -35,6 +35,10 @@ const createControlTowerFounderActionAuth = ({ config = env, recordAudit } = {})
     if (origin && !(config.controlTowerFrontendAllowedOrigins || []).includes(origin)) {
       return deny(req, res, recordAudit, 403, 'FOUNDER_ACTION_ORIGIN_DENIED', 'Founder-action origin is not exactly allowlisted.');
     }
+    // A workspace-session caller must also hold the founder role.
+    if (req.workspace && req.workspace.role !== 'founder') {
+      return deny(req, res, recordAudit, 403, 'FOUNDER_ACTION_ROLE_REQUIRED', 'Founder role is required for this action.');
+    }
     if (!req.is('application/json')) {
       return deny(req, res, recordAudit, 415, 'FOUNDER_ACTION_CONTENT_TYPE_REQUIRED', 'Content-Type application/json is required.');
     }

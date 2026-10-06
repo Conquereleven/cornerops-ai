@@ -16,6 +16,8 @@ const INTERNAL_TABLES = Object.freeze([
   'sourcing_supplier_coverage_results',
   'commercial_entities', 'commercial_transition_events', 'commercial_evidence_registry',
   'commerce_order_intakes', 'commerce_order_intake_events',
+  'workspaces', 'workspace_memberships',
+  'sales_accounts', 'sales_contacts', 'sales_opportunities', 'sales_activities',
 ]);
 const OPEN_WORK_ITEM_STATUSES = Object.freeze([
   'recommended', 'drafted', 'queued_for_approval', 'approved', 'in_progress',

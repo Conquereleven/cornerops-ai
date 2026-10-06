@@ -1,4 +1,7 @@
 const request = require('supertest');
+const { authed, installTestAppAuth } = require('./helpers/appAuth');
+
+installTestAppAuth();
 
 const ORIGINAL_ENV = { ...process.env };
 const loadApp = (overrides = {}) => {
@@ -26,13 +29,13 @@ describe('Control Tower v0.8 API', () => {
 
   test('is disabled unless explicitly enabled', async () => {
     const app = loadApp({ CORNEROPS_WEB_CONSOLE_ENABLED: 'false' });
-    await request(app).get('/api/control-tower/v0.8/status').expect(404);
+    await authed(app).get('/api/control-tower/v0.8/status').expect(404);
   });
 
   test('requires auth and returns a sanitized unified report', async () => {
     const app = loadApp();
-    await request(app).get('/api/control-tower/v0.8/status').expect(401);
-    const response = await request(app).get('/api/control-tower/v0.8/status')
+    await authed(app).get('/api/control-tower/v0.8/status').expect(401);
+    const response = await authed(app).get('/api/control-tower/v0.8/status')
       .set('x-cornerops-console-token', 'test-console-token').expect(200);
     expect(response.body).toMatchObject({
       safety: { failClosed: true, readOnly: true, writesBlocked: true, externalSendsBlocked: true },
@@ -46,7 +49,7 @@ describe('Control Tower v0.8 API', () => {
       'agents', 'data-sources', 'context-sources', 'telegram', 'first-real-source',
       'security', 'audit-summary', 'approvals', 'rejections', 'replay', 'rate-limits',
     ]) {
-      const section = await request(app).get(`/api/control-tower/v0.8/${path}`)
+      const section = await authed(app).get(`/api/control-tower/v0.8/${path}`)
         .set('x-cornerops-console-token', 'test-console-token').expect(200);
       expect(JSON.stringify(section.body)).not.toContain('test-console-token');
       expect(JSON.stringify(section.body)).not.toContain(process.cwd());
@@ -55,15 +58,15 @@ describe('Control Tower v0.8 API', () => {
 
   test('routes safe web asks, audits denials and blocks approval commands', async () => {
     const app = loadApp();
-    const safe = await request(app).post('/api/operator/v0.8/ask')
+    const safe = await authed(app).post('/api/operator/v0.8/ask')
       .set('x-cornerops-console-token', 'test-console-token')
       .send({ text: 'Show Control Tower status.' }).expect(200);
     expect(safe.body).toMatchObject({ sourceMode: expect.any(String), auditId: expect.any(String) });
-    const blocked = await request(app).post('/api/operator/v0.8/ask')
+    const blocked = await authed(app).post('/api/operator/v0.8/ask')
       .set('x-cornerops-console-token', 'test-console-token')
       .send({ text: 'Approve approval-demo-123' }).expect(403);
     expect(blocked.body).toMatchObject({ status: 'denied', auditId: expect.any(String), warnings: ['WEB_ASK_APPROVAL_ACTION_BLOCKED'] });
-    const write = await request(app).post('/api/operator/v0.8/ask')
+    const write = await authed(app).post('/api/operator/v0.8/ask')
       .set('x-cornerops-console-token', 'test-console-token')
       .send({ text: 'Mark order 123 as paid' }).expect(403);
     expect(write.body).toMatchObject({ status: 'denied', auditId: expect.any(String) });
@@ -73,7 +76,7 @@ describe('Control Tower v0.8 API', () => {
     const app = loadApp();
     const data = require('../src/core/data');
     const approval = await data.approvalService.requestApproval({ actionType: 'mark_payment_paid', createdBy: 'quotes-orders-agent' });
-    const response = await request(app)
+    const response = await authed(app)
       .post(`/api/control-tower/v0.8/approvals/${approval.id}/reject-dry-run`)
       .set('x-cornerops-console-token', 'test-console-token').expect(200);
     expect(response.body).toMatchObject({ executed: false, approval: { status: 'rejected', realExecutionAllowed: false }, auditId: expect.any(String) });

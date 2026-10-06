@@ -249,7 +249,7 @@ const createGitHubIssue = async (req, res, next) => {
     const result = await dataCore.githubIssueService.createIssue({
       ...req.body,
       requestId: req.get('x-request-id'),
-      userId: req.body.userId || 'api',
+      userId: req.appIdentity?.userId || 'api',
       channel: 'web',
     }, req.body.approvalId);
     const statusCode = result.status === 'denied'
@@ -293,7 +293,7 @@ const createApproval = async (req, res, next) => {
 
 const approveApproval = async (req, res, next) => {
   try {
-    const approval = await dataCore.approvalService.approveApproval(req.params.id, req.body.approver || 'operator');
+    const approval = await dataCore.approvalService.approveApproval(req.params.id, req.appIdentity?.userId || 'operator');
     if (!approval) return res.status(404).json({ error: true, message: 'Approval not found' });
     return res.json(approval);
   } catch (error) {
@@ -303,7 +303,7 @@ const approveApproval = async (req, res, next) => {
 
 const rejectApproval = async (req, res, next) => {
   try {
-    const approval = await dataCore.approvalService.rejectApproval(req.params.id, req.body.approver || 'operator');
+    const approval = await dataCore.approvalService.rejectApproval(req.params.id, req.appIdentity?.userId || 'operator');
     if (!approval) return res.status(404).json({ error: true, message: 'Approval not found' });
     return res.json(approval);
   } catch (error) {
@@ -435,7 +435,7 @@ const requestLeadStatusChange = async (req, res) =>
 const receiveGitHubWebhook = async (req, res, next) => {
   try {
     const result = await dataCore.githubWebhookHandler.handle({
-      body: req.body,
+      body: req.rawBody ? req.rawBody.toString('utf8') : req.body,
       deliveryId: req.get('x-github-delivery'),
       event: req.get('x-github-event'),
       signature: req.get('x-hub-signature-256'),

@@ -1,16 +1,19 @@
 process.env.NODE_ENV = 'test';
 
 const request = require('supertest');
+const { authed, installTestAppAuth } = require('./helpers/appAuth');
 const app = require('../src/app');
 
-describe('Mock compatibility endpoints', () => {
+installTestAppAuth();
+
+// The /api/mock/* aliases were removed in Product & Web Consolidation v1.
+describe('Removed mock compatibility endpoints', () => {
   test.each([
     '/api/mock/orders',
     '/api/mock/products',
     '/api/mock/leads',
-  ])('lists %s', async (path) => {
-    const response = await request(app).get(path);
-    expect(response.statusCode).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
+  ])('%s is not reachable anonymously and no longer exists', async (path) => {
+    expect((await request(app).get(path)).statusCode).toBe(401);
+    expect((await authed(app).get(path)).statusCode).toBe(404);
   });
 });

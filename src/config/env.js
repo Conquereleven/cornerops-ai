@@ -50,6 +50,8 @@ const baseEnv = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
   useSupabase: parseBoolean(process.env.USE_SUPABASE),
   internalApiKey: process.env.INTERNAL_API_KEY || '',
+  corneropsAuthSupabaseUrl: process.env.CORNEROPS_AUTH_SUPABASE_URL || '',
+  corneropsAuthSupabasePublishableKey: process.env.CORNEROPS_AUTH_SUPABASE_PUBLISHABLE_KEY || '',
   allowInternalNoKey: parseBoolean(process.env.ALLOW_INTERNAL_NO_KEY),
   aiDefaultLanguage: parseEnum(
     process.env.AI_DEFAULT_LANGUAGE,

@@ -16,6 +16,8 @@
     "lint": "node scripts/check-syntax.js",
     "typecheck": "npm --prefix frontend run typecheck",
     "qa": "node scripts/run-qa.js",
+    "security:route-inventory": "node scripts/generate-route-inventory.js",
+    "workspace:grant": "node scripts/workspace-grant.js",
     "demo:all": "node scripts/demo-all.js",
     "control:tower": "node scripts/control-tower.js",
     "control:tower:beta": "node scripts/control-tower-beta.js",

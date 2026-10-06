@@ -1,6 +1,7 @@
 const express = require('express');
 const { chat } = require('../controllers/chatController');
 const { validateChatPayload } = require('../utils/validateChatPayload');
+const { guard } = require('../middleware/appAuth');
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ const validateChatRequest = (req, res, next) => {
   return next();
 };
 
-router.post('/', validateChatRequest, chat);
+// Internal operator chat: workspace session with an operator role.
+router.post('/', ...guard('internal_write'), validateChatRequest, chat);
 
 module.exports = router;
