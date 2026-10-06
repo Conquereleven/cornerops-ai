@@ -4,12 +4,12 @@ const request = require('supertest');
 const ORIGINAL_ENV = { ...process.env };
 const INTERNAL_KEY = 'inventory-test-internal-key';
 const samplePath = (path) => path.replace(/:[A-Za-z]+/g, 'sample');
-const call = (app, route) => request(app)[route.method.toLowerCase()](samplePath(route.path)).set('Content-Type', 'application/json');
+const call = (target, route) => request(target)[route.method.toLowerCase()](samplePath(route.path)).set('Content-Type', 'application/json');
 
 // Loaded as production so no test-only shortcut (internalAuth) hides an open route.
 describe('API route inventory and anonymous access', () => {
   jest.setTimeout(60000);
-  let app; let inventory; let CLASSES;
+  let app; let server; let inventory; let CLASSES;
 
   beforeAll(() => {
     for (const level of ['log', 'info', 'warn', 'error']) jest.spyOn(console, level).mockImplementation(() => {});
@@ -18,11 +18,14 @@ describe('API route inventory and anonymous access', () => {
       ...ORIGINAL_ENV, NODE_ENV: 'production', INTERNAL_API_KEY: INTERNAL_KEY, ALLOW_INTERNAL_NO_KEY: 'false',
       CORNEROPS_FRONTEND_SERVE_ENABLED: 'false', CORNEROPS_API_ENABLED: 'true',
     };
-    app = require('../src/app');
+    // One listening server for the whole sweep: several hundred requests each
+    // opening an ephemeral server intermittently reset under load.
+    server = require('../src/app').listen(0, '127.0.0.1');
+    app = server;
     ({ CLASSES } = require('../src/api/routeInventory'));
-    inventory = require('../src/api/routeInventory').buildInventory(app);
+    inventory = require('../src/api/routeInventory').buildInventory(require('../src/app'));
   });
-  afterAll(() => { jest.restoreAllMocks(); process.env = { ...ORIGINAL_ENV }; jest.resetModules(); });
+  afterAll(async () => { await new Promise((resolve) => server.close(resolve)); jest.restoreAllMocks(); process.env = { ...ORIGINAL_ENV }; jest.resetModules(); });
 
   test('every mounted route has exactly one class', () => {
     expect(inventory.length).toBeGreaterThan(200);
@@ -85,15 +88,32 @@ describe('API route inventory and anonymous access', () => {
   test('webhooks reject unsigned callbacks and are not unlocked by sessions or the internal key', async () => {
     const open = [];
     for (const route of inventory.filter((item) => item.class === CLASSES.WEBHOOK && item.method === 'POST')) {
+      // Sequential on purpose: denied callbacks are audited to local state.
       const attempts = [
-        call(app, route).send('{}'),
-        call(app, route).set('x-internal-api-key', INTERNAL_KEY).send('{}'),
-        call(app, route).set('x-hub-signature-256', `sha256=${'0'.repeat(64)}`).set('x-telegram-bot-api-secret-token', 'wrong').send('{}'),
+        () => call(app, route).send('{}'),
+        () => call(app, route).set('x-internal-api-key', INTERNAL_KEY).send('{}'),
+        () => call(app, route).set('x-hub-signature-256', `sha256=${'0'.repeat(64)}`).set('x-telegram-bot-api-secret-token', 'wrong').send('{}'),
       ];
-      for (const response of await Promise.all(attempts)) {
+      for (const attempt of attempts) {
+        const response = await attempt();
         if (![401, 403, 404, 503].includes(response.statusCode)) open.push(`${route.method} ${route.path} -> ${response.statusCode}`);
       }
     }
     expect(open).toEqual([]);
+  });
+});
+
+describe('response hardening', () => {
+  test('every response forbids framing and the API is not indexable', async () => {
+    process.env.NODE_ENV = 'test';
+    const app = require('../src/app');
+    for (const path of ['/health', '/api/leads', '/api/app/session']) {
+      const response = await request(app).get(path);
+      expect(response.headers['x-frame-options']).toBe('DENY');
+      expect(response.headers['content-security-policy']).toBe("frame-ancestors 'none'");
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    }
+    expect((await request(app).get('/api/leads')).headers['x-robots-tag']).toBe('noindex');
   });
 });

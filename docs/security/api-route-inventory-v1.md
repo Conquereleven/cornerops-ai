@@ -59,202 +59,202 @@ Total routes: 276
 
 | Method | Path | Authentication |
 |---|---|---|
-| GET | `/api/actions` | workspace session, policy read + local console guard |
-| GET | `/api/actions/:id` | workspace session, policy read + local console guard |
-| POST | `/api/actions/github/issues/draft` | workspace session, policy internal_write + local console guard |
-| POST | `/api/actions/github/issues/request-approval` | workspace session, policy internal_write + local console guard |
-| POST | `/api/actions/internal-notes/request-approval` | workspace session, policy internal_write + local console guard |
-| POST | `/api/actions/internal-tasks/request-approval` | workspace session, policy internal_write + local console guard |
-| GET | `/api/app/sales/accounts` | workspace session, policy read |
-| POST | `/api/app/sales/accounts` | workspace session, policy internal_write |
-| GET | `/api/app/sales/accounts/:accountId` | workspace session, policy read |
-| PATCH | `/api/app/sales/accounts/:accountId` | workspace session, policy internal_write |
-| POST | `/api/app/sales/accounts/:accountId/activities` | workspace session, policy internal_write |
-| POST | `/api/app/sales/accounts/:accountId/contacts` | workspace session, policy internal_write |
-| POST | `/api/app/sales/accounts/:accountId/opportunities` | workspace session, policy internal_write |
-| PATCH | `/api/app/sales/contacts/:contactId` | workspace session, policy internal_write |
-| POST | `/api/app/sales/import/preview` | workspace session, policy internal_write |
-| PATCH | `/api/app/sales/opportunities/:opportunityId` | workspace session, policy internal_write |
-| GET | `/api/app/sales/summary` | workspace session, policy read |
+| GET | `/api/actions` | company workspace session, policy read + local console guard |
+| GET | `/api/actions/:id` | company workspace session, policy read + local console guard |
+| POST | `/api/actions/github/issues/draft` | company workspace session, policy internal_write + local console guard |
+| POST | `/api/actions/github/issues/request-approval` | company workspace session, policy internal_write + local console guard |
+| POST | `/api/actions/internal-notes/request-approval` | company workspace session, policy internal_write + local console guard |
+| POST | `/api/actions/internal-tasks/request-approval` | company workspace session, policy internal_write + local console guard |
+| GET | `/api/app/sales/accounts` | workspace session (own workspace), policy read |
+| POST | `/api/app/sales/accounts` | workspace session (own workspace), policy internal_write |
+| GET | `/api/app/sales/accounts/:accountId` | workspace session (own workspace), policy read |
+| PATCH | `/api/app/sales/accounts/:accountId` | workspace session (own workspace), policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/activities` | workspace session (own workspace), policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/contacts` | workspace session (own workspace), policy internal_write |
+| POST | `/api/app/sales/accounts/:accountId/opportunities` | workspace session (own workspace), policy internal_write |
+| PATCH | `/api/app/sales/contacts/:contactId` | workspace session (own workspace), policy internal_write |
+| POST | `/api/app/sales/import/preview` | workspace session (own workspace), policy internal_write |
+| PATCH | `/api/app/sales/opportunities/:opportunityId` | workspace session (own workspace), policy internal_write |
+| GET | `/api/app/sales/summary` | workspace session (own workspace), policy read |
 | GET | `/api/app/session` | session identity; memberships are reported, not required |
-| GET | `/api/approvals` | workspace session, policy read |
-| GET | `/api/audit-logs` | workspace session, policy read |
-| POST | `/api/chat` | workspace session, policy internal_write |
-| GET | `/api/context/health` | workspace session, policy read |
-| GET | `/api/context/search` | workspace session, policy read |
-| GET | `/api/context/sources` | workspace session, policy read |
-| GET | `/api/context/sources/:id` | workspace session, policy read |
-| POST | `/api/context/sources/:id/sync-request` | workspace session, policy internal_write |
-| GET | `/api/control-tower/frontend/v1` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/actions` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/approvals` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/audit` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/capabilities` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/connection-test` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/cornermex` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/drafts` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/environment-doctor` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/flows` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/founder-daily` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/security` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/status` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/telegram` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/frontend/v1/work-queue` | workspace session (viewer+) or operator token |
-| GET | `/api/control-tower/v0.8/agents` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/approvals` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/audit-summary` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/context-sources` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/data-sources` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/first-real-source` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/rate-limits` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/rejections` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/replay` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/security` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/status` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.8/telegram` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.9/approvals` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.9/audit-summary` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v0.9/status` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.0/approvals` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.0/audit-summary` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.0/status` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.1/approvals` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.1/audit-summary` | workspace session, policy read + local console guard |
-| GET | `/api/control-tower/v1.1/status` | workspace session, policy read + local console guard |
-| GET | `/api/conversations` | workspace session, policy read |
-| GET | `/api/conversations/:id` | workspace session, policy read |
-| GET | `/api/conversations/:id/messages` | workspace session, policy read |
-| GET | `/api/crawlers` | workspace session, policy read |
-| GET | `/api/crawlers/:id/health` | workspace session, policy read |
-| GET | `/api/dashboard` | workspace session, policy read |
-| GET | `/api/data-health` | workspace session, policy read |
-| GET | `/api/events` | workspace session, policy read |
-| GET | `/api/github/issues` | workspace session, policy read |
-| GET | `/api/github/issues/:number` | workspace session, policy read |
-| POST | `/api/github/issues/draft` | workspace session, policy internal_write |
-| GET | `/api/github/pull-requests` | workspace session, policy read |
-| GET | `/api/github/pull-requests/:number` | workspace session, policy read |
-| GET | `/api/github/repository` | workspace session, policy read |
-| GET | `/api/github/workflow-runs` | workspace session, policy read |
-| GET | `/api/github/workflow-runs/:id` | workspace session, policy read |
-| GET | `/api/handoffs` | workspace session, policy read |
-| PATCH | `/api/handoffs/:id` | workspace session, policy internal_write |
-| GET | `/api/integrations` | workspace session, policy read |
-| GET | `/api/intelligence/action-engine` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/anomalies` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/approvals` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/approvals/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/cases` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/clients` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/accounts` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/daily-closes` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/exceptions` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/founder-daily` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/fulfillments` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/opportunities` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/orders` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/payments` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/quotes` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/skus` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/commercial/status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/connectors` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/control-tower-status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/environment-doctor` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/founder-review` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/overview` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/playbooks` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/product-activation` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/signals` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/authorized-sellers` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/authorized-sellers/:sellerKey` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/authorized-sellers/:sellerKey/onboarding-preview` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/catalog` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/catalog/:catalogItemId/evidence` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/catalog/capture-summary` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/demand-requests` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/demand-requests/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/demand-requests/:id/latest-match` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/demand-requests/:id/match-runs` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/demand-requests/:id/supplier-coverage` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/evidence-conflicts` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/evidence-expiring` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/evidence-packages` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/evidence-packages/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/evidence-packages/:id/preview` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/inventory/initialization-status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/match-runs` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/match-runs/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/match-runs/:id/supplier-coverage` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/media/coverage` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/products/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/products/:id/inventory` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/products/:id/media` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-catalog-gaps` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-coverage` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-onboarding-packages` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-onboarding-packages/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-onboarding-packages/:id/preview` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/seller-readiness` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/sellers/:id/catalog` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/sellers/:id/catalog-health` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/sellers/:id/inventory` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/sellers/:id/media-status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/suppliers` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/suppliers/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/suppliers/:supplierId/evidence-status` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/supplygraph/wave1-activation` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/work-queue` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/work-queue/:id` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/work-queue/audit` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/work-queue/drafts` | workspace session (viewer+) or operator token |
-| GET | `/api/intelligence/work-queue/status` | workspace session (viewer+) or operator token |
-| GET | `/api/leads` | workspace session, policy read |
-| GET | `/api/leads/:id` | workspace session, policy read |
-| PATCH | `/api/leads/:id` | workspace session, policy internal_write |
-| POST | `/api/leads/:id/status-change-request` | workspace session, policy internal_write |
-| GET | `/api/leads/follow-up` | workspace session, policy read |
-| GET | `/api/local-archives/records` | workspace session, policy read |
-| GET | `/api/local-archives/records/:id` | workspace session, policy read |
-| GET | `/api/native-tools` | workspace session, policy read |
-| GET | `/api/openclaw-ecosystem/services` | workspace session, policy read |
-| GET | `/api/openclaw-ecosystem/skills` | workspace session, policy read |
-| POST | `/api/operator/v0.8/ask` | workspace session, policy internal_write + local console guard |
-| GET | `/api/orders` | workspace session, policy read |
-| POST | `/api/orders/:id/manual-payment-mark-paid-request` | workspace session, policy internal_write |
-| POST | `/api/orders/:id/status-change-request` | workspace session, policy internal_write |
-| GET | `/api/orders/:orderNumber` | workspace session, policy read |
-| GET | `/api/orders/manual-payments` | workspace session, policy read |
-| GET | `/api/orders/requiring-action` | workspace session, policy read |
-| GET | `/api/products` | workspace session, policy read |
-| GET | `/api/products/:sku` | workspace session, policy read |
-| GET | `/api/products/search` | workspace session, policy read |
-| GET | `/api/quotes` | workspace session, policy read |
-| GET | `/api/quotes/:id` | workspace session, policy read |
-| GET | `/api/quotes/follow-up` | workspace session, policy read |
-| GET | `/api/sdk/clawbench/reports` | workspace session, policy read |
-| POST | `/api/sdk/clawbench/run-request` | workspace session, policy internal_write |
-| GET | `/api/sdk/plugin-inspector/reports` | workspace session, policy read |
-| POST | `/api/sdk/plugin-inspector/review-request` | workspace session, policy internal_write |
-| GET | `/api/settings` | workspace session, policy read |
-| GET | `/api/worker-runs` | workspace session, policy read |
-| GET | `/api/workers` | workspace session, policy read |
+| GET | `/api/approvals` | company workspace session, policy read |
+| GET | `/api/audit-logs` | company workspace session, policy read |
+| POST | `/api/chat` | company workspace session, policy internal_write |
+| GET | `/api/context/health` | company workspace session, policy read |
+| GET | `/api/context/search` | company workspace session, policy read |
+| GET | `/api/context/sources` | company workspace session, policy read |
+| GET | `/api/context/sources/:id` | company workspace session, policy read |
+| POST | `/api/context/sources/:id/sync-request` | company workspace session, policy internal_write |
+| GET | `/api/control-tower/frontend/v1` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/actions` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/approvals` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/audit` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/capabilities` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/connection-test` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/cornermex` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/drafts` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/environment-doctor` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/flows` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/founder-daily` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/security` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/status` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/telegram` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/frontend/v1/work-queue` | company workspace session (viewer+) or operator token |
+| GET | `/api/control-tower/v0.8/agents` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/approvals` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/audit-summary` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/context-sources` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/data-sources` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/first-real-source` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/rate-limits` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/rejections` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/replay` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/security` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/status` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.8/telegram` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.9/approvals` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.9/audit-summary` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v0.9/status` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.0/approvals` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.0/audit-summary` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.0/status` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.1/approvals` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.1/audit-summary` | company workspace session, policy read + local console guard |
+| GET | `/api/control-tower/v1.1/status` | company workspace session, policy read + local console guard |
+| GET | `/api/conversations` | company workspace session, policy read |
+| GET | `/api/conversations/:id` | company workspace session, policy read |
+| GET | `/api/conversations/:id/messages` | company workspace session, policy read |
+| GET | `/api/crawlers` | company workspace session, policy read |
+| GET | `/api/crawlers/:id/health` | company workspace session, policy read |
+| GET | `/api/dashboard` | company workspace session, policy read |
+| GET | `/api/data-health` | company workspace session, policy read |
+| GET | `/api/events` | company workspace session, policy read |
+| GET | `/api/github/issues` | company workspace session, policy read |
+| GET | `/api/github/issues/:number` | company workspace session, policy read |
+| POST | `/api/github/issues/draft` | company workspace session, policy internal_write |
+| GET | `/api/github/pull-requests` | company workspace session, policy read |
+| GET | `/api/github/pull-requests/:number` | company workspace session, policy read |
+| GET | `/api/github/repository` | company workspace session, policy read |
+| GET | `/api/github/workflow-runs` | company workspace session, policy read |
+| GET | `/api/github/workflow-runs/:id` | company workspace session, policy read |
+| GET | `/api/handoffs` | company workspace session, policy read |
+| PATCH | `/api/handoffs/:id` | company workspace session, policy internal_write |
+| GET | `/api/integrations` | company workspace session, policy read |
+| GET | `/api/intelligence/action-engine` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/anomalies` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/approvals` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/approvals/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/cases` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/clients` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/accounts` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/daily-closes` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/exceptions` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/founder-daily` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/fulfillments` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/opportunities` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/orders` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/payments` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/quotes` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/skus` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/commercial/status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/connectors` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/control-tower-status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/environment-doctor` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/founder-review` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/overview` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/playbooks` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/product-activation` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/signals` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/authorized-sellers` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/authorized-sellers/:sellerKey` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/authorized-sellers/:sellerKey/onboarding-preview` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/catalog` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/catalog/:catalogItemId/evidence` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/catalog/capture-summary` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/demand-requests` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/demand-requests/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/demand-requests/:id/latest-match` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/demand-requests/:id/match-runs` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/demand-requests/:id/supplier-coverage` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/evidence-conflicts` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/evidence-expiring` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/evidence-packages` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/evidence-packages/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/evidence-packages/:id/preview` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/inventory/initialization-status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/match-runs` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/match-runs/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/match-runs/:id/supplier-coverage` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/media/coverage` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/products/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/products/:id/inventory` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/products/:id/media` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-catalog-gaps` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-coverage` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-onboarding-packages` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-onboarding-packages/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-onboarding-packages/:id/preview` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/seller-readiness` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/sellers/:id/catalog` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/sellers/:id/catalog-health` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/sellers/:id/inventory` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/sellers/:id/media-status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/suppliers` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/suppliers/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/suppliers/:supplierId/evidence-status` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/supplygraph/wave1-activation` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/work-queue` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/work-queue/:id` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/work-queue/audit` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/work-queue/drafts` | company workspace session (viewer+) or operator token |
+| GET | `/api/intelligence/work-queue/status` | company workspace session (viewer+) or operator token |
+| GET | `/api/leads` | company workspace session, policy read |
+| GET | `/api/leads/:id` | company workspace session, policy read |
+| PATCH | `/api/leads/:id` | company workspace session, policy internal_write |
+| POST | `/api/leads/:id/status-change-request` | company workspace session, policy internal_write |
+| GET | `/api/leads/follow-up` | company workspace session, policy read |
+| GET | `/api/local-archives/records` | company workspace session, policy read |
+| GET | `/api/local-archives/records/:id` | company workspace session, policy read |
+| GET | `/api/native-tools` | company workspace session, policy read |
+| GET | `/api/openclaw-ecosystem/services` | company workspace session, policy read |
+| GET | `/api/openclaw-ecosystem/skills` | company workspace session, policy read |
+| POST | `/api/operator/v0.8/ask` | company workspace session, policy internal_write + local console guard |
+| GET | `/api/orders` | company workspace session, policy read |
+| POST | `/api/orders/:id/manual-payment-mark-paid-request` | company workspace session, policy internal_write |
+| POST | `/api/orders/:id/status-change-request` | company workspace session, policy internal_write |
+| GET | `/api/orders/:orderNumber` | company workspace session, policy read |
+| GET | `/api/orders/manual-payments` | company workspace session, policy read |
+| GET | `/api/orders/requiring-action` | company workspace session, policy read |
+| GET | `/api/products` | company workspace session, policy read |
+| GET | `/api/products/:sku` | company workspace session, policy read |
+| GET | `/api/products/search` | company workspace session, policy read |
+| GET | `/api/quotes` | company workspace session, policy read |
+| GET | `/api/quotes/:id` | company workspace session, policy read |
+| GET | `/api/quotes/follow-up` | company workspace session, policy read |
+| GET | `/api/sdk/clawbench/reports` | company workspace session, policy read |
+| POST | `/api/sdk/clawbench/run-request` | company workspace session, policy internal_write |
+| GET | `/api/sdk/plugin-inspector/reports` | company workspace session, policy read |
+| POST | `/api/sdk/plugin-inspector/review-request` | company workspace session, policy internal_write |
+| GET | `/api/settings` | company workspace session, policy read |
+| GET | `/api/worker-runs` | company workspace session, policy read |
+| GET | `/api/workers` | company workspace session, policy read |
 
 ### FOUNDER / CONTROLLED (53)
 
 | Method | Path | Authentication |
 |---|---|---|
-| POST | `/api/actions/approvals/:id/execute` | workspace session, policy external_action + local console guard |
-| POST | `/api/actions/approvals/:id/execute-dry-run` | workspace session, policy sensitive_config + local console guard |
-| POST | `/api/approvals` | workspace session, policy sensitive_config |
-| POST | `/api/approvals/:id/approve` | workspace session, policy sensitive_config |
-| POST | `/api/approvals/:id/reject` | workspace session, policy sensitive_config |
-| POST | `/api/context/retention-change-request` | workspace session, policy sensitive_config |
-| POST | `/api/context/sources/:id/enable-request` | workspace session, policy sensitive_config |
-| POST | `/api/control-tower/v0.8/approvals/:id/approve-dry-run` | workspace session, policy sensitive_config + local console guard |
-| POST | `/api/control-tower/v0.8/approvals/:id/reject-dry-run` | workspace session, policy sensitive_config + local console guard |
-| POST | `/api/github/issues` | workspace session, policy external_action |
-| PATCH | `/api/integrations/:id` | workspace session, policy sensitive_config |
+| POST | `/api/actions/approvals/:id/execute` | company workspace session, policy external_action + local console guard |
+| POST | `/api/actions/approvals/:id/execute-dry-run` | company workspace session, policy sensitive_config + local console guard |
+| POST | `/api/approvals` | company workspace session, policy sensitive_config |
+| POST | `/api/approvals/:id/approve` | company workspace session, policy sensitive_config |
+| POST | `/api/approvals/:id/reject` | company workspace session, policy sensitive_config |
+| POST | `/api/context/retention-change-request` | company workspace session, policy sensitive_config |
+| POST | `/api/context/sources/:id/enable-request` | company workspace session, policy sensitive_config |
+| POST | `/api/control-tower/v0.8/approvals/:id/approve-dry-run` | company workspace session, policy sensitive_config + local console guard |
+| POST | `/api/control-tower/v0.8/approvals/:id/reject-dry-run` | company workspace session, policy sensitive_config + local console guard |
+| POST | `/api/github/issues` | company workspace session, policy external_action |
+| PATCH | `/api/integrations/:id` | company workspace session, policy sensitive_config |
 | POST | `/api/intelligence/action-engine/drafts` | founder-action token; founder role when session |
 | POST | `/api/intelligence/approvals/:id/approve` | founder-action token; founder role when session |
 | POST | `/api/intelligence/approvals/:id/cancel` | founder-action token; founder role when session |
@@ -289,14 +289,14 @@ Total routes: 276
 | POST | `/api/intelligence/supplygraph/wave1-activation/work-queue/sync` | founder-action token; founder role when session |
 | PATCH | `/api/intelligence/work-queue/:id` | founder-action token; founder role when session |
 | POST | `/api/intelligence/work-queue/sync` | founder-action token; founder role when session |
-| POST | `/api/native-tools/:id/enable-request` | workspace session, policy sensitive_config |
-| POST | `/api/openclaw-ecosystem/crabox/run-suite` | workspace session, policy sensitive_config |
-| POST | `/api/openclaw-ecosystem/lobster/workflows/dry-run` | workspace session, policy sensitive_config |
-| POST | `/api/openclaw-ecosystem/skills/:id/approve` | workspace session, policy sensitive_config |
-| POST | `/api/openclaw-ecosystem/skills/:id/disable` | workspace session, policy sensitive_config |
-| POST | `/api/openclaw-ecosystem/skills/review` | workspace session, policy sensitive_config |
-| PUT | `/api/settings` | workspace session, policy sensitive_config |
-| PATCH | `/api/workers/:id` | workspace session, policy sensitive_config |
+| POST | `/api/native-tools/:id/enable-request` | company workspace session, policy sensitive_config |
+| POST | `/api/openclaw-ecosystem/crabox/run-suite` | company workspace session, policy sensitive_config |
+| POST | `/api/openclaw-ecosystem/lobster/workflows/dry-run` | company workspace session, policy sensitive_config |
+| POST | `/api/openclaw-ecosystem/skills/:id/approve` | company workspace session, policy sensitive_config |
+| POST | `/api/openclaw-ecosystem/skills/:id/disable` | company workspace session, policy sensitive_config |
+| POST | `/api/openclaw-ecosystem/skills/review` | company workspace session, policy sensitive_config |
+| PUT | `/api/settings` | company workspace session, policy sensitive_config |
+| PATCH | `/api/workers/:id` | company workspace session, policy sensitive_config |
 
 ### INTERNAL SERVICE (36)
 

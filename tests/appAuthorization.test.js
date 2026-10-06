@@ -74,6 +74,45 @@ describe('workspace authorization boundary', () => {
     });
   });
 
+  describe('company scope', () => {
+    test('a founder of another workspace cannot reach company data, configuration or tools', async () => {
+      const other = authed(app, 'other');
+      for (const attempt of [
+        other.get('/api/leads'), other.get('/api/settings'), other.get('/api/conversations'), other.get('/api/audit-logs'),
+        other.get('/api/context/sources'), other.put('/api/settings').send({}), other.post('/api/approvals/x/approve').send({}),
+        other.post('/api/chat').send({ userId: 'u', message: 'hola' }), other.get('/api/actions'), other.get('/api/control-tower/v0.8/status'),
+        other.post('/api/operator/v0.8/ask').send({ text: 'status' }), other.get('/api/unknown'),
+      ]) {
+        const response = await attempt;
+        expect(response.statusCode).toBe(403);
+        expect(response.body.code).toBe('WORKSPACE_SCOPE_DENIED');
+      }
+      expect(state.auditEvents.at(-1)).toMatchObject({ eventType: 'app_authorization_denied', metadata: { code: 'WORKSPACE_SCOPE_DENIED' } });
+    });
+
+    test('that same member still reaches its own workspace-scoped records', async () => {
+      const sales = require('../src/core/sales');
+      sales.setSalesService(new sales.SalesService({ store: new sales.MemorySalesStore() }));
+      await authed(app, 'other').get('/api/app/sales/accounts').expect(200);
+      expect((await authed(app, 'other').get('/api/app/session').expect(200)).body.workspaces).toHaveLength(1);
+      sales.setSalesService(undefined);
+    });
+
+    test('a member of several workspaces defaults to the company workspace', async () => {
+      state.workspaceStore.grant({ workspaceSlug: 'other-workspace', authUserId: USERS.founder, role: 'viewer' });
+      state.workspaceStore.workspaces.push({ id: '00000000-0000-4000-8000-000000000001', slug: 'aaa-first-by-sort', name: 'First', status: 'active' });
+      state.workspaceStore.grant({ workspaceSlug: 'aaa-first-by-sort', authUserId: USERS.founder, role: 'viewer' });
+      await allowed(authed(app, 'founder').put('/api/settings').send({}));
+      const scoped = await authed(app, 'founder').get('/api/leads').set('x-cornerops-workspace', 'other-workspace');
+      expect(scoped.statusCode).toBe(403);
+    });
+
+    test('the bridge kill switch and scope both apply to session callers', async () => {
+      const response = await authed(app, 'other').get('/api/intelligence/overview');
+      expect([403, 503]).toContain(response.statusCode);
+    });
+  });
+
   describe('role policy', () => {
     test('viewer reads but cannot mutate', async () => {
       await allowed(authed(app, 'viewer').get('/api/leads'));
@@ -126,7 +165,12 @@ describe('workspace authorization boundary', () => {
       const router = createAppAuth(runtime).policyRouter();
       expect(() => router.post('/unsafe', (_req, res) => res.json({}))).toThrow(/no execution policy/);
       expect(() => router.delete('/unsafe', (_req, res) => res.json({}))).toThrow(/no execution policy/);
+      expect(() => router.route('/unsafe').patch((_req, res) => res.json({}))).toThrow(/no execution policy/);
+      expect(() => router.all('/unsafe', (_req, res) => res.json({}))).toThrow(/not allowed/);
+      expect(() => router.route('/unsafe').all((_req, res) => res.json({}))).toThrow(/not allowed/);
+      expect(() => router.post('/safe', createAppAuth(runtime).requirePolicy('internal_write'), (_req, res) => res.json({}))).not.toThrow();
       expect(() => createAppAuth(runtime).requirePolicy('made_up')).toThrow(/Unknown execution policy/);
+      expect(() => createAppAuth(runtime).guard('read', { scope: 'everyone' })).toThrow(/Unknown workspace scope/);
     });
   });
 

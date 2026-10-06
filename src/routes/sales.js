@@ -3,7 +3,7 @@ const { policyRouter, requirePolicy } = require('../middleware/appAuth');
 
 // Internal CRM records for the caller's workspace. Reads need any membership,
 // writes need the operator role. There is no send, schedule or outreach route.
-const router = policyRouter();
+const router = policyRouter({ scope: 'workspace' }); // records are stored per workspace
 const internalWrite = requirePolicy('internal_write');
 
 const context = (req) => ({

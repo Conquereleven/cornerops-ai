@@ -23,12 +23,22 @@ const { getDataSourceStatus } = require('./data/supabase/supabaseClient');
 const app = express();
 
 app.disable('x-powered-by');
+// The workspace must never be framed, and the sign-in callback URL carries a
+// one-time code that must not leak through a Referer header.
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (env.nodeEnv === 'production') res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 app.use((req, res, next) => {
   if (usesControlTowerFrontendCors(req.path)) return next();
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, x-cornerops-console-token, x-internal-api-key, x-request-id, x-correlation-id, x-operator-id',
+    'Content-Type, Authorization, x-cornerops-workspace, x-cornerops-console-token, x-internal-api-key, x-request-id, x-correlation-id, x-operator-id',
   );
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);

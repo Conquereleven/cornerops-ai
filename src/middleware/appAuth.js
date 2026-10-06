@@ -1,4 +1,5 @@
 const express = require('express');
+const env = require('../config/env');
 const identityRuntime = require('../core/identity/runtime');
 const { POLICIES, isSlug, roleSatisfies } = require('../core/identity/policy');
 
@@ -53,7 +54,7 @@ const createResolveWorkspace = (runtime = identityRuntime) => async (req, res, n
   const requested = req.get('x-cornerops-workspace');
   const selected = requested
     ? (isSlug(requested) ? memberships.find((item) => item.slug === requested) : null)
-    : memberships[0];
+    : (memberships.find((item) => item.slug === env.corneropsCompanyWorkspaceSlug) || memberships[0]);
   if (!selected) {
     await auditDenied(runtime, req, 'WORKSPACE_ACCESS_DENIED');
     return deny(res, 403, 'WORKSPACE_ACCESS_DENIED', 'No active membership for the requested workspace.');
@@ -76,33 +77,59 @@ const createRequirePolicy = (runtime = identityRuntime) => (policy) => {
   return handler;
 };
 
+// Step 2b: routes that are not workspace-scoped in storage (legacy operations
+// data, configuration, Control Tower) belong to the company workspace only.
+// Membership of any other workspace never opens them.
+const createRequireScope = (runtime = identityRuntime) => (scope) => {
+  if (!['company', 'workspace'].includes(scope)) throw new Error(`Unknown workspace scope: ${scope}`);
+  return async (req, res, next) => {
+    if (scope === 'company' && req.workspace?.slug !== env.corneropsCompanyWorkspaceSlug) {
+      await auditDenied(runtime, req, 'WORKSPACE_SCOPE_DENIED');
+      return deny(res, 403, 'WORKSPACE_SCOPE_DENIED', 'This area is not available in your workspace.');
+    }
+    return next();
+  };
+};
+
 const createAppAuth = (runtime = identityRuntime) => {
   const authenticate = createAuthenticate(runtime);
   authenticate.isAppBoundary = true; // lets the route inventory recognise guarded routers
   const resolveWorkspace = createResolveWorkspace(runtime);
   const requirePolicy = createRequirePolicy(runtime);
+  const requireScope = createRequireScope(runtime);
   return {
     authenticate,
     resolveWorkspace,
     requirePolicy,
-    // Full boundary for one policy.
-    guard: (policy) => [authenticate, resolveWorkspace, requirePolicy(policy)],
+    // Full boundary for one policy. scope 'company' unless the route stores its
+    // data per workspace.
+    guard: (policy, { scope = 'company' } = {}) => [authenticate, resolveWorkspace, requireScope(scope), requirePolicy(policy)],
     // Router whose every route sits behind the boundary. Reads need any active
     // membership; a mutation without an explicit policy cannot be registered.
-    policyRouter: () => {
+    policyRouter: ({ scope = 'company' } = {}) => {
       const router = express.Router();
-      router.use(authenticate, resolveWorkspace, (req, res, next) => (
+      router.use(authenticate, resolveWorkspace, requireScope(scope), (req, res, next) => (
         ['GET', 'HEAD'].includes(req.method) ? requirePolicy('read')(req, res, next) : next()
       ));
-      for (const method of ['post', 'put', 'patch', 'delete']) {
-        const register = router[method].bind(router);
-        router[method] = (path, ...handlers) => {
-          if (!handlers[0]?.executionPolicy) {
-            throw new Error(`Route ${method.toUpperCase()} ${path} has no execution policy.`);
-          }
-          return register(path, ...handlers);
-        };
-      }
+      const MUTATIONS = ['post', 'put', 'patch', 'delete'];
+      const assertPolicy = (method, path, handlers) => {
+        if (!handlers[0]?.executionPolicy) {
+          throw new Error(`Route ${method.toUpperCase()} ${path} has no execution policy.`);
+        }
+      };
+      // Express registers every verb through router.route(), so the check lives
+      // there and covers router.post(...) and router.route(...).post(...) alike.
+      const createRoute = router.route.bind(router);
+      router.route = (path) => {
+        const route = createRoute(path);
+        for (const method of MUTATIONS) {
+          const register = route[method].bind(route);
+          route[method] = (...handlers) => { assertPolicy(method, path, handlers); return register(...handlers); };
+        }
+        route.all = () => { throw new Error(`Route ALL ${path} is not allowed on a policy router.`); };
+        return route;
+      };
+      router.all = (path) => { throw new Error(`Route ALL ${path} is not allowed on a policy router.`); };
       return router;
     },
   };

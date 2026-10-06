@@ -213,5 +213,10 @@ describe('Sales MVP API', () => {
     expect(JSON.stringify(preview)).not.toContain('example.test');
     expect(store.state.rows.sales_accounts).toHaveLength(0);
     expect((await viewer.post('/api/app/sales/import/preview').send({ csv })).statusCode).toBe(403);
+
+    // A file without a header row must not have its first data row echoed.
+    const headerless = (await operator.post('/api/app/sales/import/preview').send({ csv: 'Example Trading LLC,ana.ejemplo@example.test,+000 000 0000\nOther Co,b@example.test,1' }).expect(200)).body;
+    expect(JSON.stringify(headerless)).not.toMatch(/example\.test|000 000/);
+    expect(headerless.unmappedColumns).toContain('column 2');
   });
 });

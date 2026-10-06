@@ -75,12 +75,13 @@ const authentication = (route, routeClass) => {
   if (routeClass === CLASSES.WEBHOOK) return 'provider signature / secret';
   if (route.path.startsWith('/api/intelligence') || route.path.startsWith('/api/control-tower/frontend/v1')) {
     return route.method === 'GET'
-      ? 'workspace session (viewer+) or operator token'
+      ? 'company workspace session (viewer+) or operator token'
       : 'founder-action token; founder role when session';
   }
   if (route.path === '/api/app/session') return 'session identity; memberships are reported, not required';
   const console = route.path.startsWith('/api/control-tower/v') || route.path.startsWith('/api/actions') || route.path === '/api/operator/v0.8/ask';
-  return `workspace session, policy ${route.policy || 'read'}${console ? ' + local console guard' : ''}`;
+  const scope = route.path.startsWith('/api/app/sales') ? 'workspace session (own workspace)' : 'company workspace session';
+  return `${scope}, policy ${route.policy || 'read'}${console ? ' + local console guard' : ''}`;
 };
 
 const buildInventory = (app) => listRoutes(app)

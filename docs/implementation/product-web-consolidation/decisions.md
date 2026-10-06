@@ -4,7 +4,7 @@ Only decisions with a real alternative are recorded.
 
 ## D1 — Server-side identity verification calls Supabase Auth
 
-The backend verifies every browser access token by calling `GET {auth url}/auth/v1/user` with the publishable key and the bearer token, with a short bounded positive cache (30 s, keyed on the token's SHA-256). Local JWT verification was rejected for now: it needs key management (JWKS or shared secret) and does not see revoked sessions. Any verifier failure denies the request (401 for a rejected token, 503 when the provider is unreachable or unconfigured). No new dependency.
+The backend verifies every browser access token by calling `GET {auth url}/auth/v1/user` with the publishable key and the bearer token, with a short bounded cache (30 s for an accepted token, keyed on its SHA-256; see D9). Local JWT verification was rejected for now: it needs key management (JWKS or shared secret) and does not see revoked sessions. Any verifier failure denies the request (401 for a rejected token, 503 when the provider is unreachable or unconfigured). No new dependency.
 
 Config names: `CORNEROPS_AUTH_SUPABASE_URL`, `CORNEROPS_AUTH_SUPABASE_PUBLISHABLE_KEY`. The service-role key is never used for identity.
 
@@ -44,3 +44,19 @@ These change behaviour for any external caller that relied on the anonymous path
 ## D7 — Tests never bypass the boundary by environment
 
 There is no `NODE_ENV=test` shortcut in `appAuth`. Tests install a fake identity verifier and an in-memory membership store through the same injection point production uses.
+
+## D8 — Routes without per-workspace storage belong to the company workspace
+
+Sales records carry `workspace_id`. The legacy operations data, configuration, Control Tower and chat do not. Those routes therefore require membership of the company workspace (`CORNEROPS_COMPANY_WORKSPACE_SLUG`, default `cornerops-ai`), not just any workspace. Without this, the first client workspace would have exposed CornerMex data and CornerOps settings to its members. Found in the self-review.
+
+## D9 — Cheap local rejection before calling the identity provider
+
+The verifier reads the token's own claims (unverified) only to refuse tokens that cannot be valid — malformed, expired, no subject — and to require that the provider confirms the same subject. A provider rejection is remembered for 10 s so a replayed bad token cannot be used to flood the provider. Outages are never cached. This supersedes the "never cache failures" wording an earlier draft of D1 implied. A revoked session can stay accepted for at most 30 s.
+
+## D10 — Policy routers refuse unclassified mutations at registration
+
+`policyRouter()` hooks `router.route()`, the single path Express uses to register every verb, so `router.post(...)` and `router.route(...).post(...)` both throw without an execution policy, and `all` is not allowed. A developer cannot add an open mutation by accident; the process fails to start and the tests fail.
+
+## D11 — Frontend bundle size
+
+Adding the Supabase client grows the main bundle from about 337 kB to about 607 kB (gzip about 101 kB → 180 kB). Accepted for now; lazy-loading the private app is a later optimisation, not a security matter.

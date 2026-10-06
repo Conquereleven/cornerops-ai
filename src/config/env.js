@@ -50,6 +50,9 @@ const baseEnv = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
   useSupabase: parseBoolean(process.env.USE_SUPABASE),
   internalApiKey: process.env.INTERNAL_API_KEY || '',
+  // Non-workspace-scoped operator routes (legacy data, configuration, Control
+  // Tower) are only for members of this workspace.
+  corneropsCompanyWorkspaceSlug: process.env.CORNEROPS_COMPANY_WORKSPACE_SLUG || 'cornerops-ai',
   corneropsAuthSupabaseUrl: process.env.CORNEROPS_AUTH_SUPABASE_URL || '',
   corneropsAuthSupabasePublishableKey: process.env.CORNEROPS_AUTH_SUPABASE_PUBLISHABLE_KEY || '',
   allowInternalNoKey: parseBoolean(process.env.ALLOW_INTERNAL_NO_KEY),

@@ -15,6 +15,8 @@ const COLUMN_MAP = Object.freeze({
 });
 const NUMERIC = new Set(['fitScore', 'qualificationScore', 'estimatedValue']);
 const MAX_ROWS = 500;
+// A file without a header row would otherwise have its first data row echoed back.
+const HEADER_NAME = /^[A-Za-z][A-Za-z _/-]{0,39}$/;
 
 const parseCsv = (text) => {
   const rows = []; let row = []; let cell = ''; let quoted = false;
@@ -43,7 +45,10 @@ const parseCsv = (text) => {
 const previewCsv = (text) => {
   const [header = [], ...lines] = parseCsv(String(text || ''));
   const mapping = header.map((name) => COLUMN_MAP[name.trim().toLowerCase()] || null);
-  const unmappedColumns = header.filter((_name, index) => !mapping[index]).map((name) => name.trim()).filter(Boolean);
+  const unmappedColumns = header
+    .map((name, index) => ({ name: name.trim(), index }))
+    .filter(({ name, index }) => name && !mapping[index])
+    .map(({ name, index }) => (HEADER_NAME.test(name) ? name : `column ${index + 1}`));
   const result = {
     writesPerformed: false,
     rows: lines.length,
