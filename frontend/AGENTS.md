@@ -15,3 +15,5 @@ When implementing from a selected generated mock, treat that image as the source
 - 2026-09-08 — Founder authorizes the Embassy web release through gated merges of #84/#90 and production deployment. Public contact: joel.escudero12@gmail.com, WhatsApp +971 55 563 3651, Google Calendar https://calendar.app.google/1KYnZsKuFbbGj2Ha8. This supersedes the earlier draft-only release boundary; all non-web exclusions remain.
 
 - 2026-10-06 — Product & Web Consolidation v1 (Founder sprint brief) replaces the staged login with real Supabase sign-in, puts the private app under `/app/*` behind server-verified workspace membership, and reduces navigation to Core / Admin / Commerce OS incubator. The main workspace is "CornerOps AI"; CornerMex is incubator context only. The public landing is unchanged apart from reading contact values from `siteConfig`. Not merged or deployed by the sprint.
+
+- 2026-10-07 — Corner Tech AI reconstruction supersedes the public CornerGlass/green identity. Founder video and extracted frames are canonical; preserve the PR #91 auth boundary and legacy internal identifiers. Feature branch only, no merge or deployment.

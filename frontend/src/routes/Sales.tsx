@@ -50,7 +50,7 @@ export function Sales() {
   };
 
   return <div className="module-page sales-page">
-    <header className="page-title"><div><span className="eyebrow">{workspace.active?.name ?? 'CornerOps AI'} · Sales</span><h1>Sales</h1><p>Accounts, contacts, opportunities and activity. Records are internal: nothing here sends a message.</p></div><div className="module-header-actions">{canWrite && <button onClick={() => { setAdding((value) => !value); setFormError(''); }} aria-expanded={adding}><Plus size={14} />New account</button>}<button onClick={() => void load()} disabled={loading}><RefreshCw size={14} className={loading ? 'spin' : ''} />Refresh</button></div></header>
+    <header className="page-title"><div><span className="eyebrow">{workspace.active?.slug === 'cornerops-ai' ? 'Corner Tech AI' : workspace.active?.name ?? 'Corner Tech AI'} · Sales</span><h1>Sales</h1><p>Accounts, contacts, opportunities and activity. Records are internal: nothing here sends a message.</p></div><div className="module-header-actions">{canWrite && <button onClick={() => { setAdding((value) => !value); setFormError(''); }} aria-expanded={adding}><Plus size={14} />New account</button>}<button onClick={() => void load()} disabled={loading}><RefreshCw size={14} className={loading ? 'spin' : ''} />Refresh</button></div></header>
 
     {error && <section className="resource-error" role="alert"><div><strong>Not connected</strong><p>{error}</p></div><button onClick={() => void load()}>Retry</button></section>}
 

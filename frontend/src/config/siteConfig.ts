@@ -14,7 +14,7 @@ const httpsUrl = (candidate: string) => {
 const whatsappNumber = value('VITE_PUBLIC_WHATSAPP_NUMBER', '+971 55 563 3651');
 
 export const siteConfig = {
-  name: 'CornerOps',
+  name: 'Corner Tech AI',
   /** Canonical public origin. Empty until a domain is chosen; then canonical/OG URLs are emitted. */
   siteUrl: httpsUrl(value('VITE_PUBLIC_SITE_URL')),
   bookingUrl: httpsUrl(value('VITE_PUBLIC_BOOKING_URL', 'https://calendar.app.google/1KYnZsKuFbbGj2Ha8')),

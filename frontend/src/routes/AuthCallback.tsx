@@ -17,7 +17,7 @@ export function AuthCallback() {
 
   useEffect(() => {
     if (!configured || providerError || !code) {
-      setError('The sign-in response was missing or invalid. Start again from the CornerOps login page.');
+      setError('The sign-in response was missing or invalid. Start again from the Corner Tech AI login page.');
       return;
     }
     // A PKCE code is single-use: never exchange the same one twice.
@@ -25,7 +25,7 @@ export function AuthCallback() {
     exchanged.current = code;
     void completeAuthCallback(code)
       .then(() => navigate(next, { replace: true }))
-      .catch(() => setError('CornerOps could not complete sign-in. The session was not accepted.'));
+      .catch(() => setError('Corner Tech AI could not complete sign-in. The session was not accepted.'));
   }, [code, completeAuthCallback, configured, navigate, next, providerError]);
 
   return <main className="co-public co-auth-state">
