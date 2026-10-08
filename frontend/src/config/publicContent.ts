@@ -75,7 +75,7 @@ export const publicContent = {
     title: "Tres Leches",
     framing:
       "Digital ordering infrastructure built around the way the business actually operates.",
-    copy: "Tres Leches is a food business using WhatsApp as its primary sales channel. Corner Tech AI designed a digital ordering system that connects customer ordering, payment and operational workflows into one structured experience.",
+    copy: "Tres Leches is a food business using WhatsApp as its primary sales channel. CornerTech AI designed a digital ordering system that connects customer ordering, payment and operational workflows into one structured experience.",
     layers: [
       "Ordering",
       "WhatsApp",

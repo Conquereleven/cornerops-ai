@@ -37,7 +37,7 @@ export function ProtectedWorkspaceRoute() {
     return <main className="co-public co-auth-state">
       <ServerCrash aria-hidden="true" />
       <h1>Workspace access could not be verified</h1>
-      <p role="alert">Corner Tech AI could not reach the authorization service, so the workspace stays closed. Nothing was loaded.</p>
+      <p role="alert">CornerTech AI could not reach the authorization service, so the workspace stays closed. Nothing was loaded.</p>
       <button className="co-public-secondary" type="button" onClick={refreshWorkspace}>Try again</button>
     </main>;
   }

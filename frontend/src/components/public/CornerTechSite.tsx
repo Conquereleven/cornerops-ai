@@ -13,7 +13,7 @@ import { publicContent as content } from "../../config/publicContent";
 
 export function Brand() {
   return (
-    <Link to="/" className="ct-brand" aria-label="Corner Tech AI home">
+    <Link to="/" className="ct-brand" aria-label="CornerTech AI home">
       <img src="/brand/logo-mark.png" width="32" height="26" alt="" />
       <span>
         Corner<span>TechAI</span>
@@ -59,9 +59,11 @@ export function Header() {
             {label}
           </a>
         ))}
-        <Link className="ct-nav-signin" to="/login">
-          Sign in
-        </Link>
+        {siteConfig.signInEnabled && (
+          <Link className="ct-nav-signin" to="/login">
+            Sign in
+          </Link>
+        )}
       </nav>
       <a className="ct-button ct-nav-contact" href="#contact">
         Talk to us
@@ -484,7 +486,7 @@ export function ProcessAndPrinciples() {
       </ol>
       <div className="ct-principles ct-split">
         <div>
-          <Label>Why Corner Tech AI</Label>
+          <Label>Why CornerTech AI</Label>
           <h2>
             Engineering meets
             <br />
@@ -525,7 +527,7 @@ export function CompanyAndContact() {
           <div>
             <p>We unify fragmented operations into intelligent systems.</p>
             <p>
-              Corner Tech AI understands operations and builds software around
+              CornerTech AI understands operations and builds software around
               how businesses actually work. Our approach connects data,
               workflow, AI and a clear command center, with reusable foundations
               for each operating environment.
@@ -583,7 +585,7 @@ export function CompanyAndContact() {
           <a href="#contact">Contact</a>
           {siteConfig.privacyUrl && <a href={siteConfig.privacyUrl}>Privacy</a>}
           {siteConfig.termsUrl && <a href={siteConfig.termsUrl}>Terms</a>}
-          <Link to="/login">Sign in</Link>
+          {siteConfig.signInEnabled && <Link to="/login">Sign in</Link>}
         </nav>
         <small>
           © {new Date().getFullYear()} {siteConfig.name}

@@ -15,7 +15,7 @@ function Unavailable({ what }: { what: string }) {
   return <div className="module-empty"><strong>Not connected</strong><p>{what} could not be loaded. No substitute numbers are shown.</p></div>;
 }
 
-// Company-level overview for Corner Tech AI. Every figure comes from a live
+// Company-level overview for CornerTech AI. Every figure comes from a live
 // internal source; anything not connected says so instead of showing a number.
 export function CompanyOverview() {
   const { workspace } = useAuth();
@@ -37,7 +37,7 @@ export function CompanyOverview() {
   const nothingToday = sales.state === 'ready' && queueReady && !due.length && !followUp.length && !pending;
 
   return <div className="dashboard-page">
-    <header className="page-title"><div><span className="eyebrow">{workspace.active?.slug === 'cornerops-ai' ? 'Corner Tech AI' : workspace.active?.name ?? 'Corner Tech AI'} · Company workspace</span><h1>Overview</h1><p>What needs attention across Corner Tech AI today.</p></div><div className="module-header-actions"><button onClick={() => void load()} disabled={loading}><RefreshCw size={14} className={loading ? 'spin' : ''} />Refresh</button></div></header>
+    <header className="page-title"><div><span className="eyebrow">{workspace.active?.slug === 'cornerops-ai' ? 'CornerTech AI' : workspace.active?.name ?? 'CornerTech AI'} · Company workspace</span><h1>Overview</h1><p>What needs attention across CornerTech AI today.</p></div><div className="module-header-actions"><button onClick={() => void load()} disabled={loading}><RefreshCw size={14} className={loading ? 'spin' : ''} />Refresh</button></div></header>
 
     <section className="panel overview-summary" aria-labelledby="founder-today"><div className="panel-heading"><div><span className="eyebrow">Founder today</span><h2 id="founder-today">Needs attention</h2></div></div>
       {loading ? <p role="status">Loading…</p> : nothingToday ? <div className="module-empty"><strong>Nothing is due</strong><p>No sales follow-ups are due and no approvals are waiting.</p></div> : <ul className="overview-list">

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "build:public": "vite build --mode public-preview --outDir dist-public && cp preview/_headers preview/_redirects preview/robots.txt dist-public/ && rm -f dist-public/qa-*",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

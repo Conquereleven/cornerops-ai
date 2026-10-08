@@ -65,7 +65,7 @@ export function SalesAccount() {
 
   return <div className="module-page sales-page">
     {back}
-    <header className="page-title"><div><span className="eyebrow">{workspace.active?.slug === 'cornerops-ai' ? 'Corner Tech AI' : workspace.active?.name ?? 'Corner Tech AI'} · Sales account</span><h1>{account.name}</h1><p>{[account.segment, account.source && `Source: ${account.source}`].filter(Boolean).join(' · ') || 'No segment or source recorded.'}</p></div><div className="module-header-actions"><StatusBadge tone="blue">{account.status}</StatusBadge>{account.priority && <StatusBadge tone={account.priority === 'high' ? 'red' : 'amber'}>{account.priority} priority</StatusBadge>}</div></header>
+    <header className="page-title"><div><span className="eyebrow">{workspace.active?.slug === 'cornerops-ai' ? 'CornerTech AI' : workspace.active?.name ?? 'CornerTech AI'} · Sales account</span><h1>{account.name}</h1><p>{[account.segment, account.source && `Source: ${account.source}`].filter(Boolean).join(' · ') || 'No segment or source recorded.'}</p></div><div className="module-header-actions"><StatusBadge tone="blue">{account.status}</StatusBadge>{account.priority && <StatusBadge tone={account.priority === 'high' ? 'red' : 'amber'}>{account.priority} priority</StatusBadge>}</div></header>
 
     <div className="overview-grid">
       <section className="panel overview-card" aria-labelledby="account-facts"><div className="panel-heading"><h2 id="account-facts">Account</h2></div>
