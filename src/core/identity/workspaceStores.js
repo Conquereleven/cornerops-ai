@@ -35,7 +35,16 @@ class PostgresWorkspaceStore {
         [authUserId],
       );
       return result.rows.map(mapMembership);
-    } catch (_error) {
+    } catch (error) {
+      // Log only non-sensitive classification fields for staging diagnostics.
+      // Never log the connection string, error message, SQL or user identity.
+      if (process.env.CORNERTECH_STAGING_DB_DIAGNOSTICS === 'true') {
+        console.error('cornertech_workspace_db_query_failed', {
+          code: typeof error?.code === 'string' ? error.code : 'UNKNOWN',
+          name: typeof error?.name === 'string' ? error.name : 'Error',
+          causeCode: typeof error?.cause?.code === 'string' ? error.cause.code : undefined,
+        });
+      }
       throw identityError('Workspace authorization is unavailable.', 'WORKSPACE_LOOKUP_UNAVAILABLE', 503);
     }
   }
