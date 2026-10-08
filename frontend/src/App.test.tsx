@@ -47,9 +47,9 @@ describe('public surface', () => {
   test('renders the landing at root without calling any API', async () => {
     const fetchSpy = mockApi({});
     render(<App authClient={null} />);
-    expect(await screen.findByRole('heading', { name: 'AI systems that make businesses run better.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Intelligence, engineered for business.' })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Sign in' })[0]).toHaveAttribute('href', '/login');
-    expect(screen.getByRole('link', { name: /Talk to CornerOps/ })).toHaveAttribute('href', '#contact');
+    expect(screen.getAllByRole('link', { name: 'Talk to us' })[0]).toHaveAttribute('href', '#contact');
     expect(document.getElementById('contact')).toBeInTheDocument();
     expect(document.getElementById('work')).toBeInTheDocument();
     expect(fetchSpy.mock.calls.filter(([url]) => String(url).includes('/api'))).toEqual([]);
@@ -59,13 +59,13 @@ describe('public surface', () => {
   test('the landing is the same for a signed-in member: root never becomes the app', async () => {
     mockApi({ '/api/app/session': () => json(membership('founder')) });
     render(<App authClient={fakeClient().client} />);
-    expect(await screen.findByRole('heading', { name: 'AI systems that make businesses run better.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Intelligence, engineered for business.' })).toBeInTheDocument();
     expect(shell()).not.toBeInTheDocument();
   });
 
   test('external contact links open safely', async () => {
     render(<App authClient={null} />);
-    await screen.findByRole('heading', { name: 'AI systems that make businesses run better.' });
+    await screen.findByRole('heading', { name: 'Intelligence, engineered for business.' });
     const external = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]'));
     expect(external.length).toBeGreaterThan(0);
     external.forEach((link) => { expect(link.rel).toContain('noopener'); expect(link.rel).toContain('noreferrer'); expect(link.href).toMatch(/^https:/); });
@@ -91,7 +91,7 @@ describe('identity', () => {
   test('missing auth configuration is stated truthfully and sign-in is disabled', async () => {
     at('/login');
     render(<App authClient={null} />);
-    expect(await screen.findByRole('heading', { name: 'Sign in to CornerOps' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in to CornerTech AI' })).toBeInTheDocument();
     expect(screen.getByText('Sign-in is not available in this environment')).toBeInTheDocument();
     expect(screen.getByLabelText('Work email')).toBeDisabled();
     expect(screen.getByRole('button', { name: /Email me a sign-in link/ })).toBeDisabled();
@@ -171,7 +171,7 @@ describe('identity', () => {
     const { client, auth } = fakeClient();
     render(<App authClient={client} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
-    expect(await screen.findByRole('heading', { name: 'Sign in to CornerOps' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in to CornerTech AI' })).toBeInTheDocument();
     expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
     expect(sessionStorage.getItem('cornerops-console-token')).toBeNull();
     expect(shell()).not.toBeInTheDocument();
@@ -188,7 +188,7 @@ describe('workspace guard', () => {
     at(path);
     const fetchSpy = mockApi({});
     render(<App authClient={fakeClient(null).client} />);
-    expect(await screen.findByRole('heading', { name: 'Sign in to CornerOps' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in to CornerTech AI' })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/login');
     expect(new URLSearchParams(window.location.search).get('next')).toBe(next);
     expect(shell()).not.toBeInTheDocument();
@@ -214,13 +214,14 @@ describe('workspace guard', () => {
 
   test('the shell never renders before the backend confirms membership', async () => {
     at('/app/overview');
-    let release: (response: Response) => void = () => undefined;
+    let release: ((response: Response) => void) | undefined;
     mockApi({ '/api/app/session': () => new Promise<Response>((resolve) => { release = resolve; }), '/api/app/sales/summary': () => json(emptySummary) });
     render(<App authClient={fakeClient().client} />);
     expect(await screen.findByText('Checking workspace access…')).toBeInTheDocument();
     expect(shell()).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Overview' })).not.toBeInTheDocument();
-    release(json(membership('viewer')));
+    await waitFor(() => expect(release).toBeTypeOf('function'));
+    release!(json(membership('viewer')));
     expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
     expect(shell()).toBeInTheDocument();
   });
@@ -242,7 +243,7 @@ describe('workspace guard', () => {
     mockApi({ '/api/app/session': () => json({ error: true, code: 'APP_SESSION_INVALID' }, 401) });
     const { client, auth } = fakeClient();
     render(<App authClient={client} />);
-    expect(await screen.findByRole('heading', { name: 'Sign in to CornerOps' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in to CornerTech AI' })).toBeInTheDocument();
     expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
     expect(shell()).not.toBeInTheDocument();
   });
@@ -266,8 +267,12 @@ describe('workspace guard', () => {
     at(legacy);
     mockApi({ '/api/app/session': () => json(membership('founder')), '/api/app/sales/summary': () => json(emptySummary) });
     render(<App authClient={fakeClient().client} />);
+    // Nothing private exists while membership is still being checked.
+    expect(shell()).not.toBeInTheDocument();
     await waitFor(() => expect(window.location.pathname).toBe(canonical));
-    expect(shell()).toBeInTheDocument();
+    // The redirect commits the new URL one render before the shell mounts, so
+    // wait for the shell rather than reading the DOM in the same tick.
+    expect(await screen.findByRole('navigation', { name: 'Workspace navigation' })).toBeInTheDocument();
   });
 });
 
@@ -299,10 +304,10 @@ describe('workspace shell and navigation', () => {
     expect(await screen.findByText('Not available for your role')).toBeInTheDocument();
   });
 
-  test('the workspace is CornerOps AI, not CornerMex', async () => {
+  test('the workspace displays CornerTech AI while preserving its legacy slug', async () => {
     await open('founder');
     const sidebar = document.querySelector('.sidebar-footer') as HTMLElement;
-    expect(within(sidebar).getByText('CornerOps AI')).toBeInTheDocument();
+    expect(within(sidebar).getByText('CornerTech AI')).toBeInTheDocument();
     expect(within(sidebar).getByText('founder access')).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/CornerMex UAE|Unified Command Center v1\.15/);
   });

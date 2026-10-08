@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { Activity, Archive, BarChart3, Bot, Boxes, BriefcaseBusiness, CalendarDays, CheckCheck, ClipboardCheck, FileText, GitBranch, Handshake, HeartHandshake, Image, LayoutDashboard, Library, ListChecks, Megaphone, MessageSquareText, PackageCheck, PackageSearch, Palette, PlugZap, Radio, ScanSearch, Settings, ShieldCheck, ShoppingBasket, Store, Tags, Users, WandSparkles, Workflow, Wrench } from 'lucide-react';
 
-// core: runs CornerOps AI itself. admin: founder configuration. incubator:
+// core: runs CornerTech AI itself. admin: founder configuration. incubator:
 // Commerce OS product work, visible but separate. hidden: kept and routable for
 // authorized members, not in navigation until a customer need validates it.
 export type ModuleSurface = 'core' | 'admin' | 'incubator' | 'hidden';
@@ -39,9 +39,9 @@ const m = (surface: ModuleSurface, key: ModuleKey, label: string, slug: string, 
 });
 
 export const moduleRegistry: CommandCenterModule[] = [
-  // Core — the CornerOps AI company workspace.
-  m('core', 'overview', 'Overview', 'overview', LayoutDashboard, 'What needs the Founder today across CornerOps AI.', 10, ['/overview']),
-  m('core', 'sales', 'Sales', 'sales', Handshake, 'Accounts, contacts, opportunities and activity for CornerOps AI.', 20, [], { readOnly: false, requiredPermission: 'operator_controlled', blockedActions: ['external_actions'] }),
+  // Core — the CornerTech AI company workspace.
+  m('core', 'overview', 'Overview', 'overview', LayoutDashboard, 'What needs the Founder today across CornerTech AI.', 10, ['/overview']),
+  m('core', 'sales', 'Sales', 'sales', Handshake, 'Accounts, contacts, opportunities and activity for CornerTech AI.', 20, [], { readOnly: false, requiredPermission: 'operator_controlled', blockedActions: ['external_actions'] }),
   m('core', 'work-queue', 'Work Queue', 'work-queue', ListChecks, 'Persistent internal recommendations.', 30, ['/work-queue']),
   m('core', 'intelligence', 'Intelligence', 'intelligence', ScanSearch, 'Internal intelligence and evidence.', 40, ['/intelligence']),
   m('core', 'approvals', 'Approvals', 'approvals', CheckCheck, 'Decisions that need the Founder.', 50, ['/approvals']),

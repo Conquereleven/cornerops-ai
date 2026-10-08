@@ -1,5 +1,6 @@
 node_modules
 frontend/dist
+frontend/dist-public
 frontend/.npm-cache
 .npm-cache
 .env

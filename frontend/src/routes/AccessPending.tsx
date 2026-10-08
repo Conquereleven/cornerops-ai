@@ -24,7 +24,7 @@ export function AccessPending() {
     <ShieldAlert aria-hidden="true" />
     <span className="co-public-eyebrow">{unavailable ? 'Signed in · access not verified' : 'Signed in · no workspace access'}</span>
     <h1>{unavailable ? 'Workspace access could not be verified' : 'Workspace access has not been granted'}</h1>
-    <p>{unavailable ? 'CornerOps could not reach the authorization service, so the workspace stays closed.' : 'Your identity was verified, but signing in does not grant access to a CornerOps workspace. An administrator has to add you as a member.'}</p>
+    <p>{unavailable ? 'CornerTech AI could not reach the authorization service, so the workspace stays closed.' : 'Your identity was verified, but signing in does not grant access to a CornerTech AI workspace. An administrator has to add you as a member.'}</p>
     {error && <p role="alert" className="co-auth-error">{error}</p>}
     <button className="co-public-secondary" type="button" onClick={refreshWorkspace}>Check again</button>
     <button className="co-public-secondary" type="button" onClick={() => void logout()}><LogOut size={15} /> Sign out</button>

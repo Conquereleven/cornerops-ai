@@ -7,10 +7,10 @@ export function NotFound() {
     <span className="co-public-eyebrow">404</span>
     <h1 id="not-found-title">Page not found</h1>
     <p>The page you asked for does not exist or has moved.</p>
-    <Link className="co-public-secondary" to="/">Back to CornerOps</Link>
+    <Link className="co-public-secondary" to="/">Back to CornerTech AI</Link>
   </main>;
 }
 
 export function AppNotFound() {
-  return <div className="module-page"><header className="page-title"><div><span className="eyebrow">CornerOps AI</span><h1>Page not found</h1><p>This workspace has no page at this address.</p></div></header><section className="panel module-empty"><Link to="/app/overview">Go to Overview</Link></section></div>;
+  return <div className="module-page"><header className="page-title"><div><span className="eyebrow">CornerTech AI</span><h1>Page not found</h1><p>This workspace has no page at this address.</p></div></header><section className="panel module-empty"><Link to="/app/overview">Go to Overview</Link></section></div>;
 }

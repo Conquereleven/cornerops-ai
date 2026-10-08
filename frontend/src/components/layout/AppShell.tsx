@@ -11,7 +11,7 @@ export function AppShell() {
     const robots = document.createElement('meta');
     robots.name = 'robots'; robots.content = 'noindex, nofollow';
     document.head.appendChild(robots);
-    document.title = 'CornerOps AI — Workspace';
+    document.title = 'CornerTech AI — Workspace';
     return () => { robots.remove(); document.title = previousTitle; };
   }, []);
   return <div className="app-shell"><Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} /><div className="app-main"><Topbar onMenu={() => setMobileOpen(true)} /><main className="page"><Outlet /></main></div></div>;
