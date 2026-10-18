@@ -1,5 +1,27 @@
 # CornerOps AI
 
+## CornerTech AI | technical leadership orientation
+
+**CornerOps AI is an internal operations/agent platform associated with the CornerTech AI and CornerMex ecosystem.** The repository name is historical; it is not, on its own, a statement that the entire CornerTech AI corporate platform is deployed here.
+
+**Start with:** [CTO onboarding and technical-review agenda](docs/CTO_ONBOARDING.md), [architecture overview](docs/architecture/overview.md), [Commercial Operations Core](docs/architecture/commercial-operations-core-v1.17a.md), and [founder operating runbook](docs/operator/founder-quickstart-v1.0.md).
+
+| Area | What exists in the repository | Important boundary |
+| --- | --- | --- |
+| Backend | Node.js / Express, workflow services, agents, repositories | Data can be mock, mixed or configured real; verify the source of each result |
+| Interface | React / Vite Command Center | UI state is not evidence of production activation |
+| Data | Supabase/PostgreSQL adapters and local memory/JSON modes | Read-only and write capabilities are governed separately |
+| Assistants | Optional OpenAI, OpenClaw gateway, approvals and audit | Many providers/actions are disabled or dry-run by default |
+| Commercial Core | Accounts, quotes, orders, evidence-gated payment and fulfillment | COD evidence is not settlement; the Intermex handoff is manual |
+| Tooling | Jest, QA, demo and founder scripts | Demos and fixtures do not imply live integrations |
+
+**Repository visibility:** public. Never put customer/partner data, credentials, private infrastructure configuration, internal commercial terms or founder-only operating details in this README or its linked onboarding guide. Grants to private systems require separate approval.
+
+**Status discipline:** distinguish implementation, tests, configured connectivity, deployment and approved commercial activation. For any critical assumption, ask for dated runtime evidence instead of treating roadmap entries as shipped functionality.
+
+---
+
+
 ## Commercial Operations Core v1.17A
 
 CornerOps includes a disabled-by-default internal commercial loop for authorized accounts and SKUs,
