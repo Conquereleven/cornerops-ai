@@ -60,4 +60,4 @@ The final command is an explicitly non-production demo. The broader README inclu
 
 Produce a short architecture inventory, risks by severity (security, data integrity, maintainability and scalability), integration-boundary diagram, test-evidence table, and a prioritized 30/60/90-day recommendation. Treat these as review proposals until leadership accepts them.
 
-**No access escalation:** prospective CTO review does not automatically grant customer data, database credentials, connected accounts, deployment permissions or business authorization.
+**CEO-approved GitHub access for Eric:** code **read/write** access is authorized for this repository, including dedicated branches, commits and pull requests. This is distinct from approvals to merge to `main`, activate external business operations, access private databases or secrets, change connected accounts, or deploy to Production. Respect existing approval and review gates; the CTO role itself remains prospective.
