@@ -6,7 +6,7 @@ class GitHubWebhookHandler {
   }
 
   async handle({ body, deliveryId, event, signature }) {
-    const rawBody = typeof body === 'string' ? body : JSON.stringify(body || {});
+    const rawBody = Buffer.isBuffer(body) || typeof body === 'string' ? body : JSON.stringify(body || {});
     if (!this.client.verifyWebhookSignature({ body: rawBody, signature })) {
       await this.auditLogService?.record({
         eventType: 'security_denied',

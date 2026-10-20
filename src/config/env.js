@@ -608,6 +608,7 @@ const baseEnv = {
   ),
   whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '',
+  whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET || '',
   corneropsAgentsEnabled:

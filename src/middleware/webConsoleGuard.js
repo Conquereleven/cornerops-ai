@@ -30,12 +30,10 @@ const createWebConsoleGuard = (config = env) => (req, res, next) => {
   if (origin && !config.corneropsWebConsoleAllowedOrigins.includes(origin)) {
     return res.status(403).json({ error: true, message: 'Origin is not allowed.' });
   }
-  const authRequired = config.corneropsWebConsoleRequireAuth
-    || Boolean(config.corneropsWebConsoleAuthToken);
-  if (authRequired && !config.corneropsWebConsoleAuthToken) {
+  if (!config.corneropsWebConsoleAuthToken) {
     return res.status(503).json({ error: true, message: 'Control Tower authentication is not configured.' });
   }
-  if (authRequired && !safeEqual(providedToken(req), config.corneropsWebConsoleAuthToken)) {
+  if (!safeEqual(providedToken(req), config.corneropsWebConsoleAuthToken)) {
     return res.status(401).json({ error: true, message: 'Invalid Control Tower credentials.' });
   }
   if (

@@ -1,4 +1,4 @@
-const request = require('supertest');
+const request = require('../../helpers/internalRequest');
 const app = require('../../../src/app');
 const { ControlTowerService } = require('../../../src/core/control-tower/ControlTowerService');
 
@@ -101,7 +101,7 @@ describe('CornerOps Control Tower', () => {
     expect(report.security.warnings).toContain('CRITICAL: fail-closed mode is disabled.');
   });
 
-  test('exposes protected internal Control Tower endpoints in test mode', async () => {
+  test('exposes protected internal Control Tower endpoints with an explicit service key', async () => {
     await request(app).get('/api/control-tower/status').expect(200)
       .expect((res) => expect(res.body.agents.total).toBe(6));
     await request(app).get('/api/control-tower/security').expect(200)

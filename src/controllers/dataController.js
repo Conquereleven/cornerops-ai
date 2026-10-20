@@ -435,7 +435,7 @@ const requestLeadStatusChange = async (req, res) =>
 const receiveGitHubWebhook = async (req, res, next) => {
   try {
     const result = await dataCore.githubWebhookHandler.handle({
-      body: req.body,
+      body: req.rawBody,
       deliveryId: req.get('x-github-delivery'),
       event: req.get('x-github-event'),
       signature: req.get('x-hub-signature-256'),

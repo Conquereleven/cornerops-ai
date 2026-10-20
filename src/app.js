@@ -17,11 +17,12 @@ const env = require('./config/env');
 const { usesControlTowerFrontendCors } = require('./api/middleware/controlTowerFrontendRouteScope');
 const fs = require('fs');
 const path = require('path');
-const { getDataSourceStatus } = require('./data/supabase/supabaseClient');
 
 const app = express();
 
 app.disable('x-powered-by');
+app.use(express.json({ limit: '32kb', inflate: false, verify: (req, _res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
+app.use('/api', require('./middleware/apiContainment').apiContainment);
 app.use((req, res, next) => {
   if (usesControlTowerFrontendCors(req.path)) return next();
   res.setHeader('Access-Control-Allow-Origin', env.frontendOrigin);
@@ -33,21 +34,18 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   return next();
 });
-app.use(express.json({ limit: '32kb' }));
 app.use(requestLogger);
 
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'cornerops-ai',
-    dataSource: getDataSourceStatus(),
   });
 });
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'cornerops-ai',
-    dataSource: getDataSourceStatus(),
   });
 });
 
@@ -63,6 +61,14 @@ app.use('/api/actions', actionRoutes);
 app.use('/api/webhooks/whatsapp', whatsappRoutes);
 app.use('/api', contextRoutes);
 app.use('/api', dataRoutes);
+
+// API-looking paths (including encoded spellings) must never fall through to static HTML.
+app.use((req, res, next) => {
+  let decodedPath;
+  try { decodedPath = decodeURIComponent(req.path); } catch (_error) { return res.sendStatus(400); }
+  if (/^\/api(?:\/|$)/i.test(decodedPath)) return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
+  return next();
+});
 
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');

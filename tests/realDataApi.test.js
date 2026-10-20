@@ -1,4 +1,4 @@
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 
 describe('real data control tower API', () => {

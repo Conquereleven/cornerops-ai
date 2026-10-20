@@ -1,10 +1,10 @@
 process.env.NODE_ENV = 'test';
 
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 
 describe('Internal operations API', () => {
-  test('allows the safe test bypass and lists internal resources', async () => {
+  test('requires an explicit synthetic service key and lists internal resources', async () => {
     const [conversations, leads, products, orders] = await Promise.all([
       request(app).get('/api/internal/conversations'),
       request(app).get('/api/internal/leads'),

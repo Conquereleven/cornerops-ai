@@ -1,0 +1,129 @@
+{
+  "auditedAt": "2026-10-20T14:13:30.828Z",
+  "production": {
+    "service": {
+      "id": "3c57d108-d956-49b2-b65f-d798cbedd656",
+      "name": "cornerops-ai",
+      "state": "live"
+    },
+    "latestDeployment": {
+      "id": "e60316eb-bae5-4560-a2d8-d8055ca71f7f",
+      "status": "SUCCESS",
+      "createdAt": "2026-09-08T15:14:45.833Z",
+      "url": null
+    },
+    "staged": null,
+    "stagedChanges": []
+  },
+  "rollback": [
+    {
+      "id": "e60316eb-bae5-4560-a2d8-d8055ca71f7f",
+      "status": "SUCCESS",
+      "createdAt": "2026-09-08T15:14:45.833Z",
+      "updatedAt": "2026-09-08T15:16:08.866Z",
+      "serviceId": "3c57d108-d956-49b2-b65f-d798cbedd656",
+      "environmentId": "6d33520e-bd58-4ad6-bf03-4bb4439964da",
+      "url": null,
+      "snapshotId": "9992e7af-d1c1-458e-b18f-41cfc9f5f6b9",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "sfo"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitHash": "f74b5dcfe920ac5849b352745ebdc5f83ae37bc2",
+        "branch": "main"
+      }
+    },
+    {
+      "id": "06f07a60-84b2-405f-9ddc-efe6d2c0fb5f",
+      "status": "REMOVED",
+      "createdAt": "2026-09-08T15:09:58.602Z",
+      "updatedAt": "2026-09-08T15:16:16.315Z",
+      "serviceId": "3c57d108-d956-49b2-b65f-d798cbedd656",
+      "environmentId": "6d33520e-bd58-4ad6-bf03-4bb4439964da",
+      "url": null,
+      "snapshotId": "62f435c3-5a92-4b0b-a0e4-cebcfbdaa63f",
+      "canRollback": false,
+      "canRedeploy": true,
+      "regions": [
+        "sfo"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitHash": "274168eb2919d70b10c41e9458a0420b367b8491",
+        "branch": "main"
+      }
+    },
+    {
+      "id": "51863152-d89f-4337-850c-b84c754d30a3",
+      "status": "FAILED",
+      "createdAt": "2026-08-28T23:42:47.287Z",
+      "updatedAt": "2026-08-29T00:10:15.021Z",
+      "serviceId": "3c57d108-d956-49b2-b65f-d798cbedd656",
+      "environmentId": "6d33520e-bd58-4ad6-bf03-4bb4439964da",
+      "url": null,
+      "snapshotId": "a68a43dc-d3ca-4b59-9946-78f00fd8e436",
+      "canRollback": false,
+      "canRedeploy": false,
+      "regions": [],
+      "meta": {
+        "reason": "deploy",
+        "commitHash": "15c4af02b8220228260e4ef589f8fa15f84f7924",
+        "branch": "main"
+      }
+    }
+  ],
+  "trafficWindow": {
+    "returned": 98,
+    "first": "2026-10-13T15:34:30.343582338Z",
+    "last": "2026-10-20T13:23:51.242672875Z",
+    "requestedStart": "2026-10-13T00:00:00Z",
+    "limit": 500
+  },
+  "httpTrafficAggregate": {
+    "GET /api/health 200": 41,
+    "GET /api/intelligence/work-queue/status 200": 40,
+    "GET / 200": 5,
+    "GET /assets/index-DUgMY2zv.js 200": 2,
+    "GET /assets/index-DcZp7wtP.css 200": 2,
+    "GET /assets/index-CNUSwF0K.js 200": 2,
+    "GET /favicon.ico 200": 3,
+    "GET /assets/index-CNUSwF0K.js 304": 1,
+    "GET /robots.txt 404": 2
+  },
+  "variables": {
+    "valuesRedacted": true,
+    "presence": {
+      "INTERNAL_API_KEY": false,
+      "ALLOW_INTERNAL_NO_KEY": false,
+      "WHATSAPP_VERIFY_TOKEN": false,
+      "WHATSAPP_WEBHOOK_SECRET": false,
+      "GITHUB_WEBHOOK_SECRET": false,
+      "TELEGRAM_OPERATOR_WEBHOOK_SECRET": false
+    },
+    "securityNames": [
+      "CONTROL_TOWER_FOUNDER_ACTION_AUTH_REQUIRED",
+      "CONTROL_TOWER_FOUNDER_ACTION_TOKEN_HASH",
+      "CONTROL_TOWER_FRONTEND_AUTH_MODE",
+      "CONTROL_TOWER_FRONTEND_AUTH_REQUIRED",
+      "CONTROL_TOWER_FRONTEND_TOKEN_HASH",
+      "SUPPLYGRAPH_AUTHORIZED_SELLERS_ENABLED"
+    ]
+  },
+  "statusOnlyProbes": {
+    "/api/health": 200,
+    "/api/intelligence/work-queue/status": 401
+  },
+  "productionSource": {
+    "repo": "Conquereleven/cornerops-ai",
+    "branch": "main",
+    "checkSuites": false
+  },
+  "limitations": [
+    "Variable values redacted; names do not establish validity.",
+    "Returned HTTP logs do not establish complete retention or absence of unobserved callers.",
+    "No production mutations or customer data collected."
+  ]
+}

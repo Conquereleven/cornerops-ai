@@ -62,13 +62,7 @@ const createControlTowerFrontendAuth = (config = env) => (req, res, next) => {
     );
   }
   if (!config.controlTowerFrontendAuthRequired) {
-    req.controlTowerFrontendAuth = {
-      auditId: bridgeAuditId('auth-not-required'),
-      authMode: config.controlTowerFrontendAuthMode,
-      authenticated: true,
-      tokenFingerprint: 'auth-disabled',
-    };
-    return next();
+    return safeError(res, 503, 'CONTROL_TOWER_FRONTEND_AUTH_UNSAFE_CONFIG', 'Operator authentication cannot be disabled.', 'auth-disabled');
   }
   if (!config.controlTowerFrontendTokenHash) {
     return safeError(
