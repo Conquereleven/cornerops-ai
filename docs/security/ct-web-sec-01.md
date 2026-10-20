@@ -79,3 +79,9 @@ Security review/explicit production authorization → security lands on main →
 ## J–K. Gate
 
 Draft review only. Founder next action: review the exact security PR and intentional legacy API shutdown; authorize a distinct security release only after CI and caller assessment are accepted. Public-site release/DNS/private-app activation remain separate gates. Readiness is reported only in the delivery report once exact-head CI is confirmed.
+
+## Final review corrections (reviewed base 1f4678382907e3d1d4b80e535b3e8181bb80b25c)
+
+The request logger now registers before parsing and containment, so denied requests are recorded as well as authorized ones. It captures the full pathname before router rewrites, strips control characters and bounds its length; only method, pathname, response status and duration are supplied to the existing logger. Credentials, query strings and bodies are never included. The duplicate WhatsApp secret configuration property was removed without changing its value or environment-variable contract.
+
+Regression tests inspect emitted logs for 401/403/503 and authenticated monitoring. The production compatibility matrix above remains unchanged: with the last audited configuration, unconfigured internal APIs intentionally return 503, public health returns 200, configured operator monitoring returns 200 with its existing token, and missing/invalid operator credentials remain denied. No production credentials or configuration were read or modified for these corrections. Complete local validation: 800 backend tests passed, 15 pre-existing skipped; 20 frontend tests passed, with lint, typecheck and build. Final exact-head CI and secret-scan evidence are recorded in the delivery report.

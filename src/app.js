@@ -21,6 +21,7 @@ const path = require('path');
 const app = express();
 
 app.disable('x-powered-by');
+app.use(requestLogger);
 app.use(express.json({ limit: '32kb', inflate: false, verify: (req, _res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
 app.use('/api', require('./middleware/apiContainment').apiContainment);
 app.use((req, res, next) => {
@@ -34,7 +35,6 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   return next();
 });
-app.use(requestLogger);
 
 app.get('/health', (req, res) => {
   res.status(200).json({
