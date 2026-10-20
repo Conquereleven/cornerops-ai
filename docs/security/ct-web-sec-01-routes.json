@@ -8564,6 +8564,12 @@
   ],
   "fallthrough": [
     {
+      "path": "/*",
+      "methods": "OPTIONS",
+      "category": "PUBLIC",
+      "guard": "Non-API generic CORS preflight returns 204 without a route handler; literal /api requests first pass the API boundary, including the origin-checked bridge exception"
+    },
+    {
       "path": "/api/*",
       "methods": "ALL",
       "category": "INTERNAL",
