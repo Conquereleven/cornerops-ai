@@ -3,7 +3,7 @@ process.env.CORNEROPS_TELEGRAM_REAL_MODE = 'false';
 process.env.CORNEROPS_TELEGRAM_ALLOW_POLLING = 'false';
 process.env.CORNEROPS_TELEGRAM_ALLOW_REAL_REPLY = 'false';
 
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 const { controlTowerService } = require('../src/core/control-tower');
 const { ControlTowerService } = require('../src/core/control-tower/ControlTowerService');

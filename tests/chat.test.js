@@ -1,6 +1,6 @@
 process.env.NODE_ENV = 'test';
 
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 const aiWorkerRunRepository = require('../src/data/repositories/aiWorkerRunRepository');
 
@@ -98,7 +98,7 @@ describe('CornerOps chat API', () => {
   test('returns the compatible API health alias', async () => {
     const response = await request(app).get('/api/health');
     expect(response.statusCode).toBe(200);
-    expect(response.body.dataSource.mode).toBe('mock');
+    expect(response.body).toEqual({ status: 'ok', service: 'cornerops-ai' });
   });
 
   test('replays an idempotent request without duplicating messages', async () => {

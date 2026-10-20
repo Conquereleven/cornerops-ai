@@ -19,8 +19,8 @@ const verifyWebhook = (req, res) => {
   }
 
   if (!env.whatsappVerifyToken) {
-    return res.status(200).json({
-      status: 'placeholder',
+    return res.status(503).json({
+      status: 'disabled',
       configured: false,
     });
   }

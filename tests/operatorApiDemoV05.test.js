@@ -1,6 +1,6 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 
 describe('Operator API gate and interactive demo v0.5', () => {

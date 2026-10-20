@@ -1,6 +1,6 @@
 process.env.NODE_ENV = 'test';
 
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 const leadRepository = require('../src/data/repositories/leadRepository');
 

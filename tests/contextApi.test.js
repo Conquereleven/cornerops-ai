@@ -4,7 +4,7 @@ process.env.SLACK_CONTEXT_ENABLED = 'true';
 process.env.WHATSAPP_CONTEXT_ENABLED = 'true';
 process.env.NOTION_CONTEXT_ENABLED = 'true';
 
-const request = require('supertest');
+const request = require('./helpers/internalRequest');
 const app = require('../src/app');
 
 describe('context API', () => {
