@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /
+Allow: /$
+Allow: /assets/
+Allow: /brand/
+Sitemap: https://cornertech.ae/sitemap.xml
