@@ -30,3 +30,8 @@ Maturity and evidence are separate: LIVE means currently offered/observed, VERIF
 | C23 | Revenue lifts, customer counts/logos, testimonials, certifications, paid plans | No authorized evidence supplied | BLOCKED; omit entirely |
 
 Current contact defaults: joel.escudero12@gmail.com; +971 55 563 3651; https://calendar.app.google/1KYnZsKuFbbGj2Ha8. Privacy/terms/LinkedIn remain absent unless real approved URLs exist. No form or analytics added. Revalidate every claim at Sprint01 signoff and release; record approver/date/source per final copy section. Client-name permission is not inferred from an existing V1 page. No cross-repository evidence collection was performed.
+
+## Founder coordination amendment
+CornerTech Commerce remains flagship and IN DEVELOPMENT. The three available commercial capabilities are Custom Engineering, AI Automation and Systems Integration. Preserve existing brand mark, Geist and navy/cobalt identity. Initial routes are Home/Commerce/Solutions; Company/Contact are sections and Tres Leches standalone case remains permission-gated.
+
+S02–03 may showcase only approved product claims, labelled synthetic states and non-functional illustrations; no access or integration availability implied. S05 plans commercial integration, not shipping integrations or authenticated product access. Independent product readiness and security evidence must precede any future access authorization. No direct private CornerOps API exposure or Tres Leches production data is permitted. Claude Code proposes experience/copy and claim IDs; Codex cross-checks provenance/security; Founder approves factual publication. Pending independent Claude findings are not fabricated or presumed accepted.

@@ -20,7 +20,7 @@ Status: no release authority granted. Sprint00 docs only. Evidence baseline `264
 | Unproven proprietary/IP and customer outcomes | Medium | Positioning is not ownership/legal/commercial proof | Founder diligence; avoid unsupported claims |
 
 ## Gate sequence
-G0: accept these Sprint00 planning artifacts and explicitly authorize Sprint01. Required decisions: flagship/service hierarchy, Commerce IN DEVELOPMENT policy, reduced/full routes, brand continuity, proposed static architecture. Case permission/evidence remains separately owned and can be deferred by omitting Work.
+G0: technical Sprint00 delivery accepted subject to coordination amendments. Keep PR96 Draft. First obtain Claude Code’s independent Sprint00 findings, pin their reviewed SHA, and publish Codex dispositions and unresolved issues. Only then request final Founder Sprint01 authorization. Recorded direction: flagship IN DEVELOPMENT; three available services; Geist/mark/navy-cobalt continuity; Home/Commerce/Solutions; Company/Contact sections; case permission gate; React/Vite; planning-only prerender spike. Protected server changes NOT authorized.
 
 G1: approve final narrative, labels, route copy and responsive design system. No generated implementation in Sprint00.
 
@@ -37,3 +37,9 @@ Future V2: record current accepted release immediately before cutover. Observed 
 
 ## Acceptance limits
 Read-only Railway metadata, public GETs and local tests establish a bounded current baseline, not full production security certification. No authenticated production probe, customer database, provider action, DNS panel mutation, browser V2 implementation, field performance or new accessibility certification performed. Existing main Prod Watch is evidence of its own workflow, not a new database check run by this sprint.
+
+## Coordination and integration risks
+- Shared-file collision: one named writer per path per handoff; separate agent worktrees/branches. No concurrent edits without a documented ownership/interface contract; serialize shared-file writes even when interfaces are agreed.
+- Incomplete independent review: Claude Code’s Sprint00 findings are pending. Codex may not substitute its own review or imply Claude approved. Record findings, severity, evidence SHA and disposition before asking for Sprint01 approval.
+- Product showcase mistaken for access: S02–03 remain public presentation. S05 authorizes only commercial integration planning when separately started. Independent security and product readiness, privacy/data contracts and explicit Founder approval gate all future authenticated access. No private CornerOps API or Tres Leches production-data exposure.
+- Integration gate: reciprocal review, protected-file diff and tests on the combined head precede acceptance. A clean merge/cherry-pick is not review approval. Founder retains merge/deploy/DNS gates; neither agent can waive them.

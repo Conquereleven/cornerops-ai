@@ -1,6 +1,6 @@
 # CornerTech AI Website 2.0 — implementation PRD
 
-Status: PROPOSED for Founder review; Sprint 00 only. Audit date: 2026-10-21.
+Status: Sprint00 technical delivery accepted, coordination amendments pending independent Claude Code review; Sprint00 only. Audit date: 2026-10-21.
 Source of requirements: Founder request and CT-WEB-V2-PLAN-01 / Codex_Sprint_00_Start.md, read in full. Attached instructions are planning requirements, not production authorization.
 Baseline: `264588059418cb34fbc9319e922de8dec116522c` (fresh origin/main). See BASELINE_AUDIT.md for evidence and limitations.
 
@@ -9,7 +9,12 @@ CornerTech AI is the parent software engineering company. CornerTech Commerce is
 
 The website must make product maturity and two conversion intentions clear: explore Commerce/design partnership, or discuss a paid engineering project. English first; UAE/GCC operators primary, engineering buyers secondary, prospective partners/talent/investors tertiary. Avoid implying general availability, autonomous consequential actions, guaranteed outcomes, published prices or a launch date.
 
-## Proposed information architecture
+## Founder planning direction and Website 2.1
+Initial scope is `/`, `/products/commerce`, `/solutions`. Company and Contact remain homepage sections. Standalone Tres Leches case is deferred and permission-gated. Preserve Geist, the existing mark and navy/cobalt identity; candidate palette changes below are review inputs, not permission to replace them. React/Vite retained; prerender spike authorized for planning only. Protected server changes NOT authorized.
+
+Product showcasing belongs to Sprints02–03. Commercial integration planning belongs to Sprint05; it does not implement onboarding, purchases, subscriptions or authentication. Future authenticated product access requires independent security and product readiness gates and separate Founder authorization. Public pages must never directly expose private CornerOps APIs or Tres Leches production data. Codex is Engineering Lead/Integration DRI; Claude Code is Product Experience Lead and active engineering contributor under CODEX_CLAUDE_HANDOFF_CONTRACT.md.
+
+## Route map: initial scope and deferred options
 | Route | Visitor purpose | Required content / acceptance | Conversion / dependency |
 |---|---|---|---|
 | `/` | Understand company, flagship and services | Commerce first; visible development status; service trio; evidence-based work; no fake metrics | Explore Commerce only when target exists; discuss project via vetted links |
@@ -19,7 +24,7 @@ The website must make product maturity and two conversion intentions clear: expl
 | `/company` | Understand engineering philosophy | Actual company facts and GCC focus; Labs only if explicitly labelled research proposal | Contact |
 | `/contact` | Choose intent | Project discussion / explore early access; approved email, WhatsApp and calendar links | No form, analytics or PII collection added |
 
-Prefer Home + Commerce + Solutions + permitted Work over incomplete six-page scope. Company/Contact can remain honest home sections until their routes ship. If Work permission is absent, release three complete routes and omit case links pending separate approval. Founder must select this reduced scope before implementation. All nav/footer/CTA targets must exist in the same released revision; no placeholder pages.
+The table includes future route options; only Home, Commerce and Solutions are initial standalone routes. Company/Contact stay home sections and Work stays absent from standalone navigation until separately approved and permission-cleared. Every initial CTA must target an existing page or approved external contact. The broader route list is not current implementation authority.
 
 ## Functional and content requirements
 - One route manifest drives navigation, route metadata, sitemap and static output; only approved published routes appear.
@@ -40,4 +45,4 @@ Responsive widths 390/430/768/1024/1280/1440; keyboard menu, Escape/focus return
 SEO requires distinct initial HTML metadata/content, canonical and sitemap agreement, deliberate robots rules and real unknown-route HTTP 404. See ADR for the required protected-server review. Every code PR needs fresh-base protected diff, security and import-negative tests, complete CI and screenshots. Sprint 00 documents do not certify V2 accessibility, performance or production readiness.
 
 ## Explicit exclusions
-Commerce product development; PR91/92 history; auth/Sales/Command Center; integrations; migrations; new hosting/framework infrastructure; deployment; DNS; customer repositories; legal documents invented as placeholders; forms; pricing; localization. Sprint 01 begins only after Founder approval of the planning gate.
+Commerce product development; PR91/92 history; auth/Sales/Command Center; integrations; migrations; new hosting/framework infrastructure; deployment; DNS; customer repositories; legal documents invented as placeholders; forms; pricing; localization. Sprint01 remains unstarted. Await Claude Code’s independent Sprint00 findings and resolve cross-review before requesting final Founder authorization.
