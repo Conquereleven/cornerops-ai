@@ -1,0 +1,82 @@
+[
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/",
+    "type": "text/html; charset=UTF-8",
+    "bytes": 1350,
+    "title": [
+      "CornerTech AI | Intelligence, engineered for business."
+    ],
+    "cache": "no-cache, no-store, must-revalidate",
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/robots.txt",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/robots.txt",
+    "type": "text/plain; charset=UTF-8",
+    "bytes": 110,
+    "title": [],
+    "cache": "public, max-age=300",
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/sitemap.xml",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/sitemap.xml",
+    "type": "application/xml",
+    "bytes": 153,
+    "title": [],
+    "cache": "public, max-age=300",
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/products/commerce",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/products/commerce",
+    "type": "text/html; charset=UTF-8",
+    "bytes": 1350,
+    "title": [
+      "CornerTech AI | Intelligence, engineered for business."
+    ],
+    "cache": "no-cache, no-store, must-revalidate",
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/s00-missing-page",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/s00-missing-page",
+    "type": "text/html; charset=UTF-8",
+    "bytes": 1350,
+    "title": [
+      "CornerTech AI | Intelligence, engineered for business."
+    ],
+    "cache": "no-cache, no-store, must-revalidate",
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornerops-ai-production.up.railway.app/api/health",
+    "status": 200,
+    "finalUrl": "https://cornerops-ai-production.up.railway.app/api/health",
+    "type": "application/json; charset=utf-8",
+    "bytes": 40,
+    "title": [],
+    "cache": null,
+    "csp": null,
+    "hsts": null
+  },
+  {
+    "url": "https://cornertech.ae/",
+    "error": "<urlopen error [Errno 61] Connection refused>"
+  },
+  {
+    "url": "https://www.cornertech.ae/",
+    "error": "<urlopen error [Errno 61] Connection refused>"
+  }
+]
