@@ -10,17 +10,17 @@ Status: no release authority granted. Sprint00 docs only. Evidence baseline `264
 | Claim exceeds product maturity | High | Code contracts ≠ shipping commerce service; ledger separates states | Founder each factual claim |
 | Tres Leches authorization/privacy | High | Existing reconstruction not independent permission evidence | Founder; omit case until permission; no customer repo/data access |
 | New forms/tracking/privacy obligations | High | No collection authorized | Founder/legal/backend review before any new flow |
-| Custom domain acceptance unknown | High for canonical release | Root/www connection refused from audit host; does not establish universal outage or DNS cause | Separate V1 owner investigates; no V2 DNS action |
+| Custom domain routing cutover deliberately pending | High canonical-release gate | Ownership verified:true for both domains; apex165.22.30.248 parking/www alias remain; certificate status still validating | Founder CT-WEB-LIVE-01 GO DNS CUTOVER separately, then TLS/traffic acceptance; no V2 DNS action |
 | Missing CSP/HSTS on sampled Railway HTML | Medium | Response headers absent in GET sample; API auth is not a substitute for web headers | Separate reviewed hardening assessment; do not modify in S00 |
 | SPA metadata, root-only robots and duplicate fallback | Medium | index.html, robots, sitemap, GET audit | Approved static architecture + initial HTML and HTTP tests |
-| Build cache/asset detection mismatch | Medium | Server immutable regex expects dotted hex; Vite uses hyphenated asset names, generally falls back to300s | Measure before targeted approved cache change; not an availability failure |
+| Build cache/asset detection mismatch | Medium | Server immutable regex expects dotted hex; Vite uses hyphenated asset names, generally falls back to300s | Candidate in same pre-S03 narrow404/static review window (D6); no server authorization; not an availability failure |
 | Brand continuity/accessibility | Medium | Palette proposal not contrast-tested; retain mark/type cues | Founder design review; Codex accessibility evidence |
 | Zoho/contact readiness | Medium | Existing approved links only; no delivery/form exercised | Founder verifies any replacement separately |
 | Core Commerce capacity | Medium | Website scope could grow into product work | Timebox and reduced complete route scope |
 | Unproven proprietary/IP and customer outcomes | Medium | Positioning is not ownership/legal/commercial proof | Founder diligence; avoid unsupported claims |
 
 ## Gate sequence
-G0: technical Sprint00 delivery accepted subject to coordination amendments. Keep PR96 Draft. First obtain Claude Code’s independent Sprint00 findings, pin their reviewed SHA, and publish Codex dispositions and unresolved issues. Only then request final Founder Sprint01 authorization. Recorded direction: flagship IN DEVELOPMENT; three available services; Geist/mark/navy-cobalt continuity; Home/Commerce/Solutions; Company/Contact sections; case permission gate; React/Vite; planning-only prerender spike. Protected server changes NOT authorized.
+G0: technical Sprint00 delivery and coordination reconciliation complete. Keep PR96 Draft. Claude independent commit672c11ab8b98bd545d694e6f31b2a7771281a23b is preserved; all18 findings have dispositions, critical F05/F08/F09/F16 resolved. GO WITH CONDITIONS for S01 planning readiness; Founder must explicitly authorize start. D1–D7 in CROSS_REVIEW_DISPOSITIONS remain PROPOSED. No repeat review loop unless a material unresolved issue appears. Protected server changes NOT authorized.
 
 G1: approve final narrative, labels, route copy and responsive design system. No generated implementation in Sprint00.
 
@@ -40,6 +40,11 @@ Read-only Railway metadata, public GETs and local tests establish a bounded curr
 
 ## Coordination and integration risks
 - Shared-file collision: one named writer per path per handoff; separate agent worktrees/branches. No concurrent edits without a documented ownership/interface contract; serialize shared-file writes even when interfaces are agreed.
-- Incomplete independent review: Claude Code’s Sprint00 findings are pending. Codex may not substitute its own review or imply Claude approved. Record findings, severity, evidence SHA and disposition before asking for Sprint01 approval.
+- Incomplete independent review: Claude Code findings received and preserved at exact commit672c11a; Codex dispositions are separate and do not imply Claude reviewed the new final SHA. No self-invented signoff or new routine review loop.
 - Product showcase mistaken for access: S02–03 remain public presentation. S05 authorizes only commercial integration planning when separately started. Independent security and product readiness, privacy/data contracts and explicit Founder approval gate all future authenticated access. No private CornerOps API or Tres Leches production-data exposure.
 - Integration gate: reciprocal review, protected-file diff and tests on the combined head precede acceptance. A clean merge/cherry-pick is not review approval. Founder retains merge/deploy/DNS gates; neither agent can waive them.
+
+## Reconciled gates F05/F09/F13/F14/F15
+Every rendered product capability requires internal evidenceLevel, closed publicStatus, ledger ID and exact text/status approval with approver/date/version. Missing/stale approval omits capability; unknown IDs/incompatible states fail tests. Evidence is not a public availability badge. Unsupported enterprise-grade/enterprise-ready/certification/scale/outcome claims cannot pass this gate; D5 preferred wording remains proposed.
+
+Bring transitive public import and negative tests to S02 entry, before component integration, with explicit review for any protected test edits. Require320px reflow/400% zoom,200% text resize,24px target-size checks,visible/unobscured focus,contrast and fictional-data captions. Before S03, plan the D6 narrow static404/cache review; implementation remains blocked without separate Founder approval. Domain routing cutover is a deliberate external authorization gate, not an unresolved ownership fault.

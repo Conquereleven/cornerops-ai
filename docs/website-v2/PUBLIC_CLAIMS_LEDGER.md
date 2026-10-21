@@ -1,9 +1,15 @@
 # Public claims ledger
 Audit: 2026-10-21, main `264588059418cb34fbc9319e922de8dec116522c`. This is internal planning evidence, not approved public copy.
 
-Maturity and evidence are separate: LIVE means currently offered/observed, VERIFIED means bounded evidence, VERIFIED CASE requires customer permission and factual review, IN DEVELOPMENT means incomplete product, PLANNED is roadmap only, RESEARCH is exploration. A source-code test cannot establish commercial availability. Founder owns all public claim approval; customer permission is additionally required for Tres Leches.
+## F05 — separate evidence from public availability
+Internal evidenceLevel (never public): founder-confirmed, source-verified, case-verified, roadmap, research. Public publicStatus (closed visitor-facing set): available → Available; in-development → In development; planned → Planned; research → Research. VERIFIED and VERIFIED CASE are internal historical evidence labels, never public badges. A permitted case renders approved narrative without a capability badge.
 
-| ID | Current statement or proposed promise | Evidence / maturity | Safe treatment and outstanding gate |
+The table below preserves audited source wording/status in its evidence column; those legacy labels are not schema enums or publishing approval. C02 is founder-confirmed service availability; C07–C09 source evidence supports only Commerce in-development. C10–C12 roadmap items must not appear available. Case C14–C15 remains permission-pending; C19 research; C23 unsupported. Founder-confirmed general direction is not blanket approval of every rendered claim.
+
+## F09 — capability publication gate
+Every publicly rendered capability must reference an existing claim ID, bounded evidence, explicit Founder approval of exact text/status version, approver/date and applicable permissions. If any approval is absent/stale or evidence/status incompatible, omit the item at build time; CI fails unknown IDs/inconsistent states. Codex owns ledger-sync and approval tests; Claude owns content and rendering/omission tests. A boolean alone cannot substitute for approval provenance. Internal evidence references must not leak into the public bundle. Source-verified evidence alone never supports available. Status always includes text, not color alone. Optional data produces omission, never invented placeholders. These are S02 acceptance requirements, not new implemented code.
+
+| ID | Current statement or proposed promise | Audited evidence / historical source wording | Safe treatment and outstanding gate |
 |---|---|---|---|
 | C01 | CornerTech AI software engineering company; Commerce flagship | Founder task, strategic direction VERIFIED | Sprint01 copy approval; do not imply corporate certifications or proprietary IP ownership diligence completed |
 | C02 | Custom Engineering, AI Automation, Systems Integration offered | Founder explicitly confirms; LIVE service offering | Scope each engagement; no universal integration/outcome guarantee |
@@ -35,3 +41,6 @@ Current contact defaults: joel.escudero12@gmail.com; +971 55 563 3651; https://c
 CornerTech Commerce remains flagship and IN DEVELOPMENT. The three available commercial capabilities are Custom Engineering, AI Automation and Systems Integration. Preserve existing brand mark, Geist and navy/cobalt identity. Initial routes are Home/Commerce/Solutions; Company/Contact are sections and Tres Leches standalone case remains permission-gated.
 
 S02–03 may showcase only approved product claims, labelled synthetic states and non-functional illustrations; no access or integration availability implied. S05 plans commercial integration, not shipping integrations or authenticated product access. Independent product readiness and security evidence must precede any future access authorization. No direct private CornerOps API exposure or Tres Leches production data is permitted. Claude Code proposes experience/copy and claim IDs; Codex cross-checks provenance/security; Founder approves factual publication. Pending independent Claude findings are not fabricated or presumed accepted.
+
+## Proposed Founder decisions (D1–D5)
+D1 project enquiry primary with visually prominent Commerce and secondary design-partner CTA; D2 preserve cyan#00D7FF accent with contrast-aware cobalt#2563EB action fills; D3 vetted intent-prefill text, no new visitor data collection; D4 exclude standalone case and use permission-independent fallback; D5 prohibit unsupported enterprise-grade/enterprise-ready/certification/scale/outcome claims, prefer “Software built for real operations.” All remain PROPOSED, not approved copy/visuals. Unsupported claims are already excluded by the evidence gate; no replacement “production-grade” or “operator-grade” claim is presumed proven. See CROSS_REVIEW_DISPOSITIONS.md for owners/timing.
