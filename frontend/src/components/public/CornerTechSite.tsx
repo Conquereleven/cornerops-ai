@@ -509,6 +509,80 @@ export function ProcessAndPrinciples() {
     </section>
   );
 }
+type ContactChannels = {
+  bookingUrl: string;
+  whatsappUrl: string;
+  contactEmail: string;
+};
+
+const externalLink = { target: "_blank", rel: "noopener noreferrer" } as const;
+
+// One primary action, then the remaining channels, never the same destination
+// twice. A booking link is shown only when siteConfig provides one; siteConfig
+// leaves it empty when the booking page is not verified, and the WhatsApp
+// conversation becomes the primary way to start a project.
+export function ContactActions({
+  bookingUrl = siteConfig.bookingUrl,
+  whatsappUrl = siteConfig.whatsappUrl,
+  contactEmail = siteConfig.contactEmail,
+}: Partial<ContactChannels>) {
+  const email = contactEmail && (
+    <a className="ct-button" href={`mailto:${contactEmail}`}>
+      Email us
+    </a>
+  );
+
+  if (bookingUrl) {
+    return (
+      <div className="ct-actions">
+        <a
+          className="ct-button ct-primary"
+          href={bookingUrl}
+          aria-label="Book a call (opens in a new tab)"
+          {...externalLink}
+        >
+          Book a call <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+        {email}
+        {whatsappUrl && (
+          <a
+            className="ct-button"
+            href={whatsappUrl}
+            aria-label="WhatsApp (opens in a new tab)"
+            {...externalLink}
+          >
+            WhatsApp <ArrowUpRight size={16} aria-hidden="true" />
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  if (whatsappUrl) {
+    return (
+      <div className="ct-actions">
+        <a
+          className="ct-button ct-primary"
+          href={whatsappUrl}
+          aria-label="Discuss a project on WhatsApp (opens in a new tab)"
+          {...externalLink}
+        >
+          Discuss a project <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+        {email}
+      </div>
+    );
+  }
+
+  return contactEmail ? (
+    <div className="ct-actions">
+      <a className="ct-button ct-primary" href={`mailto:${contactEmail}`}>
+        Email us
+      </a>
+    </div>
+  ) : null;
+}
+
 export function CompanyAndContact() {
   return (
     <>
@@ -546,33 +620,7 @@ export function CompanyAndContact() {
           Bring us one workflow that takes too much time. We’ll help you
           identify what to build first.
         </p>
-        <div className="ct-actions">
-          {siteConfig.bookingUrl && (
-            <a
-              className="ct-button ct-primary"
-              href={siteConfig.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book a call <ArrowUpRight size={16} />
-            </a>
-          )}
-          {siteConfig.contactEmail && (
-            <a className="ct-button" href={`mailto:${siteConfig.contactEmail}`}>
-              Email us
-            </a>
-          )}
-          {siteConfig.whatsappUrl && (
-            <a
-              className="ct-button"
-              href={siteConfig.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WhatsApp <ArrowUpRight size={16} />
-            </a>
-          )}
-        </div>
+        <ContactActions />
         <small>
           {siteConfig.contactEmail} · {siteConfig.whatsappNumber}
         </small>
