@@ -20,7 +20,8 @@ export const siteConfig = {
   signInEnabled: false,
   /** Canonical public origin. Founder-confirmed purchased domain, verified in AEServer. */
   siteUrl: httpsUrl(value('VITE_PUBLIC_SITE_URL', 'https://cornertech.ae')),
-  bookingUrl: httpsUrl(value('VITE_PUBLIC_BOOKING_URL', 'https://calendar.app.google/1KYnZsKuFbbGj2Ha8')),
+  // Booking is opt-in: configure only a separately verified public appointment URL.
+  bookingUrl: httpsUrl(value('VITE_PUBLIC_BOOKING_URL')),
   contactEmail: value('VITE_PUBLIC_CONTACT_EMAIL', 'joel.escudero12@gmail.com'),
   whatsappNumber,
   whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber.replace(/\D/g, '')}` : '',
