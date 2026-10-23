@@ -24,7 +24,7 @@ function audit(load: Load, entry = 'main.tsx') {
       const name = spec.text;
       if (name.endsWith('.css')) {
         // Only the existing bootstrap styles are allowed; no arbitrary style import escape.
-        if (file !== 'main.tsx' || !['./styles/globals.css', './styles/cornertech.css'].includes(name)) {
+        if (!['main.tsx:./styles/globals.css', 'routes/PublicLanding.tsx:../styles/cornertech.css'].includes(`${file}:${name}`)) {
           throw new Error(`Unapproved stylesheet: ${name}`);
         }
         return;
@@ -99,6 +99,9 @@ describe('V2-200 transitive public import entry gate', () => {
     'new WebSocket("wss://example.invalid")', 'navigator.sendBeacon("/collect")', 'window["fetch"]("/api/private")', 'const send = fetch; send("/api/private")'])
   ('rejects network action %s', statement => {
     expect(() => audit(synthetic({ 'main.tsx': statement }))).toThrow(/Public network (call|reference)/);
+  });
+  it('rejects arbitrary stylesheet import escapes', () => {
+    expect(() => audit(synthetic({ 'main.tsx': "import './private.css';" }))).toThrow(/Unapproved stylesheet/);
   });
   it('rejects computed import targets instead of silently skipping them', () => {
     expect(() => audit(synthetic({ 'main.tsx': 'import(target);' }))).toThrow(/Nonliteral/);
