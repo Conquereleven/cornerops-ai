@@ -204,15 +204,10 @@ export function V2Frame({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  // Every navigation closes the menu; an in-app hash target (/#company,
-  // /#contact) receives focus on its tabIndex=-1 heading, which also scrolls it
-  // into view below the sticky header (scroll-margin in cornertech.css).
+  // Router-owned effects handle scroll/focus/history. The frame only closes
+  // its disclosure when navigation changes.
   useEffect(() => {
     setOpen(false);
-    if (!location.hash) return;
-    const target = document.getElementById(location.hash.slice(1));
-    const heading = target?.querySelector<HTMLElement>('[tabindex="-1"]');
-    (heading ?? target)?.focus();
   }, [location.key, location.hash]);
 
   const current = (href: string) =>
@@ -321,7 +316,7 @@ export function V2Home({ contact }: { contact: ContactLinks }) {
             </div>
             <p className="v2-flagship-name">{home.flagship.name}</p>
             <p>{home.flagship.copy}</p>
-            <Link className="v2-link" to="/commerce">
+            <Link className="v2-link" to="/products/commerce">
               {home.flagship.link} <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -369,7 +364,7 @@ export function V2Home({ contact }: { contact: ContactLinks }) {
           >
             <div className="v2-stack">
               <p className="v2-body">{home.showcase.copy}</p>
-              <Link className="v2-link" to="/commerce">
+              <Link className="v2-link" to="/products/commerce">
                 {home.flagship.link} <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -759,7 +754,7 @@ export function V2Solutions() {
             ))}
           </dl>
           <p className="v2-after">
-            <Link className="v2-link" to="/commerce">
+            <Link className="v2-link" to="/products/commerce">
               {content.home.flagship.link} <span aria-hidden="true">→</span>
             </Link>
           </p>

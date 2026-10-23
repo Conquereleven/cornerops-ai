@@ -19,7 +19,7 @@ const EMAIL = "hello@example.test";
 const NO_BOOKING: ContactLinks = { bookingUrl: "", whatsappUrl: WHATSAPP, contactEmail: EMAIL };
 
 const nav: PublicNavItem[] = [
-  { label: content.navigation.commerce, href: "/commerce" },
+  { label: content.navigation.commerce, href: "/products/commerce" },
   { label: content.navigation.solutions, href: "/solutions" },
   { label: content.navigation.company, href: "/#company" },
   { label: content.navigation.contact, href: "/#contact" },
@@ -27,7 +27,7 @@ const nav: PublicNavItem[] = [
 
 const PAGES = [
   ["/", content.routes.home.h1],
-  ["/commerce", content.routes.commerce.h1],
+  ["/products/commerce", content.routes.commerce.h1],
   ["/solutions", content.routes.solutions.h1],
 ] as const;
 
@@ -37,7 +37,7 @@ function renderAt(path: string, contact: ContactLinks = NO_BOOKING) {
       <V2Frame nav={nav}>
         <Routes>
           <Route path="/" element={<V2Home contact={contact} />} />
-          <Route path="/commerce" element={<V2Commerce />} />
+          <Route path="/products/commerce" element={<V2Commerce />} />
           <Route path="/solutions" element={<V2Solutions />} />
         </Routes>
       </V2Frame>
@@ -86,16 +86,18 @@ describe("Website V2 frame", () => {
     }
   });
 
-  test("navigation moves between pages and focuses hash targets on Home", async () => {
+  test("navigation moves between pages and exposes the approved Home section targets", async () => {
     const user = userEvent.setup();
     renderAt("/");
     await user.click(within(primaryNav()).getByRole("link", { name: content.navigation.commerce }));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(content.routes.commerce.h1);
     await user.click(within(primaryNav()).getByRole("link", { name: content.navigation.company }));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(content.routes.home.h1);
-    expect(screen.getByRole("heading", { name: content.home.company.title })).toHaveFocus();
+    expect(screen.getByRole("heading", { name: content.home.company.title })).toBeInTheDocument();
+    expect(within(primaryNav()).getByRole("link", { name: content.navigation.company })).toHaveAttribute("href", "/#company");
     await user.click(within(primaryNav()).getByRole("link", { name: content.navigation.contact }));
-    expect(screen.getByRole("heading", { name: content.home.contact.title })).toHaveFocus();
+    expect(screen.getByRole("heading", { name: content.home.contact.title })).toBeInTheDocument();
+    expect(within(primaryNav()).getByRole("link", { name: content.navigation.contact })).toHaveAttribute("href", "/#contact");
   });
 
   test("mobile menu is a disclosure that closes on Escape (returning focus) and on link activation", async () => {
@@ -161,7 +163,7 @@ describe("Website V2 pages", () => {
     const hero = section(content.routes.home.h1);
     expect(within(hero).getByText(content.status.inDevelopment)).toBeInTheDocument();
     expect(within(hero).getByText(content.home.flagship.name)).toBeInTheDocument();
-    expect(within(hero).getByRole("link", { name: new RegExp(content.home.flagship.link) })).toHaveAttribute("href", "/commerce");
+    expect(within(hero).getByRole("link", { name: new RegExp(content.home.flagship.link) })).toHaveAttribute("href", "/products/commerce");
     const services = within(section(content.home.services.title)).getAllByRole("listitem");
     expect(services).toHaveLength(3);
     services.forEach((card, i) => {
@@ -183,13 +185,13 @@ describe("Website V2 pages", () => {
     }
   });
 
-  test.each(["/", "/commerce"])("%s labels the concept illustration as synthetic data", (path) => {
+  test.each(["/", "/products/commerce"])("%s labels the concept illustration as synthetic data", (path) => {
     renderAt(path);
     expect(screen.getByRole("img", { name: /synthetic data/i })).toHaveTextContent(content.illustration.caption);
   });
 
   test("Commerce is truthful about status and omits unapproved capability detail", () => {
-    const { container } = renderAt("/commerce");
+    const { container } = renderAt("/products/commerce");
     expect(screen.getByText(content.status.notYetAvailable)).toBeInTheDocument();
     expect(content.commerceCapabilities).toHaveLength(0);
     expect(container.querySelector("table")).toBeNull();

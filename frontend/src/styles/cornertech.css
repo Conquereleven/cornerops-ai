@@ -1376,6 +1376,11 @@
 }
 
 /* ───────── Website 2.0 review preview (tokens@1). Scoped to .ct-v2 only. ───────── */
+/* Public-only override: legacy globals impose a 320px body minimum. */
+body:has(.ct-v2) {
+  min-width: 0;
+}
+
 html:has(.ct-v2) {
   /* Keeps keyboard focus clear of the sticky header (WCAG 2.4.11). */
   scroll-padding-top: calc(64px + 16px);
