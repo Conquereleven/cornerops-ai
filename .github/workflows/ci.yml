@@ -6,7 +6,12 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+
+# Only superseded feature PR validation is disposable. Unique run IDs keep
+# main/develop pushes and release/hotfix/security PR validation independent.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/') && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/') }}
 
 jobs:
   test:
