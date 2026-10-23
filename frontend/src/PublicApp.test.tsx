@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import PublicApp from './PublicApp';
@@ -52,4 +52,21 @@ test('Back restores the saved long-page offset after navigating to a shorter rou
   await waitFor(() => expect(window.location.pathname).toBe('/'));
   await waitFor(() => expect(window.scrollTo).toHaveBeenLastCalledWith(0, 6200));
   expect(document.querySelector('main')).toHaveFocus();
+});
+
+
+test('client navigation updates canonical/social metadata and unknown routes remove public canonical', async () => {
+  const { unmount } = render(<PublicApp />);
+  expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute('href','https://cornertech.ae/');
+  await userEvent.click(within(screen.getAllByRole('navigation')[0]).getByRole('link', {name:websiteV2Content.navigation.commerce}));
+  expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute('href','https://cornertech.ae/products/commerce');
+  expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute('content',websiteV2Content.routes.commerce.title);
+  expect(document.querySelectorAll('meta[name="robots"]')).toHaveLength(1);
+  act(() => { window.history.pushState({},'', '/unknown'); window.dispatchEvent(new PopStateEvent('popstate')); });
+  await waitFor(() => expect(screen.getByRole('heading',{name:'Page unavailable'})).toHaveFocus());
+  expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+  expect(document.querySelector('meta[property="og:url"]')).toBeNull();
+  expect(document.querySelector('meta[name="robots"]')).toHaveAttribute('content','noindex, nofollow');
+  unmount();
+  expect(document.querySelectorAll('meta[name="robots"]')).toHaveLength(0);
 });

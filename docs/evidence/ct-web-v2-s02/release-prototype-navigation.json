@@ -1,0 +1,27 @@
+[
+  {
+    "canonical": "https://cornertech.ae/products/commerce",
+    "focused": "CornerTech Commerce",
+    "path": "/products/commerce"
+  },
+  {
+    "canonical": "https://cornertech.ae/solutions",
+    "focused": "Engineering for the way your operation actually works.",
+    "path": "/solutions"
+  },
+  {
+    "email": [
+      "mailto:joel.escudero12@gmail.com",
+      "mailto:joel.escudero12@gmail.com?subject=Design%20partner%20conversation"
+    ],
+    "focused": "Choose the conversation you want to have.",
+    "path": "/#contact",
+    "robotsTags": 1,
+    "whatsapp": [
+      {
+        "href": "https://wa.me/971555633651",
+        "rel": "noopener noreferrer"
+      }
+    ]
+  }
+]
