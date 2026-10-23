@@ -2,7 +2,7 @@ name: CornerOps Prod Watch
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 concurrency:
