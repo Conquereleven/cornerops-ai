@@ -1,8 +1,8 @@
 {
-  "base": "a552990aa8b1a2371d201e282794ff4ff875346a",
-  "fileCount": 797,
-  "sha256": "601311292e922cb8007f88e6a3561cc39278bd5e909c7e95065d8bee0fcde7cf",
-  "authorizedSprint": "CT-WEB-V2-RELEASE-01 + CT-INFRA-GHA-01/02",
+  "base": "11abdb38ec5bb1feda8aefffcf65fc6cb396578d",
+  "fileCount": 799,
+  "sha256": "6908d0c13f8f937fe68bc19e6d6d14017f51c1aa219b7279503f3e1cd09af674",
+  "authorizedSprint": "CT-WEB-V2-RELEASE-01 + CT-INFRA-GHA-01/02 + CT-EXECUTION-STANDARD-1.0",
   "authorizedChanges": [
     "src/app.js",
     "frontend/vite.config.ts",
@@ -13,8 +13,10 @@
     ".github/tests/test_ci_scope.py",
     ".github/workflows/ci.yml",
     ".github/workflows/prod-watch.yml",
-    "tests/githubActionsCost.test.js"
+    "tests/githubActionsCost.test.js",
+    "AGENTS.md",
+    "CLAUDE.md"
   ],
-  "previousSha256": "4c2bf2afc938c59229d7077268b27e7dba44bdf4290b7b53931c686d6143057c",
+  "previousSha256": "601311292e922cb8007f88e6a3561cc39278bd5e909c7e95065d8bee0fcde7cf",
   "previousStageSha256": "de9a79d6879c8bcdb72b99ae96cf465982f51051d4b0f85c36312383157082aa"
 }
