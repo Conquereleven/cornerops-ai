@@ -1,0 +1,23 @@
+{
+  "email": [
+    {
+      "href": "mailto:joel.escudero12@gmail.com",
+      "text": "Email us"
+    },
+    {
+      "href": "mailto:joel.escudero12@gmail.com?subject=Design%20partner%20conversation",
+      "text": "Email us about design partnership"
+    }
+  ],
+  "focus": "v2-contact-title",
+  "hash": "#contact",
+  "path": "/",
+  "whatsapp": [
+    {
+      "href": "https://wa.me/971555633651",
+      "name": "Discuss a project on WhatsApp (opens in a new tab)",
+      "rel": "noopener noreferrer",
+      "text": "Discuss a project "
+    }
+  ]
+}

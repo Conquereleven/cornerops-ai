@@ -18,9 +18,12 @@ describe('App',()=>{
 
   test('renders the public CornerTech AI landing without private activation',async()=>{
     render(<App/>);
-    expect(await screen.findByRole('heading',{name:'Intelligence, engineered for business.'})).toBeInTheDocument();
+    expect(await screen.findByRole('heading',{name:'Software built for real operations.'})).toBeInTheDocument();
     expect(screen.queryByRole('link',{name:'Sign in'})).not.toBeInTheDocument();
-    expect(screen.getByRole('link',{name:/Explore our work/})).toHaveAttribute('href','#work');
+    for (const link of screen.getAllByRole('link',{name:'Discuss a project'})) {
+      expect(link).toHaveAttribute('href','/#contact');
+    }
+    expect(screen.getByRole('link',{name:'Discuss a project on WhatsApp (opens in a new tab)'})).toHaveAttribute('href','https://wa.me/971555633651');
     expect(screen.getByRole('link',{name:'Email us'})).toHaveAttribute('href','mailto:joel.escudero12@gmail.com');
     expect(document.getElementById('contact')).toBeInTheDocument();
   });

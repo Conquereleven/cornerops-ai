@@ -1,0 +1,242 @@
+[
+  {
+    "page": "home",
+    "client": 319,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 319,
+    "view": "home",
+    "width": 319
+  },
+  {
+    "page": "home",
+    "client": 320,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 320,
+    "view": "home",
+    "width": 320
+  },
+  {
+    "page": "home",
+    "client": 390,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 390,
+    "view": "home",
+    "width": 390
+  },
+  {
+    "page": "home",
+    "client": 430,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 430,
+    "view": "home",
+    "width": 430
+  },
+  {
+    "page": "home",
+    "client": 768,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 768,
+    "view": "home",
+    "width": 768
+  },
+  {
+    "page": "home",
+    "client": 1024,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 1024,
+    "view": "home",
+    "width": 1024
+  },
+  {
+    "page": "home",
+    "client": 1280,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 1280,
+    "view": "home",
+    "width": 1280
+  },
+  {
+    "page": "home",
+    "client": 1440,
+    "h1": [
+      "Software built for real operations."
+    ],
+    "scroll": 1440,
+    "view": "home",
+    "width": 1440
+  },
+  {
+    "page": "commerce",
+    "client": 319,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 319,
+    "view": "commerce",
+    "width": 319
+  },
+  {
+    "page": "commerce",
+    "client": 320,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 320,
+    "view": "commerce",
+    "width": 320
+  },
+  {
+    "page": "commerce",
+    "client": 390,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 390,
+    "view": "commerce",
+    "width": 390
+  },
+  {
+    "page": "commerce",
+    "client": 430,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 430,
+    "view": "commerce",
+    "width": 430
+  },
+  {
+    "page": "commerce",
+    "client": 768,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 768,
+    "view": "commerce",
+    "width": 768
+  },
+  {
+    "page": "commerce",
+    "client": 1024,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 1024,
+    "view": "commerce",
+    "width": 1024
+  },
+  {
+    "page": "commerce",
+    "client": 1280,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 1280,
+    "view": "commerce",
+    "width": 1280
+  },
+  {
+    "page": "commerce",
+    "client": 1440,
+    "h1": [
+      "CornerTech Commerce"
+    ],
+    "scroll": 1440,
+    "view": "commerce",
+    "width": 1440
+  },
+  {
+    "page": "solutions",
+    "client": 319,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 319,
+    "view": "solutions",
+    "width": 319
+  },
+  {
+    "page": "solutions",
+    "client": 320,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 320,
+    "view": "solutions",
+    "width": 320
+  },
+  {
+    "page": "solutions",
+    "client": 390,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 390,
+    "view": "solutions",
+    "width": 390
+  },
+  {
+    "page": "solutions",
+    "client": 430,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 430,
+    "view": "solutions",
+    "width": 430
+  },
+  {
+    "page": "solutions",
+    "client": 768,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 768,
+    "view": "solutions",
+    "width": 768
+  },
+  {
+    "page": "solutions",
+    "client": 1024,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 1024,
+    "view": "solutions",
+    "width": 1024
+  },
+  {
+    "page": "solutions",
+    "client": 1280,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 1280,
+    "view": "solutions",
+    "width": 1280
+  },
+  {
+    "page": "solutions",
+    "client": 1440,
+    "h1": [
+      "Engineering for the way your operation actually works."
+    ],
+    "scroll": 1440,
+    "view": "solutions",
+    "width": 1440
+  }
+]

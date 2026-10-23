@@ -74,19 +74,36 @@ const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 if (env.corneropsFrontendServeEnabled && fs.existsSync(frontendIndexPath)) {
-  app.use(express.static(frontendDistPath, {
+  const staticFrontend = express.static(frontendDistPath, {
     index: false,
+    redirect: false,
     setHeaders: (res, filePath) => {
       if (/[/\\]assets[/\\].*\.[a-f0-9]{8,}\./i.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       else res.setHeader('Cache-Control', 'public, max-age=300');
     },
-  }));
+  });
+  // HTML is served only through the explicit public route map below.
+  app.use((req, res, next) => {
+    if (/\.html?$/i.test(decodeURIComponent(req.path))) return next();
+    return staticFrontend(req, res, next);
+  });
+  const publicPages = Object.freeze({
+    '/': 'index.html',
+    '/products/commerce': 'products/commerce/index.html',
+    '/solutions': 'solutions/index.html',
+  });
   app.get('*', (req, res) => {
-    if (req.path.startsWith('/api') || !req.accepts('html')) {
-      return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
-    }
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return res.sendFile(frontendIndexPath);
+    const route = req.path.replace(/\/+$/, '') || '/';
+    const file = Object.prototype.hasOwnProperty.call(publicPages, route) ? publicPages[route] : null;
+    if (!file || !req.accepts('html') || !['cornertech.ae', 'www.cornertech.ae'].includes(req.hostname)) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    if (!req.accepts('html')) return res.status(404).json({ error: true, message: 'Ruta no encontrada.' });
+    const target = path.join(frontendDistPath, file || '404.html');
+    if (!fs.existsSync(target)) {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+      return res.status(file ? 503 : 404).json({ error: true, message: 'Public page unavailable.' });
+    }
+    return res.status(file ? 200 : 404).sendFile(target);
   });
 } else {
   app.use((req, res) => {

@@ -1,0 +1,8 @@
+{
+  "base": "264588059418cb34fbc9319e922de8dec116522c",
+  "trackedFiles": 1173,
+  "protectedCount": 792,
+  "protectedSha256": "be91c76a09f9bff3a83742bfc9446fe72edc535c095bdb4094e5bb5b697e5e90",
+  "protectedDifferences": [],
+  "method": "Independent git ls-tree + git show at freshly fetched main; sorted path NUL bytes NUL, compared with worktree bytes"
+}

@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<title>DRAFT · NOT APPROVED — CornerTech AI Website 2.1 experience preview</title>
+<!--
+  CT-WEB-V2 Sprint 01 review composition (V2-103/105/106). Docs-only design artifact.
+  Owner: Claude Code. Reviewer: Codex. Approver: Founder. Spec: ../EXPERIENCE_SPEC.md (tokens@1, content@1).
+  Not Sprint 02 implementation. No network requests, trackers, forms, external fonts or external scripts.
+  Brand assets load by relative path when served from the repository root; otherwise system fonts are used.
+  Inline JS only switches between the three compositions, scrolls to home sections and opens the mobile menu.
+-->
+<style>
+@font-face { font-family: Geist; src: url("../../../frontend/public/brand/geist.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: Geist; src: url("../../../frontend/public/brand/geist-medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("../../../frontend/public/brand/geist-mono.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+
+/* tokens@1 (PROPOSED, EXPERIENCE_SPEC §7) */
+:root {
+  --ct-color-bg: #070B12;
+  --ct-color-surface: #111A29;
+  --ct-color-surface-raised: #18243A;
+  --ct-color-text: #F5F7FA;
+  --ct-color-text-muted: #B8C8D9;
+  --ct-color-text-subtle: #8D9DB3;
+  --ct-color-action: #2563EB;
+  --ct-color-action-strong: #1D4ED8;
+  --ct-color-on-action: #F5F7FA;
+  --ct-color-accent: #00D7FF;
+  --ct-color-border-strong: #6B7B93;
+  --ct-color-rule: rgba(184, 200, 217, .14);
+  --ct-color-bg-inverse: #F5F7FA;
+  --ct-color-surface-inverse: #E6EBF2;
+  --ct-color-text-inverse: #070B12;
+  --ct-color-text-inverse-muted: #4A5568;
+  --ct-color-border-inverse: #7A8699;
+  --ct-status-available: #34D399;
+  --ct-status-in-development: #F5B83D;
+  --ct-status-planned: #B8C8D9;
+  --ct-status-research: #A5B4FC;
+  --ct-color-draft: #F5B83D;
+
+  --ct-type-display: clamp(2.5rem, 1.6rem + 4.5vw, 5.5rem);
+  --ct-type-h1: clamp(2.25rem, 1.65rem + 3vw, 4.5rem);
+  --ct-type-h2: clamp(1.75rem, 1.35rem + 2vw, 3.25rem);
+  --ct-type-h3: clamp(1.25rem, 1.15rem + .5vw, 1.625rem);
+  --ct-type-lede: clamp(1.125rem, 1.05rem + .4vw, 1.375rem);
+  --ct-type-small: .875rem;
+  --ct-type-label: .75rem;
+
+  --ct-space-1: .25rem; --ct-space-2: .5rem; --ct-space-3: .75rem; --ct-space-4: 1rem; --ct-space-5: 1.5rem;
+  --ct-space-6: 2rem; --ct-space-7: 3rem; --ct-space-8: 4rem; --ct-space-9: 6rem; --ct-space-10: 8rem;
+  --ct-section: clamp(4rem, 2.5rem + 6vw, 8rem);
+
+  --ct-radius-1: 4px; --ct-radius-2: 8px; --ct-radius-3: 12px;
+  --ct-motion-fast: 150ms; --ct-motion-base: 240ms; --ct-motion-slow: 400ms; --ct-ease: cubic-bezier(.2, 0, 0, 1);
+  --ct-header-h: 64px; --ct-draft-h: 28px;
+
+  --sans: Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --ct-motion-fast: 0ms; --ct-motion-base: 0ms; --ct-motion-slow: 0ms; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--ct-header-h) + var(--ct-draft-h) + 1rem); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: var(--ct-color-bg); color: var(--ct-color-text); font-family: var(--sans); font-size: 1rem; line-height: 1.6; }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img { display: block; max-width: 100%; }
+a { color: inherit; }
+button { font: inherit; }
+[hidden] { display: none !important; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ───────── Review chrome (not part of the design) ───────── */
+.rv-bar { background: #E6EBF2; color: #070B12; font-family: var(--mono); font-size: .75rem; line-height: 1.4; border-bottom: 2px dashed #4A5568; }
+.rv-bar__inner { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: center; padding: .625rem 1rem; max-width: 1440px; margin-inline: auto; }
+.rv-bar__title { font-weight: 400; letter-spacing: .08em; text-transform: uppercase; margin-right: auto; min-width: 0; }
+.rv-bar__title strong { background: #070B12; color: #F5B83D; padding: .125rem .375rem; border-radius: 2px; font-weight: 400; }
+.rv-group { display: flex; flex-wrap: wrap; gap: .375rem; align-items: center; min-width: 0; }
+.rv-group > span { color: #4A5568; }
+.rv-tab, .rv-chip { display: inline-flex; align-items: center; min-height: 32px; padding: .25rem .75rem; border: 1px solid #7A8699; border-radius: 4px; background: #F5F7FA; color: #070B12; text-decoration: none; cursor: pointer; font: inherit; }
+.rv-tab[aria-current="page"], .rv-chip[aria-pressed="true"] { background: #070B12; color: #F5F7FA; border-color: #070B12; }
+.rv-bar :focus-visible { outline: 2px solid #1D4ED8; outline-offset: 2px; }
+body[data-frame="390"] .comp { max-width: 390px; }
+body[data-frame="768"] .comp { max-width: 768px; }
+body[data-frame="1440"] .comp { max-width: 1440px; }
+body:not([data-frame="fit"]) .comp { box-shadow: 0 0 0 1px #4A5568; }
+.rv-note { font-family: var(--mono); font-size: .75rem; line-height: 1.5; color: #070B12; background: #E6EBF2; border: 1px dashed #4A5568; border-radius: 4px; padding: .5rem .75rem; margin-top: var(--ct-space-4); }
+.rv-note b { font-weight: 400; text-transform: uppercase; letter-spacing: .08em; }
+body.rv-notes-off .rv-note, body.rv-notes-off .rv-tag { display: none; }
+.rv-tag { display: inline-block; font-family: var(--mono); font-size: .6875rem; color: #070B12; background: #E6EBF2; border: 1px dashed #4A5568; border-radius: 3px; padding: 0 .375rem; margin-left: .375rem; vertical-align: middle; }
+
+/* ───────── Composition root (container queries let the frame control emulate widths) ───────── */
+.comp { container: comp / inline-size; margin-inline: auto; background: var(--ct-color-bg); min-width: 0; }
+.wrap { --m: 20px; width: 100%; max-width: calc(1280px + 2 * var(--m)); margin-inline: auto; padding-inline: var(--m); }
+@container comp (max-width: 359px) { .wrap { --m: 16px; } }
+@container comp (min-width: 600px) { .wrap { --m: 40px; } }
+@container comp (min-width: 1024px) { .wrap { --m: 64px; } }
+
+.comp :focus-visible { outline: 2px solid var(--ct-color-accent); outline-offset: 2px; border-radius: 2px; }
+.comp .light :focus-visible { outline-color: var(--ct-color-action-strong); }
+.comp [tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
+
+/* Type */
+.eyebrow { font-family: var(--mono); font-size: var(--ct-type-label); line-height: 1.4; letter-spacing: .12em; text-transform: uppercase; color: var(--ct-color-text-subtle); display: flex; align-items: center; gap: .75rem; }
+.eyebrow::before { content: ""; width: 24px; height: 1px; background: currentColor; flex: none; }
+.display { font-size: var(--ct-type-display); line-height: .98; letter-spacing: -.05em; font-weight: 400; overflow-wrap: anywhere; }
+.h1 { font-size: var(--ct-type-h1); line-height: 1.02; letter-spacing: -.045em; font-weight: 400; overflow-wrap: anywhere; }
+.h2 { font-size: var(--ct-type-h2); line-height: 1.08; letter-spacing: -.035em; font-weight: 400; overflow-wrap: anywhere; }
+.h3 { font-size: var(--ct-type-h3); line-height: 1.2; letter-spacing: -.02em; font-weight: 500; }
+.lede { font-size: var(--ct-type-lede); line-height: 1.5; letter-spacing: -.01em; color: var(--ct-color-text-muted); max-width: 40ch; }
+.body { color: var(--ct-color-text-muted); max-width: 68ch; }
+.small { font-size: var(--ct-type-small); line-height: 1.5; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--ct-color-text-muted); }
+.subtle { color: var(--ct-color-text-subtle); }
+
+/* Light sections */
+.light { background: var(--ct-color-bg-inverse); color: var(--ct-color-text-inverse); }
+.light .lede, .light .body, .light .muted { color: var(--ct-color-text-inverse-muted); }
+.light .eyebrow, .light .subtle { color: var(--ct-color-text-inverse-muted); }
+.surface { background: var(--ct-color-surface); }
+
+.section { padding-block: var(--ct-section); border-top: 1px solid var(--ct-color-rule); }
+.light.section { border-top-color: transparent; }
+.section-head { display: grid; gap: var(--ct-space-5); margin-bottom: var(--ct-space-7); }
+@container comp (min-width: 1024px) {
+  .section-head--split { grid-template-columns: 5fr 7fr; column-gap: 24px; align-items: end; }
+  .section-head--split .eyebrow { grid-column: 1 / -1; }
+}
+
+/* Buttons and links */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .625rem; min-height: 48px; padding: .75rem 1.25rem; border-radius: var(--ct-radius-1); border: 1px solid var(--ct-color-border-strong); background: transparent; color: var(--ct-color-text); font-family: var(--sans); font-size: 1rem; font-weight: 500; line-height: 1.3; text-decoration: none; cursor: pointer; text-align: center; transition: background-color var(--ct-motion-fast) var(--ct-ease), border-color var(--ct-motion-fast) var(--ct-ease); }
+.btn:hover { border-color: var(--ct-color-text-muted); background: rgba(245, 247, 250, .04); }
+.btn-primary { background: var(--ct-color-action); border-color: var(--ct-color-action); color: var(--ct-color-on-action); }
+.btn-primary:hover { background: var(--ct-color-action-strong); border-color: var(--ct-color-action-strong); }
+.light .btn { color: var(--ct-color-text-inverse); border-color: var(--ct-color-border-inverse); }
+.light .btn:hover { background: rgba(7, 11, 18, .04); border-color: var(--ct-color-text-inverse-muted); }
+.light .btn-primary { color: var(--ct-color-on-action); border-color: var(--ct-color-action); background: var(--ct-color-action); }
+.btn-sm { min-height: 44px; padding: .5rem 1rem; font-size: .9375rem; }
+.btn .arr { font-family: var(--mono); }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: center; }
+.link-arrow { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; color: var(--ct-color-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .3em; font-weight: 500; }
+.link-arrow:hover { text-decoration-thickness: 2px; }
+.light .link-arrow { color: var(--ct-color-action-strong); }
+
+/* Status label: text + shape; tint secondary */
+.status { display: inline-flex; align-items: center; gap: .5rem; font-family: var(--mono); font-size: var(--ct-type-label); line-height: 1.4; letter-spacing: .08em; text-transform: uppercase; color: inherit; padding: .25rem .625rem; border: 1px solid var(--ct-color-border-strong); border-radius: 999px; white-space: nowrap; }
+.light .status { border-color: var(--ct-color-border-inverse); }
+.status i { width: 10px; height: 10px; flex: none; display: inline-block; }
+.status--available i { background: var(--ct-status-available); border-radius: 1px; }
+.status--dev i { border-radius: 50%; border: 1.5px solid var(--ct-status-in-development); background: linear-gradient(90deg, var(--ct-status-in-development) 50%, transparent 50%); }
+.status--planned i { border-radius: 50%; border: 1.5px solid var(--ct-status-planned); }
+.status--research i { border-radius: 50%; border: 1.5px dashed var(--ct-status-research); }
+.light .status--available i { background: #047857; }
+.light .status--dev i { border-color: #92400E; background: linear-gradient(90deg, #92400E 50%, transparent 50%); }
+.light .status--planned i { border-color: #4A5568; }
+.status--lg { font-size: .8125rem; padding: .375rem .875rem; white-space: normal; border-radius: var(--ct-radius-2); }
+
+/* ───────── Header ───────── */
+.skip { position: absolute; left: 1rem; top: -100px; z-index: 50; background: var(--ct-color-text); color: var(--ct-color-bg); padding: .75rem 1rem; border-radius: var(--ct-radius-1); font-weight: 500; }
+.skip:focus { top: .5rem; }
+.site-header { position: sticky; top: 0; z-index: 20; background: rgba(7, 11, 18, .96); border-bottom: 1px solid var(--ct-color-rule); }
+@supports (backdrop-filter: blur(1px)) { .site-header { background: rgba(7, 11, 18, .88); backdrop-filter: blur(14px); } }
+.draft-strip { min-height: var(--ct-draft-h); background: var(--ct-color-draft); color: var(--ct-color-bg); font-family: var(--mono); font-size: .75rem; line-height: 1.3; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; }
+.draft-strip .wrap { display: flex; gap: .25rem 1rem; flex-wrap: wrap; padding-block: .25rem; }
+.draft-strip .long { display: none; }
+@container comp (min-width: 600px) { .draft-strip .long { display: inline; } }
+.bar { height: var(--ct-header-h); display: flex; align-items: center; gap: 1rem; }
+.brand { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; text-decoration: none; color: var(--ct-color-text); font-size: 1.0625rem; font-weight: 500; letter-spacing: -.05em; white-space: nowrap; margin-right: auto; }
+.brand img { width: 32px; height: 26px; object-fit: contain; }
+.brand span span { color: #488BDF; } /* V1 wordmark colour retained; logotype */
+.nav-inline { display: none; gap: .25rem; align-items: center; }
+.nav-inline a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 .75rem; color: var(--ct-color-text-muted); text-decoration: none; font-size: .9375rem; border-radius: var(--ct-radius-1); }
+.nav-inline a:hover { color: var(--ct-color-text); }
+.nav-inline a[aria-current="page"] { color: var(--ct-color-text); box-shadow: inset 0 -2px 0 var(--ct-color-accent); border-radius: 0; }
+.header-cta { display: none; }
+.menu-toggle { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; min-width: 44px; padding: 0 .875rem; background: transparent; color: var(--ct-color-text); border: 1px solid var(--ct-color-border-strong); border-radius: var(--ct-radius-1); cursor: pointer; font-size: .9375rem; }
+.menu-toggle .bars { width: 16px; height: 10px; border-block: 1.5px solid currentColor; position: relative; }
+.menu-toggle .bars::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px solid currentColor; transform: translateY(-50%); }
+.menu-panel { background: var(--ct-color-surface); border-bottom: 1px solid var(--ct-color-rule); }
+.menu-panel ul { display: grid; padding-block: .5rem 1rem; }
+.menu-panel a:not(.btn) { display: flex; align-items: center; min-height: 48px; color: var(--ct-color-text); text-decoration: none; border-bottom: 1px solid var(--ct-color-rule); font-size: 1.0625rem; }
+.menu-panel a[aria-current="page"]::after { content: "Current page"; margin-left: auto; font-family: var(--mono); font-size: .75rem; color: var(--ct-color-text-subtle); text-transform: uppercase; letter-spacing: .08em; }
+.menu-panel .btn { margin-top: 1rem; width: 100%; }
+@container comp (min-width: 600px) { .header-cta { display: inline-flex; } .menu-panel .btn { display: none; } }
+@container comp (min-width: 1024px) { .nav-inline { display: flex; } .menu-toggle { display: none; } .menu-panel { display: none !important; } }
+
+/* ───────── Hero ───────── */
+.hero { position: relative; padding-block: clamp(3rem, 2rem + 5vw, 7rem) var(--ct-section); }
+.hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(to right, var(--ct-color-rule) 1px, transparent 1px); background-size: calc((min(100%, 1280px)) / 4) 100%; background-position: center top; opacity: .55; mask-image: linear-gradient(to bottom, #000 20%, transparent 95%); -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent 95%); }
+@container comp (min-width: 1024px) { .hero::before { background-size: calc((min(100%, 1280px)) / 12) 100%; } }
+.hero-grid { position: relative; display: grid; gap: var(--ct-space-7); }
+.hero-copy { display: grid; gap: var(--ct-space-5); align-content: start; min-width: 0; }
+.hero-copy .lede { max-width: 36ch; }
+.hero-copy .actions { margin-top: var(--ct-space-2); }
+@container comp (min-width: 1024px) {
+  .hero-grid { grid-template-columns: 7fr 5fr; column-gap: 48px; align-items: end; }
+}
+
+.flagship { background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-top: 2px solid var(--ct-color-accent); border-radius: var(--ct-radius-2); padding: var(--ct-space-5); display: grid; gap: var(--ct-space-4); min-width: 0; }
+.flagship-name { font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem); letter-spacing: -.035em; line-height: 1.1; }
+.flagship-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+.flagship-list { display: grid; border-top: 1px solid var(--ct-color-rule); }
+.flagship-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem .75rem; padding-block: .625rem; border-bottom: 1px solid var(--ct-color-rule); font-size: var(--ct-type-small); color: var(--ct-color-text-muted); }
+
+/* ───────── Cards / grids ───────── */
+.trio { display: grid; gap: 16px; }
+@container comp (min-width: 600px) { .trio { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } .trio > :last-child { grid-column: 1 / -1; } }
+@container comp (min-width: 1024px) { .trio { grid-template-columns: repeat(3, minmax(0, 1fr)); } .trio > :last-child { grid-column: auto; } }
+.card { background: #fff; border: 1px solid #CBD3DE; border-radius: var(--ct-radius-2); padding: var(--ct-space-5); display: grid; gap: var(--ct-space-4); align-content: start; min-width: 0; }
+.card-top { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.idx { font-family: var(--mono); font-size: var(--ct-type-label); letter-spacing: .12em; color: var(--ct-color-text-inverse-muted); }
+.after-grid { margin-top: var(--ct-space-6); }
+
+/* ───────── Synthetic illustration ───────── */
+.illus { margin-top: var(--ct-space-7); background: var(--ct-color-surface-raised); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-3); padding: var(--ct-space-4); min-width: 0; }
+@container comp (min-width: 600px) { .illus { padding: var(--ct-space-5); } }
+.illus-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; align-items: center; padding-bottom: var(--ct-space-4); margin-bottom: var(--ct-space-4); border-bottom: 1px solid var(--ct-color-rule); }
+.illus-caption { font-family: var(--mono); font-size: .8125rem; letter-spacing: .06em; color: var(--ct-color-text); display: inline-flex; align-items: center; gap: .5rem; }
+.illus-caption::before { content: ""; width: 8px; height: 8px; border: 1.5px solid var(--ct-color-accent); flex: none; }
+.illus-meta { font-family: var(--mono); font-size: .75rem; color: var(--ct-color-text-subtle); }
+.stages { display: grid; gap: 12px; counter-reset: stage; }
+@container comp (min-width: 600px) { .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container comp (min-width: 1024px) { .stages { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stage { background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-2); padding: var(--ct-space-4); display: grid; gap: .75rem; align-content: start; min-width: 0; }
+.stage-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
+.stage-name { font-family: var(--mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ct-color-text-subtle); }
+.stage .status { font-size: .6875rem; padding: .125rem .5rem; }
+.bubble { background: var(--ct-color-surface-raised); border-radius: 10px 10px 10px 2px; padding: .625rem .75rem; font-size: .9375rem; color: var(--ct-color-text); }
+.bubble small { display: block; font-family: var(--mono); font-size: .6875rem; color: var(--ct-color-text-subtle); margin-bottom: .25rem; }
+.rec-id { font-family: var(--mono); font-size: .9375rem; color: var(--ct-color-accent); overflow-wrap: anywhere; }
+.kv { display: grid; gap: .375rem; font-size: .875rem; }
+.kv div { display: flex; justify-content: space-between; gap: .75rem; border-bottom: 1px dashed var(--ct-color-rule); padding-bottom: .375rem; }
+.kv dt { color: var(--ct-color-text-subtle); font-family: var(--mono); font-size: .75rem; }
+.kv dd { text-align: right; color: var(--ct-color-text); }
+.checks { display: grid; gap: .375rem; font-size: .875rem; color: var(--ct-color-text-muted); }
+.checks li { display: flex; gap: .5rem; align-items: baseline; }
+.checks .ok::before { content: "✓"; font-family: var(--mono); color: var(--ct-color-text); }
+.checks .flag::before { content: "!"; font-family: var(--mono); color: var(--ct-color-bg); background: var(--ct-status-in-development); width: 1.1em; text-align: center; border-radius: 2px; }
+.events { display: grid; gap: .5rem; font-family: var(--mono); font-size: .75rem; color: var(--ct-color-text-muted); }
+.events li { display: grid; grid-template-columns: auto 1fr; gap: .625rem; }
+.events time { color: var(--ct-color-text-subtle); }
+.events b { font-weight: 400; color: var(--ct-color-text); }
+.queue-item { border: 1px solid var(--ct-color-border-strong); border-left: 3px solid var(--ct-status-in-development); border-radius: var(--ct-radius-1); padding: .625rem .75rem; display: grid; gap: .25rem; font-size: .875rem; }
+.queue-item .rec-id { font-size: .8125rem; }
+.queue-item em { font-style: normal; font-family: var(--mono); font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ct-color-text); }
+.planned-row { display: grid; gap: 12px; margin-top: 12px; }
+@container comp (min-width: 600px) { .planned-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.planned { border: 1px dashed var(--ct-color-border-strong); border-radius: var(--ct-radius-2); padding: .75rem var(--ct-space-4); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; color: var(--ct-color-text-muted); font-size: .9375rem; }
+.illus-foot { margin-top: var(--ct-space-4); font-size: .8125rem; color: var(--ct-color-text-subtle); }
+@media (prefers-reduced-motion: no-preference) {
+  .view:not([hidden]) .stage { animation: stage-in var(--ct-motion-slow) var(--ct-ease) both; }
+  .view:not([hidden]) .stage:nth-child(2) { animation-delay: 60ms; }
+  .view:not([hidden]) .stage:nth-child(3) { animation-delay: 120ms; }
+  .view:not([hidden]) .stage:nth-child(4) { animation-delay: 180ms; }
+}
+@keyframes stage-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ───────── Process / principles / lists ───────── */
+.steps { display: grid; gap: 0; counter-reset: step; border-top: 1px solid var(--ct-color-rule); }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 3rem 1fr; gap: .25rem 1rem; padding-block: var(--ct-space-5); border-bottom: 1px solid var(--ct-color-rule); }
+.steps li::before { content: counter(step, decimal-leading-zero); font-family: var(--mono); font-size: .75rem; color: var(--ct-color-accent); padding-top: .4rem; grid-row: span 2; }
+.steps h3 { grid-column: 2; }
+.steps p { grid-column: 2; color: var(--ct-color-text-muted); }
+.light .steps, .light .steps li { border-color: #CBD3DE; }
+.light .steps li::before { color: var(--ct-color-action-strong); }
+@container comp (min-width: 600px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; } }
+@container comp (min-width: 1024px) {
+  .steps { grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 0; }
+  .steps li { grid-template-columns: 1fr; border-bottom: 0; border-top: 1px solid var(--ct-color-border-strong); padding-top: var(--ct-space-4); }
+  .steps li::before { grid-row: auto; padding: 0 0 .5rem; }
+  .steps h3, .steps p { grid-column: 1; }
+  .light .steps li { border-top-color: var(--ct-color-border-inverse); }
+}
+.principles { display: grid; gap: 0; border-top: 1px solid #CBD3DE; }
+.principles li { padding-block: var(--ct-space-5); border-bottom: 1px solid #CBD3DE; display: grid; gap: .5rem; }
+@container comp (min-width: 600px) { .principles { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; } }
+.tags { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tags li { border: 1px solid var(--ct-color-border-strong); border-radius: var(--ct-radius-1); padding: .5rem .875rem; color: var(--ct-color-text); font-size: .9375rem; }
+.split { display: grid; gap: var(--ct-space-6); }
+@container comp (min-width: 1024px) { .split { grid-template-columns: 5fr 7fr; column-gap: 48px; align-items: start; } }
+
+/* Company facts */
+.facts { display: grid; border-top: 1px solid #CBD3DE; }
+.facts div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; padding-block: var(--ct-space-4); border-bottom: 1px solid #CBD3DE; align-items: center; }
+.facts dt { font-family: var(--mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ct-color-text-inverse-muted); }
+.facts dd { font-size: 1.0625rem; }
+
+/* Contact */
+.intents { display: grid; gap: 16px; }
+@container comp (min-width: 768px) { .intents { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } }
+.intent { background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-2); padding: var(--ct-space-6) var(--ct-space-5); display: grid; gap: var(--ct-space-4); align-content: start; min-width: 0; }
+.intent--project { border-top: 2px solid var(--ct-color-action); }
+.intent--partner { border-top: 2px solid var(--ct-color-accent); }
+.channels { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: var(--ct-space-2); }
+.contact-note { margin-top: var(--ct-space-6); color: var(--ct-color-text-subtle); font-size: var(--ct-type-small); max-width: 68ch; }
+
+/* Commerce page specifics */
+.glance { background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-2); padding: var(--ct-space-5); min-width: 0; }
+.glance dl { display: grid; }
+.glance div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; padding-block: .75rem; border-bottom: 1px solid var(--ct-color-rule); }
+.glance div:last-child { border-bottom: 0; }
+.glance dt { font-family: var(--mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ct-color-text-subtle); }
+.glance dd { color: var(--ct-color-text); }
+.problems { display: grid; gap: 16px; counter-reset: p; }
+@container comp (min-width: 768px) { .problems { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } }
+.problems li { counter-increment: p; border-top: 1px solid var(--ct-color-border-strong); padding-top: var(--ct-space-4); font-size: var(--ct-type-lede); line-height: 1.45; letter-spacing: -.01em; }
+.problems li::before { content: counter(p, decimal-leading-zero); display: block; font-family: var(--mono); font-size: .75rem; color: var(--ct-color-accent); margin-bottom: .5rem; letter-spacing: .1em; }
+.matrix { width: 100%; border-collapse: collapse; }
+.matrix th, .matrix td { text-align: left; vertical-align: top; padding: var(--ct-space-4) 0; border-bottom: 1px solid var(--ct-color-rule); }
+.matrix thead th { font-family: var(--mono); font-size: .75rem; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--ct-color-text-subtle); border-bottom-color: var(--ct-color-border-strong); }
+.matrix tbody th { font-weight: 500; padding-right: 1rem; }
+.matrix td { color: var(--ct-color-text-muted); }
+.matrix td.st { white-space: nowrap; padding-right: 1rem; }
+@container comp (max-width: 767px) {
+  .matrix thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .matrix, .matrix tbody, .matrix tr, .matrix th, .matrix td { display: block; }
+  .matrix tr { padding-block: var(--ct-space-4); border-bottom: 1px solid var(--ct-color-rule); display: grid; gap: .5rem; }
+  .matrix th, .matrix td { padding: 0; border: 0; }
+}
+.band { background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-3); padding: clamp(1.5rem, 1rem + 3vw, 4rem); display: grid; gap: var(--ct-space-5); }
+@container comp (min-width: 1024px) { .band { grid-template-columns: 7fr 5fr; align-items: end; column-gap: 48px; } .band .actions { justify-content: flex-end; } }
+
+/* Solutions specifics */
+.svc { display: grid; gap: var(--ct-space-5); padding-block: var(--ct-space-7); border-top: 1px solid #CBD3DE; }
+.svc:last-child { border-bottom: 1px solid #CBD3DE; }
+@container comp (min-width: 1024px) { .svc { grid-template-columns: 1fr 4fr 6fr; column-gap: 24px; } }
+.svc-scope { display: grid; gap: .5rem; }
+.svc-scope li { display: flex; gap: .75rem; align-items: baseline; }
+.svc-scope li::before { content: "—"; color: var(--ct-color-action-strong); font-family: var(--mono); }
+.svc-head { display: grid; gap: .75rem; align-content: start; }
+.phases { display: grid; gap: 12px; counter-reset: ph; }
+@container comp (min-width: 768px) { .phases { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.phases li { counter-increment: ph; background: var(--ct-color-surface); border: 1px solid var(--ct-color-rule); border-radius: var(--ct-radius-2); padding: var(--ct-space-4); display: grid; gap: .5rem; align-content: start; min-width: 0; }
+.phases li::before { content: "Phase " counter(ph); font-family: var(--mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ct-color-accent); }
+.phases .verb { font-family: var(--mono); font-size: .75rem; color: var(--ct-color-text-subtle); text-transform: uppercase; letter-spacing: .08em; }
+.illus-label { display: inline-flex; gap: .5rem; align-items: center; font-family: var(--mono); font-size: .8125rem; letter-spacing: .04em; color: var(--ct-color-text); border: 1px dashed var(--ct-color-border-strong); border-radius: var(--ct-radius-1); padding: .375rem .75rem; }
+.promise { display: grid; gap: 24px; }
+@container comp (min-width: 768px) { .promise { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.promise > div { border-top: 2px solid var(--ct-color-text-inverse); padding-top: var(--ct-space-4); display: grid; gap: var(--ct-space-4); align-content: start; }
+.promise > div.wont { border-top-color: var(--ct-color-border-inverse); }
+.promise ul { display: grid; gap: .625rem; }
+.promise li { display: flex; gap: .75rem; align-items: baseline; }
+.promise .will li::before { content: "✓"; font-family: var(--mono); color: var(--ct-color-action-strong); }
+.promise .wont li::before { content: "✕"; font-family: var(--mono); color: var(--ct-color-text-inverse-muted); }
+.faq { display: grid; border-top: 1px solid var(--ct-color-rule); }
+.faq div { display: grid; gap: .5rem; padding-block: var(--ct-space-5); border-bottom: 1px solid var(--ct-color-rule); }
+@container comp (min-width: 1024px) { .faq div { grid-template-columns: 5fr 7fr; column-gap: 48px; } }
+.faq dt { font-size: var(--ct-type-h3); line-height: 1.25; letter-spacing: -.02em; }
+.faq dd { color: var(--ct-color-text-muted); }
+
+/* Footer */
+.site-footer { border-top: 1px solid var(--ct-color-rule); padding-block: var(--ct-space-8) var(--ct-space-6); background: var(--ct-color-bg); }
+.footer-grid { display: grid; gap: var(--ct-space-6); }
+@container comp (min-width: 1024px) { .footer-grid { grid-template-columns: 6fr 3fr 3fr; column-gap: 24px; } }
+.footer-nav ul { display: grid; gap: .5rem; }
+.footer-nav a { display: inline-flex; align-items: center; min-height: 32px; color: var(--ct-color-text-muted); text-decoration: none; }
+.footer-nav a:hover { color: var(--ct-color-text); text-decoration: underline; }
+.footer-legal { margin-top: var(--ct-space-7); padding-top: var(--ct-space-5); border-top: 1px solid var(--ct-color-rule); display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: space-between; color: var(--ct-color-text-subtle); font-size: var(--ct-type-small); }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body data-frame="fit">
+
+<div class="rv-bar" role="region" aria-label="Review controls (not part of the design)">
+  <div class="rv-bar__inner">
+    <p class="rv-bar__title"><strong>DRAFT · NOT APPROVED</strong> CT-WEB-V2 S01 review composition — not part of the design</p>
+    <nav class="rv-group" aria-label="Composition">
+      <span>Page</span>
+      <a class="rv-tab" href="#home" data-tab="home">Home</a>
+      <a class="rv-tab" href="#commerce" data-tab="commerce">Commerce</a>
+      <a class="rv-tab" href="#solutions" data-tab="solutions">Solutions</a>
+    </nav>
+    <div class="rv-group" role="group" aria-label="Frame width">
+      <span>Frame</span>
+      <button type="button" class="rv-chip" data-frame="fit" aria-pressed="true">Fit</button>
+      <button type="button" class="rv-chip" data-frame="390" aria-pressed="false">390</button>
+      <button type="button" class="rv-chip" data-frame="768" aria-pressed="false">768</button>
+      <button type="button" class="rv-chip" data-frame="1440" aria-pressed="false">1440</button>
+    </div>
+    <div class="rv-group">
+      <button type="button" class="rv-chip" id="rv-notes" aria-pressed="true">Review notes</button>
+    </div>
+  </div>
+</div>
+
+<div class="comp">
+
+<!-- ═════════════════════════════ HOME ═════════════════════════════ -->
+<div class="view" data-view="home" data-title="CornerTech AI — Software built for real operations">
+  <a class="skip" href="#main-home">Skip to content</a>
+  <header class="site-header">
+    <div class="draft-strip"><div class="wrap"><span>Draft · Not approved</span><span class="long">Proposed copy and design for Founder review · Home</span></div></div>
+    <div class="wrap bar">
+      <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+      <nav class="nav-inline" aria-label="Primary">
+        <a href="#commerce" data-goto="commerce">Commerce</a>
+        <a href="#solutions" data-goto="solutions">Solutions</a>
+        <a href="#home" data-goto="home:company">Company</a>
+        <a href="#home" data-goto="home:contact">Contact</a>
+      </nav>
+      <a class="btn btn-sm header-cta" href="#home" data-goto="home:contact">Discuss a project</a>
+      <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu-home"><span class="bars" aria-hidden="true"></span><span class="lbl">Menu</span></button>
+    </div>
+  </header>
+  <nav class="menu-panel" id="menu-home" aria-label="Primary" hidden>
+    <ul class="wrap">
+      <li><a href="#commerce" data-goto="commerce">Commerce</a></li>
+      <li><a href="#solutions" data-goto="solutions">Solutions</a></li>
+      <li><a href="#home" data-goto="home:company">Company</a></li>
+      <li><a href="#home" data-goto="home:contact">Contact</a></li>
+      <li><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-home" tabindex="-1">
+    <section class="hero" aria-labelledby="h1-home">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Software engineering · UAE &amp; GCC</p>
+          <h1 class="display" id="h1-home" tabindex="-1">Software built for real operations.</h1>
+          <p class="lede">CornerTech AI designs, builds and integrates the systems operators run on — custom software, AI automation and connected tools, engineered around how your work actually happens.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a>
+          </div>
+        </div>
+        <aside class="flagship" aria-labelledby="fl-home-name">
+          <div class="flagship-row">
+            <p class="eyebrow">Flagship product</p>
+            <span class="status status--dev"><i aria-hidden="true"></i>In development</span>
+          </div>
+          <p class="flagship-name" id="fl-home-name">CornerTech Commerce</p>
+          <p class="muted">An operating layer for commerce orders and the exceptions around them. Not yet available.</p>
+          <ul class="flagship-list">
+            <li><span>Order intake and validation</span><span class="mono">In development</span></li>
+            <li><span>Order event history</span><span class="mono">In development</span></li>
+            <li><span>Payments and storefront</span><span class="mono">Planned</span></li>
+          </ul>
+          <a class="link-arrow" href="#commerce" data-goto="commerce">See what we're building <span aria-hidden="true">→</span></a>
+          <p class="rv-note"><b>Review note</b> · Rows in this card are capabilities: each renders only after its exact text and status are approved (C07–C10). If none are approved, the list is omitted and the card keeps name, status and link.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section light" aria-labelledby="h2-services">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Available now</p>
+          <h2 class="h2" id="h2-services">Three ways we work with operators.</h2>
+          <p class="body">Engineering services you can start today. Every engagement is scoped after we understand how your operation runs.</p>
+        </div>
+        <ul class="trio">
+          <li class="card">
+            <div class="card-top"><span class="idx">01</span><span class="status status--available"><i aria-hidden="true"></i>Available</span></div>
+            <h3 class="h3">Custom Engineering</h3>
+            <p class="body">Focused software for the workflow no product fits: operational consoles, internal tools and customer-facing ordering.</p>
+          </li>
+          <li class="card">
+            <div class="card-top"><span class="idx">02</span><span class="status status--available"><i aria-hidden="true"></i>Available</span></div>
+            <h3 class="h3">AI Automation</h3>
+            <p class="body">AI that reads requests and prepares the routine steps, with consequential actions kept under clear human control.</p>
+          </li>
+          <li class="card">
+            <div class="card-top"><span class="idx">03</span><span class="status status--available"><i aria-hidden="true"></i>Available</span></div>
+            <h3 class="h3">Systems Integration</h3>
+            <p class="body">Connect the tools your team already uses so orders, records and context move without re-typing. Scoped per engagement.</p>
+          </li>
+        </ul>
+        <p class="after-grid"><a class="link-arrow" href="#solutions" data-goto="solutions">How engagements work <span aria-hidden="true">→</span></a></p>
+      </div>
+    </section>
+
+    <section class="section surface" aria-labelledby="h2-commerce-showcase">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Flagship · In development</p>
+          <h2 class="h2" id="h2-commerce-showcase">CornerTech Commerce: one place for orders and the exceptions around them.</h2>
+          <div>
+            <p class="body">Many operators take orders through chat, calls and spreadsheets. We're building CornerTech Commerce to bring that intake into one structured record, so a team can see what was ordered, what is waiting and what needs a person. It is in development and not yet available.</p>
+            <p style="margin-top:1rem"><a class="link-arrow" href="#commerce" data-goto="commerce">See what we're building <span aria-hidden="true">→</span></a></p>
+          </div>
+        </div>
+
+        <figure class="illus" role="img" aria-label="Illustration with synthetic data: a fictional chat request becomes a structured order record, its changes are recorded as events, and one order is flagged in a queue for a person to review. Each stage is labelled in development. Payments and storefront are labelled planned.">
+          <div class="illus-head">
+            <span class="illus-caption">Illustration · synthetic data</span>
+            <span class="illus-meta">Fictional names and IDs · not a running system</span>
+          </div>
+          <ol class="stages">
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">01 Request</span><span class="status status--dev"><i></i>In development</span></div>
+              <p class="bubble"><small>Sample Customer · chat</small>Two large trays for Thursday, same address as last time.</p>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">02 Order record</span><span class="status status--dev"><i></i>In development</span></div>
+              <p class="rec-id">ORD-DEMO-0042</p>
+              <ul class="checks"><li class="ok">Customer matched</li><li class="ok">Items recognized</li><li class="flag">Address to confirm</li></ul>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">03 Event history</span><span class="status status--dev"><i></i>In development</span></div>
+              <ol class="events"><li><time>09:14</time><span><b>received</b> from chat</span></li><li><time>09:14</time><span><b>validated</b> 2 of 3 checks</span></li><li><time>09:15</time><span><b>exception</b> address</span></li></ol>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">04 Exceptions</span><span class="status status--dev"><i></i>In development</span></div>
+              <div class="queue-item"><span class="rec-id">ORD-DEMO-0042</span><span>Address to confirm</span><em>Needs a person</em></div>
+            </li>
+          </ol>
+          <div class="planned-row">
+            <div class="planned"><span>Payment status</span><span class="status status--planned"><i></i>Planned</span></div>
+            <div class="planned"><span>Storefront</span><span class="status status--planned"><i></i>Planned</span></div>
+          </div>
+        </figure>
+        <p class="rv-note"><b>Review note</b> · Coded HTML illustration, no screenshot, no provider logos, no live or connected indicators, no amounts. One-time stage reveal ≤ 400 ms, off under reduced motion. At &lt; 600 px stages stack vertically (reflow, not scaling).</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-process">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">How we work</p>
+          <h2 class="h2" id="h2-process">From the real bottleneck to working software.</h2>
+          <p class="body">The same five steps on every engagement, whatever we build.</p>
+        </div>
+        <ol class="steps">
+          <li><h3 class="h3">Understand</h3><p>Find the bottleneck and the people, tools and decisions around it.</p></li>
+          <li><h3 class="h3">Design</h3><p>Define the workflow, the experience and what done looks like.</p></li>
+          <li><h3 class="h3">Build</h3><p>Ship a focused system your team can test with real work.</p></li>
+          <li><h3 class="h3">Integrate</h3><p>Connect the stack, agree the controls, support the handover.</p></li>
+          <li><h3 class="h3">Improve</h3><p>Review what happens in practice and refine.</p></li>
+        </ol>
+        <p class="rv-note"><b>Review note</b> · D4 permission-independent fallback: process and principles replace the Tres Leches case. No client name, screenshot or outcome appears on initial pages.</p>
+      </div>
+    </section>
+
+    <section class="section light" aria-labelledby="h2-principles">
+      <div class="wrap split">
+        <div class="section-head" style="margin-bottom:0">
+          <p class="eyebrow">Principles</p>
+          <h2 class="h2" id="h2-principles">What we hold ourselves to.</h2>
+        </div>
+        <ul class="principles">
+          <li><h3 class="h3">Systems that ship</h3><p class="body">Working software, usable workflows and a clear handover are the deliverables.</p></li>
+          <li><h3 class="h3">AI with a clear role</h3><p class="body">Routine work is accelerated; consequential actions stay under human control.</p></li>
+          <li><h3 class="h3">Your stack, connected</h3><p class="body">Build on the tools your team already uses.</p></li>
+          <li><h3 class="h3">Status in plain words</h3><p class="body">We say what is available, what is in development and what is planned.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-segments">
+      <div class="wrap split">
+        <div class="section-head" style="margin-bottom:0">
+          <p class="eyebrow">Who we build for</p>
+          <h2 class="h2" id="h2-segments">Built with operators in mind.</h2>
+        </div>
+        <div>
+          <p class="body" style="margin-bottom:1.5rem">Our focus is operations-heavy businesses in the UAE and GCC, including:</p>
+          <ul class="tags">
+            <li>Logistics &amp; trade</li><li>Distribution &amp; commerce</li><li>Hospitality &amp; food</li>
+            <li>Construction &amp; infrastructure</li><li>Industry &amp; manufacturing</li><li>Energy &amp; field operations</li>
+          </ul>
+          <p class="rv-note"><b>Review note</b> · Target segments (C16), not a customer list. Tags are not interactive.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="company-home" aria-labelledby="h2-company">
+      <div class="wrap split">
+        <div class="section-head" style="margin-bottom:0">
+          <p class="eyebrow">Company</p>
+          <h2 class="h2" id="h2-company" tabindex="-1">An engineering company, focused on the Gulf.</h2>
+        </div>
+        <div>
+          <p class="lede" style="max-width:52ch">CornerTech AI is a software engineering company serving operators in the UAE and GCC. We build custom systems and AI automation for clients, and we're building CornerTech Commerce as our own product.</p>
+          <dl class="facts" style="margin-top:2rem">
+            <div><dt>Focus</dt><dd>UAE &amp; GCC operators</dd></div>
+            <div><dt>Services</dt><dd><span class="status status--available"><i aria-hidden="true"></i>Available now</span></dd></div>
+            <div><dt>Flagship</dt><dd><span class="status status--dev"><i aria-hidden="true"></i>In development</span></dd></div>
+          </dl>
+          <p class="rv-note"><b>Review note</b> · <code>/#company</code> target. No team size, office, legal entity, certification or partner claims until the Founder supplies evidence (C18).</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact-home" aria-labelledby="h2-contact">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Contact</p>
+          <h2 class="h2" id="h2-contact" tabindex="-1">Choose the conversation you want to have.</h2>
+        </div>
+        <div class="intents">
+          <article class="intent intent--project" aria-labelledby="h3-project">
+            <h3 class="h3" id="h3-project">Discuss a project</h3>
+            <p class="body">Tell us what you're running today and where it breaks. We'll reply to scope a first conversation.</p>
+            <div class="channels">
+              <button type="button" class="btn btn-primary" data-inert>Email <span class="arr" aria-hidden="true">↗</span></button>
+              <button type="button" class="btn" data-inert>WhatsApp <span class="arr" aria-hidden="true">↗</span></button>
+            </div>
+          </article>
+          <article class="intent intent--partner" aria-labelledby="h3-partner">
+            <h3 class="h3" id="h3-partner">Become a design partner</h3>
+            <p class="body">Help shape CornerTech Commerce. Tell us how your orders flow today. This is a conversation, not a sign-up: it does not provide product access, pricing or a release date.</p>
+            <div class="channels">
+              <button type="button" class="btn" data-inert>Email <span class="arr" aria-hidden="true">↗</span></button>
+              <button type="button" class="btn" data-inert>WhatsApp <span class="arr" aria-hidden="true">↗</span></button>
+            </div>
+          </article>
+        </div>
+        <p class="contact-note">This page has no enquiry form or first-party analytics. Email and WhatsApp have their own privacy practices. A message is sent only if you choose to send it.</p>
+        <p class="rv-note"><b>Review note</b> · <code>/#contact</code> target. Channel buttons are inert here; in build they resolve from <code>siteConfig</code> with D3 intent prefill (subject / message text only, no visitor data) and open in a new tab. "Book a call" appears only when a verified booking URL exists (currently not configured). No real address or number is shown in this artifact.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+          <p class="muted" style="margin-top:1rem;max-width:44ch">CornerTech AI — software engineering for operators in the UAE and GCC.</p>
+          <p class="subtle small" style="margin-top:.5rem">CornerTech Commerce is in development. Engineering services are available.</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer">
+          <ul>
+            <li><a href="#commerce" data-goto="commerce">Commerce</a></li>
+            <li><a href="#solutions" data-goto="solutions">Solutions</a></li>
+            <li><a href="#home" data-goto="home:company">Company</a></li>
+            <li><a href="#home" data-goto="home:contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-legal"><span>© 2026 CornerTech AI</span><span class="rv-tag">Privacy / Terms omitted until real approved URLs exist</span></div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═════════════════════════════ COMMERCE ═════════════════════════════ -->
+<div class="view" data-view="commerce" data-title="CornerTech Commerce — in development · CornerTech AI" hidden>
+  <a class="skip" href="#main-commerce">Skip to content</a>
+  <header class="site-header">
+    <div class="draft-strip"><div class="wrap"><span>Draft · Not approved</span><span class="long">Commerce status: In development — proposed copy for Founder review</span></div></div>
+    <div class="wrap bar">
+      <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+      <nav class="nav-inline" aria-label="Primary">
+        <a href="#commerce" data-goto="commerce" aria-current="page">Commerce</a>
+        <a href="#solutions" data-goto="solutions">Solutions</a>
+        <a href="#home" data-goto="home:company">Company</a>
+        <a href="#home" data-goto="home:contact">Contact</a>
+      </nav>
+      <a class="btn btn-sm header-cta" href="#home" data-goto="home:contact">Discuss a project</a>
+      <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu-commerce"><span class="bars" aria-hidden="true"></span><span class="lbl">Menu</span></button>
+    </div>
+  </header>
+  <nav class="menu-panel" id="menu-commerce" aria-label="Primary" hidden>
+    <ul class="wrap">
+      <li><a href="#commerce" data-goto="commerce" aria-current="page">Commerce</a></li>
+      <li><a href="#solutions" data-goto="solutions">Solutions</a></li>
+      <li><a href="#home" data-goto="home:company">Company</a></li>
+      <li><a href="#home" data-goto="home:contact">Contact</a></li>
+      <li><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-commerce" tabindex="-1">
+    <section class="hero" aria-labelledby="h1-commerce">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Flagship product</p>
+          <h1 class="h1" id="h1-commerce" tabindex="-1" style="font-size:var(--ct-type-display)">CornerTech Commerce</h1>
+          <p><span class="status status--dev status--lg"><i aria-hidden="true"></i>In development — not yet available</span></p>
+          <p class="lede">An operating layer for commerce orders and the exceptions around them — designed for businesses whose orders arrive through chat, calls and spreadsheets.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a>
+            <a class="btn" href="#home" data-goto="home:contact">Become a design partner</a>
+          </div>
+        </div>
+        <aside class="glance" aria-labelledby="glance-h">
+          <p class="eyebrow" id="glance-h">Status at a glance</p>
+          <dl style="margin-top:1rem">
+            <div><dt>Product</dt><dd>In development</dd></div>
+            <div><dt>Customer access</dt><dd>Not available</dd></div>
+            <div><dt>Pricing</dt><dd>Not published</dd></div>
+            <div><dt>Release date</dt><dd>Not announced</dd></div>
+            <div><dt>Design partners</dt><dd>Conversations open</dd></div>
+          </dl>
+          <p class="rv-note"><b>Review note</b> · D1: "Discuss a project" stays the single filled button site-wide; design partner is the outline action. A Commerce-only swap is a D1 variant for the Founder, not the default.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-problem">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">The problem</p>
+          <h2 class="h2" id="h2-problem">Orders don't arrive in one place.</h2>
+        </div>
+        <ol class="problems">
+          <li>An order is a chat message, then a note, then a row someone re-types.</li>
+          <li>Payment confirmation lives in a different thread from the order.</li>
+          <li>Exceptions — a missing address, a changed quantity — have no owner.</li>
+          <li>Nobody can answer "what is waiting right now?" without asking around.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section surface" aria-labelledby="h2-shape">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">How it is shaped</p>
+          <h2 class="h2" id="h2-shape">One record per order. Every change on the record.</h2>
+          <p class="body">Every order becomes one canonical record. Each change to it is recorded as an event, scoped to the business it belongs to. Orders that need a person surface in one queue.</p>
+        </div>
+        <figure class="illus" role="img" aria-label="Illustration with synthetic data. Four stages: Request, a fictional chat message from Sample Customer; Order record ORD-DEMO-0042 for Demo Kitchen with three validation checks; Event history with three fictional events; and an Exceptions queue with one item marked Needs a person. All four stages are labelled in development. Payment status and storefront are shown separately as planned.">
+          <div class="illus-head">
+            <span class="illus-caption">Illustration · synthetic data</span>
+            <span class="illus-meta">Demo Kitchen is fictional · not a running system</span>
+          </div>
+          <ol class="stages">
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">01 Request</span><span class="status status--dev"><i></i>In development</span></div>
+              <p class="bubble"><small>Sample Customer · chat · 09:14</small>Two large trays for Thursday, same address as last time.</p>
+              <p class="small subtle">Arrives as free text. Nothing is re-typed.</p>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">02 Order record</span><span class="status status--dev"><i></i>In development</span></div>
+              <p class="rec-id">ORD-DEMO-0042</p>
+              <dl class="kv">
+                <div><dt>Business</dt><dd>Demo Kitchen</dd></div>
+                <div><dt>Items</dt><dd>Tray, large × 2</dd></div>
+                <div><dt>Delivery</dt><dd>Thursday</dd></div>
+              </dl>
+              <ul class="checks"><li class="ok">Customer matched</li><li class="ok">Items recognized</li><li class="flag">Address to confirm</li></ul>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">03 Event history</span><span class="status status--dev"><i></i>In development</span></div>
+              <ol class="events">
+                <li><time>09:14</time><span><b>order.received</b> chat</span></li>
+                <li><time>09:14</time><span><b>order.validated</b> 2 of 3</span></li>
+                <li><time>09:15</time><span><b>exception.raised</b> address</span></li>
+              </ol>
+              <p class="small subtle">Each change is an event, scoped to Demo Kitchen.</p>
+            </li>
+            <li class="stage">
+              <div class="stage-top"><span class="stage-name">04 Exceptions</span><span class="status status--dev"><i></i>In development</span></div>
+              <div class="queue-item"><span class="rec-id">ORD-DEMO-0042</span><span>Address to confirm</span><em>Needs a person</em></div>
+              <p class="small subtle">A person resolves it. Nothing is sent automatically.</p>
+            </li>
+          </ol>
+          <div class="planned-row">
+            <div class="planned"><span>Payment status on the order</span><span class="status status--planned"><i></i>Planned</span></div>
+            <div class="planned"><span>Storefront</span><span class="status status--planned"><i></i>Planned</span></div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-matrix">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Capability status</p>
+          <h2 class="h2" id="h2-matrix">What exists, and what doesn't yet.</h2>
+          <p class="body">Each capability carries its status in words.</p>
+        </div>
+        <table class="matrix">
+          <caption class="visually-hidden">CornerTech Commerce capabilities and their status</caption>
+          <thead><tr><th scope="col">Capability</th><th scope="col">Status</th><th scope="col">What it means</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Canonical order intake <span class="rv-tag">C08 · pending</span></th><td class="st"><span class="status status--dev"><i aria-hidden="true"></i>In development</span></td><td>Incoming orders are validated into one canonical record.</td></tr>
+            <tr><th scope="row">Order event history <span class="rv-tag">C09 · pending</span></th><td class="st"><span class="status status--dev"><i aria-hidden="true"></i>In development</span></td><td>Each change to an order is recorded as an event, scoped to its business.</td></tr>
+            <tr><th scope="row">Order tracking and exceptions <span class="rv-tag">C07 · pending</span></th><td class="st"><span class="status status--dev"><i aria-hidden="true"></i>In development</span></td><td>Orders that need a person surface in one place.</td></tr>
+            <tr><th scope="row">Storefront <span class="rv-tag">C10 · pending</span></th><td class="st"><span class="status status--planned"><i aria-hidden="true"></i>Planned</span></td><td>A customer-facing ordering experience.</td></tr>
+            <tr><th scope="row">Payment status <span class="rv-tag">C10 · pending</span></th><td class="st"><span class="status status--planned"><i aria-hidden="true"></i>Planned</span></td><td>Payment confirmation attached to the order it belongs to.</td></tr>
+            <tr><th scope="row">Merchant operations console <span class="rv-tag">C10 · pending</span></th><td class="st"><span class="status status--planned"><i aria-hidden="true"></i>Planned</span></td><td>A day-to-day view for the team running orders.</td></tr>
+            <tr><th scope="row">Channel connectors <span class="rv-tag">C11 · pending</span></th><td class="st"><span class="status status--planned"><i aria-hidden="true"></i>Planned</span></td><td>Connections to commerce channels and marketplaces. No provider is named until one is available.</td></tr>
+            <tr><th scope="row">Supervised AI assistance <span class="rv-tag">C12 · pending</span></th><td class="st"><span class="status status--planned"><i aria-hidden="true"></i>Planned</span></td><td>AI that prepares routine order steps for a person to approve.</td></tr>
+          </tbody>
+        </table>
+        <p class="rv-note"><b>Review note</b> · Fail-closed (spec §6.3): a row renders only with a matching approval record (text hash, status, approver, date). Today no record exists, so in a build all eight rows — and this whole section — would be omitted. Source-verified evidence supports at most "In development". Below 768 px the table reflows to stacked rows.</p>
+      </div>
+    </section>
+
+    <section class="section light" aria-labelledby="h2-meaning">
+      <div class="wrap split">
+        <div class="section-head" style="margin-bottom:0">
+          <p class="eyebrow">Maturity</p>
+          <h2 class="h2" id="h2-meaning">What "in development" means.</h2>
+        </div>
+        <p class="lede" style="max-width:56ch">Parts of CornerTech Commerce exist as working code under test. That is not the same as a product you can use: there is no customer access, no published pricing and no release date. When that changes, this page will say so.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-partner">
+      <div class="wrap">
+        <div class="band" style="border-top:2px solid var(--ct-color-accent)">
+          <div style="display:grid;gap:1rem">
+            <p class="eyebrow">Design partners</p>
+            <h2 class="h2" id="h2-partner">Shape it with us.</h2>
+            <p class="body">We want to learn from operators whose orders arrive through chat and manual entry. Share how your orders flow today and where they break. Becoming a design partner is a conversation — not product access, a purchase or a release date.</p>
+          </div>
+          <div class="actions"><a class="btn" href="#home" data-goto="home:contact">Become a design partner</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-now" style="padding-top:0;border-top:0">
+      <div class="wrap">
+        <div class="band">
+          <div style="display:grid;gap:1rem">
+            <p class="eyebrow">Available now</p>
+            <h2 class="h2" id="h2-now">Need something working now?</h2>
+            <p class="body">Our engineering services are available today — custom systems, AI automation and integration, scoped to your operation.</p>
+          </div>
+          <div class="actions"><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+          <p class="muted" style="margin-top:1rem;max-width:44ch">CornerTech AI — software engineering for operators in the UAE and GCC.</p>
+          <p class="subtle small" style="margin-top:.5rem">CornerTech Commerce is in development. Engineering services are available.</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer">
+          <ul>
+            <li><a href="#commerce" data-goto="commerce" aria-current="page">Commerce</a></li>
+            <li><a href="#solutions" data-goto="solutions">Solutions</a></li>
+            <li><a href="#home" data-goto="home:company">Company</a></li>
+            <li><a href="#home" data-goto="home:contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-legal"><span>© 2026 CornerTech AI</span><span class="rv-tag">Privacy / Terms omitted until real approved URLs exist</span></div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═════════════════════════════ SOLUTIONS ═════════════════════════════ -->
+<div class="view" data-view="solutions" data-title="Engineering services · CornerTech AI" hidden>
+  <a class="skip" href="#main-solutions">Skip to content</a>
+  <header class="site-header">
+    <div class="draft-strip"><div class="wrap"><span>Draft · Not approved</span><span class="long">Proposed copy and design for Founder review · Solutions</span></div></div>
+    <div class="wrap bar">
+      <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+      <nav class="nav-inline" aria-label="Primary">
+        <a href="#commerce" data-goto="commerce">Commerce</a>
+        <a href="#solutions" data-goto="solutions" aria-current="page">Solutions</a>
+        <a href="#home" data-goto="home:company">Company</a>
+        <a href="#home" data-goto="home:contact">Contact</a>
+      </nav>
+      <a class="btn btn-sm header-cta" href="#home" data-goto="home:contact">Discuss a project</a>
+      <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu-solutions"><span class="bars" aria-hidden="true"></span><span class="lbl">Menu</span></button>
+    </div>
+  </header>
+  <nav class="menu-panel" id="menu-solutions" aria-label="Primary" hidden>
+    <ul class="wrap">
+      <li><a href="#commerce" data-goto="commerce">Commerce</a></li>
+      <li><a href="#solutions" data-goto="solutions" aria-current="page">Solutions</a></li>
+      <li><a href="#home" data-goto="home:company">Company</a></li>
+      <li><a href="#home" data-goto="home:contact">Contact</a></li>
+      <li><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-solutions" tabindex="-1">
+    <section class="hero" aria-labelledby="h1-solutions">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Engineering services · Available now</p>
+          <h1 class="h1" id="h1-solutions" tabindex="-1">Engineering for the way your operation actually works.</h1>
+          <p class="lede">Custom engineering, AI automation and systems integration — scoped after we understand the real workflow, built with your team, and handed over clearly.</p>
+          <div class="actions"><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></div>
+        </div>
+        <aside class="glance" aria-label="Services overview">
+          <p class="eyebrow">Services</p>
+          <dl style="margin-top:1rem">
+            <div><dt>01</dt><dd>Custom Engineering · <span class="status status--available"><i aria-hidden="true"></i>Available</span></dd></div>
+            <div><dt>02</dt><dd>AI Automation · <span class="status status--available"><i aria-hidden="true"></i>Available</span></dd></div>
+            <div><dt>03</dt><dd>Systems Integration · <span class="status status--available"><i aria-hidden="true"></i>Available</span></dd></div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section light" aria-labelledby="h2-svc">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">What we do</p>
+          <h2 class="h2" id="h2-svc">Three services, scoped to your operation.</h2>
+        </div>
+        <div>
+          <article class="svc" aria-labelledby="svc-1">
+            <span class="idx">01</span>
+            <div class="svc-head"><h3 class="h3" id="svc-1">Custom Engineering</h3><span><span class="status status--available"><i aria-hidden="true"></i>Available</span></span></div>
+            <div style="display:grid;gap:1rem"><p class="body">When no product fits, we design and build the focused system you need.</p>
+              <ul class="svc-scope"><li>Operational consoles and internal tools</li><li>Customer-facing ordering experiences</li><li>Data views for the decisions your team makes daily</li></ul></div>
+          </article>
+          <article class="svc" aria-labelledby="svc-2">
+            <span class="idx">02</span>
+            <div class="svc-head"><h3 class="h3" id="svc-2">AI Automation</h3><span><span class="status status--available"><i aria-hidden="true"></i>Available</span></span></div>
+            <div style="display:grid;gap:1rem"><p class="body">AI that reads incoming requests, prepares the routine steps and hands consequential decisions to a person.</p>
+              <ul class="svc-scope"><li>Request reading and triage</li><li>Drafting routine responses and records</li><li>Human approval for consequential actions</li></ul></div>
+          </article>
+          <article class="svc" aria-labelledby="svc-3">
+            <span class="idx">03</span>
+            <div class="svc-head"><h3 class="h3" id="svc-3">Systems Integration</h3><span><span class="status status--available"><i aria-hidden="true"></i>Available</span></span></div>
+            <div style="display:grid;gap:1rem"><p class="body">Connect the tools you already use so records and context move without re-typing.</p>
+              <ul class="svc-scope"><li>Scoped per engagement after discovery</li><li>Built on your existing tools where practical</li><li>No pre-built connector promises</li></ul></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section surface" aria-labelledby="h2-engagement">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">How engagements run</p>
+          <h2 class="h2" id="h2-engagement">What an engagement can look like.</h2>
+          <div style="display:grid;gap:1rem;justify-items:start">
+            <span class="illus-label">Illustrative engagement shape — not a client case</span>
+            <p class="body">Phases, not a promise. Timing is agreed per project.</p>
+          </div>
+        </div>
+        <ol class="phases">
+          <li><span class="verb">Understand</span><h3 class="h3">Discovery</h3><p class="muted small">Find the bottleneck and the people, tools and decisions around it.</p></li>
+          <li><span class="verb">Design</span><h3 class="h3">Design checkpoint</h3><p class="muted small">You approve the workflow, the experience and what done looks like.</p></li>
+          <li><span class="verb">Build</span><h3 class="h3">First release</h3><p class="muted small">A focused system your team tests with real work.</p></li>
+          <li><span class="verb">Integrate</span><h3 class="h3">Integration &amp; handover</h3><p class="muted small">Connect the stack, agree the controls, document the handover.</p></li>
+          <li><span class="verb">Improve</span><h3 class="h3">Review in practice</h3><p class="muted small">See what happens once it runs, and refine.</p></li>
+        </ol>
+        <p class="rv-note"><b>Review note</b> · Not a case study: no client, durations, team size or outcomes. Merges the spec's engagement shape and process keys into one section.</p>
+      </div>
+    </section>
+
+    <section class="section light" aria-labelledby="h2-promise">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Commitments</p>
+          <h2 class="h2" id="h2-promise">What we will and won't promise.</h2>
+        </div>
+        <div class="promise">
+          <div class="will"><h3 class="h3">We will</h3><ul><li>A clear scope before we build</li><li>Working software you can test</li><li>Human control over consequential actions</li><li>A documented handover</li></ul></div>
+          <div class="wont"><h3 class="h3">We won't</h3><ul><li>Outcome guarantees or ROI figures</li><li>Certifications we don't hold</li><li>Integrations we haven't scoped</li><li>Access to products that aren't available</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-faq">
+      <div class="wrap">
+        <div class="section-head section-head--split">
+          <p class="eyebrow">Questions</p>
+          <h2 class="h2" id="h2-faq">Before you get in touch.</h2>
+        </div>
+        <dl class="faq">
+          <div><dt>Do you publish prices?</dt><dd>No. Projects are scoped after a first conversation.</dd></div>
+          <div><dt>Can you work with our current tools?</dt><dd>That is usually where we start; feasibility is confirmed during discovery.</dd></div>
+          <div><dt>Can we use CornerTech Commerce?</dt><dd>Not yet. It is in development; you can talk to us about becoming a design partner. <a class="link-arrow" href="#commerce" data-goto="commerce" style="min-height:auto">See what we're building <span aria-hidden="true">→</span></a></dd></div>
+          <div><dt>Where do you work?</dt><dd>Our focus is the UAE and GCC.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h2-start" style="padding-top:0;border-top:0">
+      <div class="wrap">
+        <div class="band" style="border-top:2px solid var(--ct-color-action)">
+          <div style="display:grid;gap:1rem">
+            <h2 class="h2" id="h2-start">Start with the bottleneck.</h2>
+            <p class="body">Tell us where work gets re-typed, delayed or lost. We'll reply to scope a first conversation.</p>
+          </div>
+          <div class="actions"><a class="btn btn-primary" href="#home" data-goto="home:contact">Discuss a project</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="#home" data-goto="home" aria-label="CornerTech AI home"><img src="../../../frontend/public/brand/logo-mark.png" width="32" height="26" alt=""><span>Corner<span>TechAI</span></span></a>
+          <p class="muted" style="margin-top:1rem;max-width:44ch">CornerTech AI — software engineering for operators in the UAE and GCC.</p>
+          <p class="subtle small" style="margin-top:.5rem">CornerTech Commerce is in development. Engineering services are available.</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer">
+          <ul>
+            <li><a href="#commerce" data-goto="commerce">Commerce</a></li>
+            <li><a href="#solutions" data-goto="solutions" aria-current="page">Solutions</a></li>
+            <li><a href="#home" data-goto="home:company">Company</a></li>
+            <li><a href="#home" data-goto="home:contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-legal"><span>© 2026 CornerTech AI</span><span class="rv-tag">Privacy / Terms omitted until real approved URLs exist</span></div>
+    </div>
+  </footer>
+</div>
+
+</div><!-- /.comp -->
+
+<script>
+/* View switching for review only. No network, storage, cookies or data collection. */
+(function () {
+  "use strict";
+  var VIEWS = ["home", "commerce", "solutions"];
+  var SECTIONS = { company: "company-home", contact: "contact-home" };
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function viewEl(name) { return document.querySelector('.view[data-view="' + name + '"]'); }
+  function current() { var v = document.querySelector(".view:not([hidden])"); return v ? v.getAttribute("data-view") : null; }
+
+  function closeMenus() {
+    document.querySelectorAll(".menu-toggle[aria-expanded='true']").forEach(function (t) { setMenu(t, false); });
+  }
+  function setMenu(toggle, open) {
+    var panel = document.getElementById(toggle.getAttribute("aria-controls"));
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.querySelector(".lbl").textContent = open ? "Close menu" : "Menu";
+    panel.hidden = !open;
+  }
+
+  function show(name) {
+    if (VIEWS.indexOf(name) < 0) return false;
+    VIEWS.forEach(function (v) { viewEl(v).hidden = v !== name; });
+    document.querySelectorAll(".rv-tab").forEach(function (t) {
+      if (t.getAttribute("data-tab") === name) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current");
+    });
+    document.title = "DRAFT · NOT APPROVED — " + viewEl(name).getAttribute("data-title");
+    closeMenus();
+    return true;
+  }
+
+  function focusNoScroll(el) { if (el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } } }
+
+  /* Mirrors spec §8.3 (route change) and §8.4 (hash arrival) inside one static file. */
+  function go(target) {
+    var parts = target.split(":"), name = parts[0], section = parts[1];
+    var changed = current() !== name;
+    if (changed) { history.pushState(null, "", "#" + name); show(name); }
+    closeMenus();
+    if (section && SECTIONS[section]) {
+      var sec = document.getElementById(SECTIONS[section]);
+      sec.scrollIntoView({ behavior: reduce.matches || changed ? "auto" : "smooth", block: "start" });
+      focusNoScroll(sec.querySelector("h2"));
+    } else {
+      window.scrollTo(0, 0);
+      focusNoScroll(viewEl(name).querySelector("h1"));
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-goto]");
+    if (a) { e.preventDefault(); go(a.getAttribute("data-goto")); return; }
+    var tab = e.target.closest(".rv-tab");
+    if (tab) { e.preventDefault(); go(tab.getAttribute("data-tab")); return; }
+    var t = e.target.closest(".menu-toggle");
+    if (t) { setMenu(t, t.getAttribute("aria-expanded") !== "true"); return; }
+    var f = e.target.closest("[data-frame].rv-chip");
+    if (f) {
+      document.body.setAttribute("data-frame", f.getAttribute("data-frame"));
+      document.querySelectorAll("[data-frame].rv-chip").forEach(function (c) { c.setAttribute("aria-pressed", String(c === f)); });
+      return;
+    }
+    if (e.target.closest("#rv-notes")) {
+      var off = document.body.classList.toggle("rv-notes-off");
+      document.getElementById("rv-notes").setAttribute("aria-pressed", String(!off));
+    }
+    /* [data-inert] contact buttons intentionally do nothing in this review artifact. */
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var open = document.querySelector(".menu-toggle[aria-expanded='true']");
+    if (open) { setMenu(open, false); open.focus(); }
+  });
+
+  window.addEventListener("resize", function () {
+    var t = document.querySelector(".view:not([hidden]) .menu-toggle");
+    if (t && t.getAttribute("aria-expanded") === "true" && getComputedStyle(t).display === "none") setMenu(t, false);
+  });
+
+  function fromLocation() { if (!show(location.hash.slice(1)) && !current()) show("home"); }
+  window.addEventListener("hashchange", fromLocation);
+  window.addEventListener("popstate", fromLocation);
+  if (!show(location.hash.slice(1))) show("home");
+})();
+</script>
+</body>
+</html>
