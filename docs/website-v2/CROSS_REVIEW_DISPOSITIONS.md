@@ -53,3 +53,9 @@ Interface versions: planning contract1.1,content@1,tokens@1; no executable inter
 
 ## Readiness
 **GO WITH CONDITIONS**: ready for Founder to authorize Sprint01 strategy/spec work. Conditions: explicit start approval; D1–D5 resolved before final narrative/tokens/CTA signoff, D7 before S02, D6 reviewed before S03. Protected test/server changes still need their specific review/authorization; public access remains independently product/security-gated. PR96 remains Draft. Stop after final exact-head CI evidence; do not start Sprint01, merge, deploy or cut over DNS.
+
+
+## Sprint01 resumption — 2026-10-23 (supersedes historical current-state wording)
+Founder authorized Sprint01 strategy, content and design specifications. Runtime baseline is `4894c5b028cdb4ac469e5b7ecf01fd38c20330db`, Railway deployment `a1491b7b-9525-4de9-96db-c7fd3502fd69` SUCCESS, with strict HTTPS and working WhatsApp CTA accepted on both domains in CT-WEB-LIVE-02. The earlier pending-domain-cutover and calendar-default descriptions are historical, not current blockers. Booking is now opt-in; absent/invalid configuration yields Discuss a project on the approved WhatsApp destination, email separately secondary. Corporate `joel@cornertech.ae` is verified per Founder and may be proposed here, but public replacement is not authorized for deployment.
+
+PR96 remains Draft at `754f4868026d4fa899c90fa201814178bf4339a7`. Its docs were copied byte-for-byte into an isolated branch from new main, without merging PR96 or importing PR91/92 history. Independent CLAUDE_S00_FINDINGS.md and evidence JSON remain historical and unchanged. See SPRINT01_ENGINEERING_REVIEW.md and EXPERIENCE_SPEC.md for current execution, decisions and limitations. No Sprint02 components, protected changes, merge or deployment are authorized. D1–D7 remain PROPOSED.
