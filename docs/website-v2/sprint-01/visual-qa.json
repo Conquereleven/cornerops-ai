@@ -6,6 +6,7 @@
       "Software built for real operations."
     ],
     "scroll": 319,
+    "view": "home",
     "width": 319
   },
   {
@@ -15,6 +16,7 @@
       "Software built for real operations."
     ],
     "scroll": 320,
+    "view": "home",
     "width": 320
   },
   {
@@ -24,6 +26,7 @@
       "Software built for real operations."
     ],
     "scroll": 390,
+    "view": "home",
     "width": 390
   },
   {
@@ -33,6 +36,7 @@
       "Software built for real operations."
     ],
     "scroll": 430,
+    "view": "home",
     "width": 430
   },
   {
@@ -42,6 +46,7 @@
       "Software built for real operations."
     ],
     "scroll": 768,
+    "view": "home",
     "width": 768
   },
   {
@@ -51,6 +56,7 @@
       "Software built for real operations."
     ],
     "scroll": 1024,
+    "view": "home",
     "width": 1024
   },
   {
@@ -60,6 +66,7 @@
       "Software built for real operations."
     ],
     "scroll": 1280,
+    "view": "home",
     "width": 1280
   },
   {
@@ -69,6 +76,7 @@
       "Software built for real operations."
     ],
     "scroll": 1440,
+    "view": "home",
     "width": 1440
   },
   {
@@ -78,6 +86,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 319,
+    "view": "commerce",
     "width": 319
   },
   {
@@ -87,6 +96,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 320,
+    "view": "commerce",
     "width": 320
   },
   {
@@ -96,6 +106,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 390,
+    "view": "commerce",
     "width": 390
   },
   {
@@ -105,6 +116,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 430,
+    "view": "commerce",
     "width": 430
   },
   {
@@ -114,6 +126,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 768,
+    "view": "commerce",
     "width": 768
   },
   {
@@ -123,6 +136,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 1024,
+    "view": "commerce",
     "width": 1024
   },
   {
@@ -132,6 +146,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 1280,
+    "view": "commerce",
     "width": 1280
   },
   {
@@ -141,6 +156,7 @@
       "CornerTech Commerce"
     ],
     "scroll": 1440,
+    "view": "commerce",
     "width": 1440
   },
   {
@@ -150,6 +166,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 319,
+    "view": "solutions",
     "width": 319
   },
   {
@@ -159,6 +176,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 320,
+    "view": "solutions",
     "width": 320
   },
   {
@@ -168,6 +186,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 390,
+    "view": "solutions",
     "width": 390
   },
   {
@@ -177,6 +196,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 430,
+    "view": "solutions",
     "width": 430
   },
   {
@@ -186,6 +206,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 768,
+    "view": "solutions",
     "width": 768
   },
   {
@@ -195,6 +216,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 1024,
+    "view": "solutions",
     "width": 1024
   },
   {
@@ -204,6 +226,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 1280,
+    "view": "solutions",
     "width": 1280
   },
   {
@@ -213,6 +236,7 @@
       "Engineering for the way your operation actually works."
     ],
     "scroll": 1440,
+    "view": "solutions",
     "width": 1440
   }
 ]
