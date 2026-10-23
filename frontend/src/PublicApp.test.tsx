@@ -40,6 +40,27 @@ test('navigation crosses routes and returns to the home contact heading with foc
   await waitFor(() => expect(document.querySelector('#contact h2')).toHaveFocus());
 });
 
+test.each(['/', '/products/commerce', '/solutions'])('commercial journeys from %s preserve corporate email destinations and intent', async path => {
+  window.history.replaceState({}, '', path);
+  const fetchSpy = vi.spyOn(globalThis, 'fetch');
+  render(<PublicApp />);
+  if (path === '/products/commerce') {
+    await userEvent.click(screen.getAllByRole('link', { name: 'Become a design partner' })[0]);
+  } else if (path === '/solutions') {
+    await userEvent.click(within(screen.getAllByRole('navigation')[0]).getByRole('link', { name: 'Contact' }));
+  }
+  const contact = within(document.getElementById('contact')!);
+  expect(contact.getByRole('link', { name: 'Email us' }))
+    .toHaveAttribute('href', 'mailto:joel@cornertech.ae');
+  expect(contact.getByRole('link', { name: 'Email us about design partnership' }))
+    .toHaveAttribute('href', 'mailto:joel@cornertech.ae?subject=Design%20partner%20conversation');
+  expect(contact.getByRole('link', { name: 'Discuss a project on WhatsApp (opens in a new tab)' }))
+    .toHaveAttribute('href', 'https://wa.me/971555633651');
+  expect(document.querySelectorAll('a[href^="mailto:"]')).toHaveLength(2);
+  expect(document.querySelector('a[href*="joel.escudero12@gmail.com"]')).toBeNull();
+  expect(fetchSpy).not.toHaveBeenCalled();
+});
+
 
 test('Back restores the saved long-page offset after navigating to a shorter route', async () => {
   render(<PublicApp />);

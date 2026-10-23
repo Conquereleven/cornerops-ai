@@ -24,7 +24,7 @@ describe('App',()=>{
       expect(link).toHaveAttribute('href','/#contact');
     }
     expect(screen.getByRole('link',{name:'Discuss a project on WhatsApp (opens in a new tab)'})).toHaveAttribute('href','https://wa.me/971555633651');
-    expect(screen.getByRole('link',{name:'Email us'})).toHaveAttribute('href','mailto:joel.escudero12@gmail.com');
+    expect(screen.getByRole('link',{name:'Email us'})).toHaveAttribute('href','mailto:joel@cornertech.ae');
     expect(document.getElementById('contact')).toBeInTheDocument();
   });
 

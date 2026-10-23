@@ -3,19 +3,29 @@ import { cleanup, render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const approvedWhatsapp = 'https://wa.me/971555633651';
-const approvedEmail = 'mailto:joel.escudero12@gmail.com';
+const approvedEmail = 'mailto:joel@cornertech.ae';
 
-async function load(bookingUrl: string | undefined) {
+async function load(bookingUrl: string | undefined, contactEmail?: string) {
   vi.resetModules();
   vi.stubEnv('VITE_PUBLIC_BOOKING_URL', bookingUrl);
   vi.stubEnv('VITE_PUBLIC_WHATSAPP_NUMBER', undefined);
-  vi.stubEnv('VITE_PUBLIC_CONTACT_EMAIL', undefined);
+  vi.stubEnv('VITE_PUBLIC_CONTACT_EMAIL', contactEmail);
   const { siteConfig } = await import('../../config/siteConfig');
   const { CompanyAndContact } = await import('./CornerTechSite');
   return { siteConfig, CompanyAndContact };
 }
 
 afterEach(() => { cleanup(); vi.unstubAllEnvs(); vi.resetModules(); });
+
+test.each([undefined, '', '   '])('missing or blank contact configuration %s uses the corporate mailbox', async value => {
+  const { siteConfig } = await load(undefined, value);
+  expect(siteConfig.contactEmail).toBe('joel@cornertech.ae');
+});
+
+test('an explicitly configured public contact email still overrides the corporate default', async () => {
+  const { siteConfig } = await load(undefined, '  operations@example.com  ');
+  expect(siteConfig.contactEmail).toBe('operations@example.com');
+});
 
 test.each([undefined, '', '   ', 'not-a-url', 'javascript:alert(1)', 'http://booking.example.com'])
 ('missing or invalid booking configuration %s stays disabled', async value => {
