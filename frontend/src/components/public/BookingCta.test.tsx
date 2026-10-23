@@ -32,10 +32,10 @@ test.each([undefined, '', '   ', 'not-a-url', 'javascript:alert(1)', 'http://boo
   const contact = container.querySelector('#contact');
   expect(contact).not.toBeNull();
   const scope = within(contact as HTMLElement);
-  const primary = scope.getByRole('link', { name: 'Discuss a project' });
+  const primary = scope.getByRole('link', { name: 'Discuss a project on WhatsApp (opens in a new tab)' });
   expect(primary).toHaveAttribute('href', approvedWhatsapp);
   expect(primary).toHaveClass('ct-primary');
-  expect(scope.queryByRole('link', { name: /Book a call/ })).not.toBeInTheDocument();
+  expect(scope.queryByRole('link', { name: 'Book a call (opens in a new tab)' })).not.toBeInTheDocument();
   const email = scope.getByRole('link', { name: 'Email us' });
   expect(email).toHaveAttribute('href', approvedEmail);
   expect(email).not.toHaveClass('ct-primary');
@@ -52,12 +52,12 @@ test('a future explicitly configured HTTPS booking URL restores booking while re
   const { container } = render(<MemoryRouter><CompanyAndContact /></MemoryRouter>);
   const contact = container.querySelector('#contact') as HTMLElement;
   const scope = within(contact);
-  const primary = scope.getByRole('link', { name: /Book a call/ });
+  const primary = scope.getByRole('link', { name: 'Book a call (opens in a new tab)' });
   expect(primary).toHaveAttribute('href', verifiedForTest);
   expect(primary).toHaveClass('ct-primary');
-  expect(scope.queryByRole('link', { name: 'Discuss a project' })).not.toBeInTheDocument();
+  expect(scope.queryByRole('link', { name: 'Discuss a project on WhatsApp (opens in a new tab)' })).not.toBeInTheDocument();
   expect(scope.getByRole('link', { name: 'Email us' })).toHaveAttribute('href', approvedEmail);
-  expect(scope.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', approvedWhatsapp);
+  expect(scope.getByRole('link', { name: 'WhatsApp (opens in a new tab)' })).toHaveAttribute('href', approvedWhatsapp);
   expect(contact.querySelectorAll('.ct-primary')).toHaveLength(1);
   expect(contact.querySelectorAll(`a[href="${approvedWhatsapp}"]`)).toHaveLength(1);
 });
