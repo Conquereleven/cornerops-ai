@@ -49,6 +49,12 @@ const baseEnv = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
   useSupabase: parseBoolean(process.env.USE_SUPABASE),
+  corneropsCommerceShopifyEnabled: parseBoolean(process.env.CORNEROPS_COMMERCE_SHOPIFY_ENABLED),
+  corneropsCommerceShopifyWebhooksEnabled: parseBoolean(process.env.CORNEROPS_COMMERCE_SHOPIFY_WEBHOOKS_ENABLED),
+  corneropsCommerceShopifyShopDomain: process.env.CORNEROPS_COMMERCE_SHOPIFY_SHOP_DOMAIN || '',
+  corneropsCommerceShopifyAccessToken: process.env.CORNEROPS_COMMERCE_SHOPIFY_ACCESS_TOKEN || '',
+  corneropsCommerceShopifyWebhookSecret: process.env.CORNEROPS_COMMERCE_SHOPIFY_WEBHOOK_SECRET || '',
+  corneropsCommerceShopifyApiVersion: process.env.CORNEROPS_COMMERCE_SHOPIFY_API_VERSION || '2026-07',
   internalApiKey: process.env.INTERNAL_API_KEY || '',
   allowInternalNoKey: parseBoolean(process.env.ALLOW_INTERNAL_NO_KEY),
   aiDefaultLanguage: parseEnum(
@@ -1121,6 +1127,18 @@ const getEnvWarnings = () => {
     !baseEnv.supabaseServiceRoleKey
   ) {
     warnings.push('USE_SUPABASE=true but Supabase keys are missing; mock fallback will be used.');
+  }
+  if (
+    baseEnv.corneropsCommerceShopifyEnabled
+    && (!baseEnv.corneropsCommerceShopifyShopDomain || !baseEnv.corneropsCommerceShopifyAccessToken)
+  ) {
+    warnings.push('Commerce OS Shopify is enabled without a shop domain and read token; the connector will fail closed.');
+  }
+  if (
+    baseEnv.corneropsCommerceShopifyWebhooksEnabled
+    && (!baseEnv.corneropsCommerceShopifyEnabled || !baseEnv.corneropsCommerceShopifyWebhookSecret)
+  ) {
+    warnings.push('Commerce OS Shopify webhooks require the connector and webhook secret; webhook intake will fail closed.');
   }
   if (
     baseEnv.nodeEnv !== 'test' &&
