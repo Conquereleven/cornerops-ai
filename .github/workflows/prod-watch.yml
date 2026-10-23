@@ -5,6 +5,9 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: cornerops-prod-watch
   cancel-in-progress: false
@@ -12,38 +15,13 @@ concurrency:
 jobs:
   healthcheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       PROD_URL: https://cornerops-ai-production.up.railway.app
-      SUPABASE_URL: ${{ secrets.CORNERMEX_SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.CORNERMEX_SUPABASE_ANON_KEY }}
       CONTROL_TOWER_OPERATOR_TOKEN: ${{ secrets.CONTROL_TOWER_OPERATOR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-
-      - name: Check public health
-        run: |
-          code=$(curl --silent --show-error --max-time 20 --output /tmp/health.json --write-out '%{http_code}' "$PROD_URL/api/health")
-          test "$code" = "200" || { echo "Health check failed with HTTP $code"; exit 1; }
-
-      - name: Check authenticated work queue status
-        if: env.CONTROL_TOWER_OPERATOR_TOKEN != ''
-        run: |
-          code=$(curl --silent --show-error --max-time 20 --output /tmp/work-queue.json --write-out '%{http_code}' \
-            -H "Authorization: Bearer $CONTROL_TOWER_OPERATOR_TOKEN" \
-            "$PROD_URL/api/intelligence/work-queue/status")
-          case "$code" in
-            200) ;;
-            401|403|404) echo "Work Queue authentication/route check failed with HTTP $code"; exit 1 ;;
-            5??) echo "Work Queue service failed with HTTP $code"; exit 1 ;;
-            *) echo "Work Queue check returned unexpected HTTP $code"; exit 1 ;;
-          esac
-
-      - name: Supabase readonly check
-        run: npm run cornermex:supabase-readonly-check
+      # curl is supplied by ubuntu-latest; no Node or application dependencies.
+      - name: Check production health, authentication and API containment
+        run: bash .github/scripts/prod-watch.sh

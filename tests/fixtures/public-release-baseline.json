@@ -1,14 +1,20 @@
 {
-  "base": "4894c5b028cdb4ac469e5b7ecf01fd38c20330db",
-  "fileCount": 793,
-  "sha256": "4c2bf2afc938c59229d7077268b27e7dba44bdf4290b7b53931c686d6143057c",
-  "authorizedSprint": "CT-WEB-V2-RELEASE-01 narrow public serving exception",
+  "base": "a552990aa8b1a2371d201e282794ff4ff875346a",
+  "fileCount": 797,
+  "sha256": "601311292e922cb8007f88e6a3561cc39278bd5e909c7e95065d8bee0fcde7cf",
+  "authorizedSprint": "CT-WEB-V2-RELEASE-01 + CT-INFRA-GHA-01/02",
   "authorizedChanges": [
     "src/app.js",
     "frontend/vite.config.ts",
     "tests/publicStaticRelease.test.js",
-    "tests/frontendStaticServingV114.test.js"
+    "tests/frontendStaticServingV114.test.js",
+    ".github/scripts/ci-scope.py",
+    ".github/scripts/prod-watch.sh",
+    ".github/tests/test_ci_scope.py",
+    ".github/workflows/ci.yml",
+    ".github/workflows/prod-watch.yml",
+    "tests/githubActionsCost.test.js"
   ],
-  "previousSha256": "be91c76a09f9bff3a83742bfc9446fe72edc535c095bdb4094e5bb5b697e5e90",
-  "previousStageSha256": "1108041ee1d486de8a8715e1e834f8d6c2b9f8607e2c69f8543b8dd177d777dd"
+  "previousSha256": "4c2bf2afc938c59229d7077268b27e7dba44bdf4290b7b53931c686d6143057c",
+  "previousStageSha256": "de9a79d6879c8bcdb72b99ae96cf465982f51051d4b0f85c36312383157082aa"
 }
