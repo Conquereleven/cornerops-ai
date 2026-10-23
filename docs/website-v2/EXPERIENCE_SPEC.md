@@ -219,7 +219,7 @@ Rules: never "Talk to us", "Contact us", "Get started", "Book a demo", "Request 
 | `home.contact.partner.title` | Become a design partner | C20 |
 | `home.contact.partner.body` | Help shape CornerTech Commerce. Tell us how your orders flow today. This is a conversation, not a sign-up: it does not provide product access, pricing or a release date. | C20 |
 | `home.contact.channels` | Email · WhatsApp · Book a call ("Book a call" only when `siteConfig.bookingUrl` is verified and non-empty) | C21 |
-| `home.contact.privacyNote` | No forms and no tracking. These links open your own email or WhatsApp, and a message is sent only if you choose to send it. | C21 |
+| `home.contact.privacyNote` | This page has no enquiry form or first-party analytics. Email and WhatsApp have their own privacy practices. A message is sent only if you choose to send it. | C21 |
 
 ### 4.4 Commerce
 
@@ -510,7 +510,7 @@ Radius: `--ct-radius-1` 4 px (buttons — carried from V1), `--ct-radius-2` 8 px
 
 - Buttons and the menu toggle ≥ 44 × 44 px; nav links ≥ 44 px tall below 1024 px and ≥ 32 px at 1024 px and above; footer links ≥ 24 px tall with ≥ 8 px spacing. Inline links in prose use the WCAG 2.5.8 inline exception.
 - **320 px reflow (1.4.10) / 400 % zoom equivalent:** no horizontal document scroll at 320 CSS px; content reflows to one column; illustrations reflow to a vertical stage list instead of scaling below legibility.
-- **319 px carry-forward:** `design-qa.md` records that a 319 px in-app viewport once showed 759 px of document overflow, later contained to a 320 px layout. That observation was on the earlier private dashboard, not this public site, and is not V2 evidence. V2 rule: no fixed `min-width` at or above 320 px; `document.documentElement.scrollWidth ≤ clientWidth` at **319 and 320**, recorded in S02/S04 QA alongside 390/430/768/1024/1280/1440.
+- **319 px — current public V1 observation:** CT-WEB-LIVE-02 production acceptance at merge `4894c5b` (`outputs/CT-WEB-LIVE-02/POST_DEPLOYMENT_REPORT.md`) found no overflow at measured CSS widths 341 and 931 px, but the default browser's **319 px viewport reported overflow** on the public Website 1.0; that hotfix changed no layout CSS and records it as an open narrow-viewport follow-up, not a resolved responsive audit. It is not claimed fixed in public V1. (The older private-dashboard note in `design-qa.md` is a separate, earlier observation and is not this evidence.) V2 rule: no fixed `min-width` at or above 320 px; `document.documentElement.scrollWidth ≤ clientWidth` at **319 and 320** as explicit S02 regression checks, recorded in S02/S04 QA alongside 390/430/768/1024/1280/1440.
 - **200 % text resize (1.4.4):** all type and spacing in rem; no fixed-height text containers; buttons grow with their text; verified with browser text-only zoom (Firefox) and full zoom (Chromium/WebKit).
 - Long strings: `overflow-wrap: anywhere` on headings and IDs (e.g. `ORD-DEMO-0042`).
 
@@ -768,7 +768,7 @@ The existing `ContactActions` behaviour (booking → WhatsApp fallback) is prese
 |---|---|---|---|
 | D1 | CTA hierarchy | Project enquiry primary ("Discuss a project"); Commerce visually prominent; design partner secondary | S01 sign-off |
 | D2 | Palette | Preserve cyan #00D7FF accent; cobalt #2563EB for fills only; tokens §7.2 | S01 sign-off |
-| D3 | Intent prefill | Strings in §4.6, with no visitor data. **Corporate email:** proposal only — replace the personal Gmail default with a mailbox on the cornertech.ae domain; the Founder chooses, provisions and verifies the address; the `siteConfig` default stays unchanged until then; no Zoho or provider action is implied | S01 sign-off; email change separately |
+| D3 | Intent prefill | Strings in §4.6, with no visitor data. **Corporate email:** `joel@cornertech.ae` is **VERIFIED per Founder** and is the **proposed public replacement** for the personal Gmail default. Proposal only — no `siteConfig`, deployment or provider change in S01; the switch is a separate Founder-approved change | S01 sign-off; email change separately |
 | D4 | Case | Exclude Tres Leches; the process/principles composition replaces it | Before S02 build |
 | D5 | Claims policy | Ban list in §1.4; "Software built for real operations." as the home h1 | S01 sign-off |
 | D6 | 404/static review | Narrow review before S03; no server change authorized | Before S03 |
