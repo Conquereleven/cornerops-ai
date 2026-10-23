@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { prerenderPublicPages } from './PublicPrerender';
 import { publicDocument } from './PublicDocument';
@@ -62,4 +62,15 @@ test('crawler allowlist and sitemap cover exactly the three released public rout
   expect(sitemap.match(/<loc>/g)).toHaveLength(3);
   expect(robots).toContain('Disallow: /');
   expect(robots).not.toMatch(/Allow: \/(?:api|app|login)/);
+});
+
+
+test('prerender content remains hydration-stable across a calendar-year rollover', () => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date('2026-12-31T23:59:00Z'));
+    const before = prerenderPublicPages().map(page => page.markup);
+    vi.setSystemTime(new Date('2027-01-01T00:01:00Z'));
+    expect(prerenderPublicPages().map(page => page.markup)).toEqual(before);
+  } finally { vi.useRealTimers(); }
 });

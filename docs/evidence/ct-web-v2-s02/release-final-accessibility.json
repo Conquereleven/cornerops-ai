@@ -1,0 +1,11 @@
+{
+  "focusOutline": "rgb(0, 215, 255) solid 3px",
+  "focused": "Open menu",
+  "menuExpanded": "false",
+  "menuTarget": {
+    "height": 44,
+    "width": 92.390625
+  },
+  "overflow": false,
+  "width": 390
+}

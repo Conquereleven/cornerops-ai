@@ -1,0 +1,266 @@
+[
+  {
+    "host": "cornertech.ae",
+    "path": "/",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "CornerTech AI \u2014 Software built for real operations"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "cornertech.ae",
+    "path": "/products/commerce",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "CornerTech Commerce \u2014 in development \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "cornertech.ae",
+    "path": "/solutions",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "Engineering services \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "cornertech.ae",
+    "path": "/unknown",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "cornertech.ae",
+    "path": "/authorized-sellers",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "cornertech.ae",
+    "path": "/index.html",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "CornerTech AI \u2014 Software built for real operations"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/products/commerce",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "CornerTech Commerce \u2014 in development \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/solutions",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": null,
+    "title": [
+      "Engineering services \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/unknown",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/authorized-sellers",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "www.cornertech.ae",
+    "path": "/index.html",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "CornerTech AI \u2014 Software built for real operations"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/products/commerce",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "CornerTech Commerce \u2014 in development \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/solutions",
+    "status": 200,
+    "robots": [
+      "index, follow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Engineering services \u00b7 CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/unknown",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/authorized-sellers",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "host": "preview.invalid",
+    "path": "/index.html",
+    "status": 404,
+    "robots": [
+      "noindex, nofollow"
+    ],
+    "xRobots": "noindex, nofollow",
+    "title": [
+      "Page unavailable | CornerTech AI"
+    ],
+    "initialBody": true
+  },
+  {
+    "path": "/api/health",
+    "status": 200
+  },
+  {
+    "path": "/api/agents",
+    "status": 503
+  },
+  {
+    "path": "/%61pi/settings",
+    "status": 404
+  },
+  {
+    "path": "/robots.txt",
+    "status": 200
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200
+  },
+  {
+    "path": "/assets/index-BgAuc4XO.css",
+    "status": 200,
+    "bytes": 67698
+  },
+  {
+    "path": "/assets/index-CJfMyYYh.js",
+    "status": 200,
+    "bytes": 265953
+  }
+]

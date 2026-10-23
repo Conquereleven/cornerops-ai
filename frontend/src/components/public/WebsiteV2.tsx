@@ -282,7 +282,7 @@ export function V2Frame({
             </nav>
           </div>
           <p className="v2-footer-legal">
-            © {new Date().getFullYear()} {content.frame.copyright}
+            © {content.frame.copyrightYear} {content.frame.copyright}
           </p>
         </div>
       </footer>

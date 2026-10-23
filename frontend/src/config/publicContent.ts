@@ -132,6 +132,8 @@ export const websiteV2Content = {
     footerStatus:
       "CornerTech Commerce is in development. Engineering services are available.",
     copyright: "CornerTech AI",
+    // Publication year is stable across prerender/hydration and year rollover.
+    copyrightYear: 2026,
   },
   status: {
     available: "Available",
