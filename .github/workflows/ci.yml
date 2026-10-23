@@ -2,6 +2,8 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
   push:
     branches:
       - main
@@ -13,39 +15,63 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/') && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/') }}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Select validation tier
+        id: scope
+        run: python3 .github/scripts/ci-scope.py >> "$GITHUB_OUTPUT"
+
+      - name: Check validation policy
+        run: python3 -m unittest discover -s .github/tests -p 'test_*.py'
+
       - name: Setup Node
+        if: steps.scope.outputs.tier != 'docs'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install backend
+        if: steps.scope.outputs.tier != 'docs'
         run: npm ci
 
       - name: Install frontend
+        if: steps.scope.outputs.tier != 'docs'
         run: npm --prefix frontend ci
 
       - name: Lint
+        if: steps.scope.outputs.tier != 'docs'
         run: npm run lint
 
       - name: Typecheck
+        if: steps.scope.outputs.tier == 'full' || steps.scope.outputs.tier == 'frontend'
         run: npm run typecheck
 
       - name: Test backend
+        if: steps.scope.outputs.tier == 'full' || steps.scope.outputs.tier == 'backend'
         run: npm test
 
+      - name: Public boundary and security regressions
+        if: steps.scope.outputs.tier == 'frontend'
+        run: npm test -- --runTestsByPath tests/public-release-boundary.test.js tests/apiContainment.test.js tests/requestLoggingContainment.test.js tests/apiRouteInventory.test.js
+
       - name: Test frontend
+        if: steps.scope.outputs.tier == 'full' || steps.scope.outputs.tier == 'frontend'
         run: npm run test:frontend
 
       - name: Build
+        if: steps.scope.outputs.tier == 'full' || steps.scope.outputs.tier == 'frontend'
         run: npm run build
 
       - name: Safe beta demos
+        if: steps.scope.outputs.tier == 'full' || steps.scope.outputs.tier == 'backend'
         run: npm run control:tower && npm run demo:beta

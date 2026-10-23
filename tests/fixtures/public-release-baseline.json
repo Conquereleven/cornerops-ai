@@ -1,13 +1,16 @@
 {
   "base": "4894c5b028cdb4ac469e5b7ecf01fd38c20330db",
-  "fileCount": 794,
-  "sha256": "281618cfe9a5be962f666f0485130ee14c991cf79f1a75fe40b1dd5e8514bdc4",
-  "authorizedSprint": "CT-INFRA-GHA-01",
+  "fileCount": 796,
+  "sha256": "de9a79d6879c8bcdb72b99ae96cf465982f51051d4b0f85c36312383157082aa",
+  "authorizedSprint": "CT-INFRA-GHA-01 / CT-INFRA-GHA-02",
   "authorizedChanges": [
+    ".github/scripts/ci-scope.py",
     ".github/scripts/prod-watch.sh",
+    ".github/tests/test_ci_scope.py",
     ".github/workflows/ci.yml",
     ".github/workflows/prod-watch.yml",
     "tests/githubActionsCost.test.js"
   ],
-  "previousSha256": "be91c76a09f9bff3a83742bfc9446fe72edc535c095bdb4094e5bb5b697e5e90"
+  "previousSha256": "be91c76a09f9bff3a83742bfc9446fe72edc535c095bdb4094e5bb5b697e5e90",
+  "previousStageSha256": "281618cfe9a5be962f666f0485130ee14c991cf79f1a75fe40b1dd5e8514bdc4"
 }

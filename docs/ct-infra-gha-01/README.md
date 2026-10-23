@@ -1,3 +1,20 @@
+# Current cost finding — CT-INFRA-GHA-02
+
+GitHub API reports this repository PUBLIC. Standard GitHub-hosted runners in public repositories are free; the earlier rounded-duration estimates below are **compute estimates, not measured quota consumption or monetary savings**. Current standard-runner billable budget is zero while visibility and runner class remain unchanged. October visibility history/account invoice is unverified. Account billing API returned404 requiring additional account access; no scopes or billing settings changed. Private account/repository measurements are retained locally, not published here.
+
+Implemented in this same PR: one `test` job; Draft known-markdown changes get Python policy/document checks, reviewed-public-graph frontend changes get frontend/type/build/accessibility plus boundary/API security regressions, backend changes get backend/contracts/lint/demos, and infrastructure/dependencies/unknown/mixed changes get full CI. Missing transitive guard forces full CI; changes to the guard itself force full CI. Every ready PR, ready_for_review event, merge-group candidate and main/develop push gets full validation. No required-check path filters, no pull_request_target, no job fan-out. Existing warm npm cache retained; no unbenchmarked slim-runner migration or self-hosting.
+
+Representative model:20docs Draft updates,12frontend Draft updates,4backend Draft updates,8ready/release validations,8main pushes; assuming1minute for docs/frontend and2minutes for backend/full:72CI hosted minutes, plus up to16minutes for additional ready conversions. Without a reviewed transitive guard add12minutes. Nominal hourly November monitoring adds720jobs/minutes (best effort schedule), so ≤100 **hosted compute** minutes is impossible with that schedule retained. Current **billable** estimate remains0 for this public repository; modeled steady-state CI compute reduction≈104–120minutes versus duplicate full runs, not billed savings.
+
+Monitoring classification: A public HTTPS health GET; B authenticated work-queue GET with operator secret; C CI security/containment regressions plus PR99 anonymous API probe (not active until merge); D verified obsolete CornerMex not_configured no-op removed by PR99. Railway config was read only; it does not establish a continuous external uptime/TLS monitor with verified alert delivery. No replacement alert path has been verified, so hourly schedule remains. Minimum future replacement: credential-free public HTTPS/health monitor with tested Founder alert delivery; B/C stay in complete release CI and post-deploy acceptance, with no privileged token sent to uptime providers. Schedule removal requires successful alert test AND specific Founder reduction authorization. No monitoring change has been activated.
+
+PR100 is CLOSED as superseded. This PR remains Draft/NO-GO for merge pending narrow independent workflow/fixture review and separate release authority. No PR99 source is shared with Claude without specific Founder authorization, regardless of current repository visibility.
+
+Official references: [public standard runners](https://docs.github.com/en/billing/concepts/product-billing/github-actions), [per-job rounding](https://docs.github.com/en/enterprise-cloud%40latest/billing/reference/actions-runner-pricing).
+
+---
+Historical GHA-01 implementation/measurement packet (compute estimates only; current eight-file GHA-02 diff and 796-file digest supersede the historical four-path/794-file fixture description below):
+
 # CT-INFRA-GHA-01 — implemented workflow cost controls
 
 Baseline main4894c5b028cdb4ac469e5b7ecf01fd38c20330db. No merge/deployment, branch-policy, billing, Railway, database or credential change. Full implementation CI evidence and final SHA are in the Draft PR delivery comment.
